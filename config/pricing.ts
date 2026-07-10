@@ -21,7 +21,7 @@ export const plans: Plan[] = [
   {
     id: "draft_pro_season",
     name: "TwoBros Draft Pro",
-    price: "$39",
+    price: "$39.99",
     priceDetail: "2026 season pass",
     audience: "Live draft help without another monthly bill.",
     features: ["One-time payment", "Sleeper live sync", "Draft board and player rankings", "BPA and roster-need recommendations", "Access through the 2026 fantasy season"],
@@ -31,7 +31,7 @@ export const plans: Plan[] = [
   {
     id: "dynasty_elite_season",
     name: "TwoBros Fantasy Elite",
-    price: "$79",
+    price: "$59",
     priceDetail: "2026 season pass",
     audience: "The full command center for redraft and dynasty managers.",
     features: ["One-time payment", "All Draft Pro tools", "Redraft and dynasty command center", "Power rankings and roster strategy", "Trade value lab and multi-league dashboard"],
