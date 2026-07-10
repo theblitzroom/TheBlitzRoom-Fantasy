@@ -426,14 +426,117 @@ td {
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
+.pricing-layout {
+  display: grid;
+  gap: 26px;
+}
+
+.pricing-preview-card,
+.pricing-group,
+.pricing-trust-row {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(35, 26, 49, 0.84), rgba(16, 11, 24, 0.86));
+  box-shadow: var(--shadow-soft);
+}
+
+.pricing-preview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+  border-radius: var(--radius);
+}
+
+.pricing-preview-card h2 {
+  margin: 8px 0 8px;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1;
+}
+
+.pricing-preview-card p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.pricing-preview-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.pricing-preview-features span,
+.pricing-trust-row span {
+  border: 1px solid rgba(188, 166, 255, 0.13);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.pricing-preview-features span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pricing-group {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: calc(var(--radius) + 4px);
+}
+
+.pricing-group-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(188, 166, 255, 0.11);
+}
+
+.pricing-group-header h2 {
+  max-width: 680px;
+  margin: 8px 0 0;
+  font-size: clamp(28px, 3.2vw, 42px);
+  line-height: 1;
+}
+
+.pricing-group-header p {
+  max-width: 410px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.pricing-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
 .pricing-card {
+  display: flex;
+  flex-direction: column;
   position: relative;
   min-height: 455px;
+  height: 100%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 34%),
+    linear-gradient(180deg, rgba(35, 26, 49, 0.88), rgba(16, 11, 24, 0.9));
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(226, 190, 99, 0.28);
 }
 
 .pricing-card.highlighted {
   border-color: var(--border-strong);
-  box-shadow: 0 22px 60px rgba(217, 179, 95, 0.13);
+  box-shadow: 0 24px 62px rgba(217, 179, 95, 0.15);
 }
 
 .plan-badge {
@@ -468,15 +571,50 @@ td {
 
 .pricing-card ul {
   display: grid;
+  align-content: start;
   gap: 10px;
-  min-height: 120px;
+  flex: 1;
   padding: 0;
   margin: 22px 0;
   list-style: none;
 }
 
 .pricing-card li {
+  position: relative;
+  padding-left: 18px;
   color: var(--muted);
+  line-height: 1.45;
+}
+
+.pricing-card li::before {
+  position: absolute;
+  top: 0.62em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 0 14px rgba(217, 179, 95, 0.36);
+  content: "";
+}
+
+.pricing-trust-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius);
+}
+
+.pricing-trust-row span {
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .locked-panel {
@@ -601,6 +739,7 @@ td {
 .checkout-action {
   display: grid;
   gap: 8px;
+  margin-top: auto;
 }
 
 .mobile-drawer {
@@ -724,6 +863,20 @@ td {
     grid-template-columns: 1fr;
   }
 
+  .pricing-preview-card,
+  .pricing-group-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pricing-group-header {
+    gap: 14px;
+  }
+
+  .pricing-trust-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .site-footer {
     grid-template-columns: 1fr;
   }
@@ -756,6 +909,15 @@ td {
   }
 
   .sync-stat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-preview-card,
+  .pricing-group {
+    padding: 18px;
+  }
+
+  .pricing-trust-row {
     grid-template-columns: 1fr;
   }
 }

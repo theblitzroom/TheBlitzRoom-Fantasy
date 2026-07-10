@@ -2,6 +2,7 @@ import type { CheckoutPlan } from "@/lib/stripePlans";
 
 export type Plan = {
   id: "preview" | CheckoutPlan;
+  billing: "preview" | "season" | "monthly";
   name: string;
   price: string;
   priceDetail?: string;
@@ -15,6 +16,7 @@ export type Plan = {
 export const plans: Plan[] = [
   {
     id: "preview",
+    billing: "preview",
     name: "Preview",
     price: "$0",
     audience: "Try the interface before draft night.",
@@ -23,6 +25,7 @@ export const plans: Plan[] = [
   },
   {
     id: "draft_pro_season",
+    billing: "season",
     name: "TwoBros Draft Pro",
     price: "$39.99",
     priceDetail: "2026 season pass",
@@ -34,6 +37,7 @@ export const plans: Plan[] = [
   },
   {
     id: "draft_pro_monthly",
+    billing: "monthly",
     name: "Draft Pro Monthly",
     price: "$7.99",
     priceDetail: "per month",
@@ -44,6 +48,7 @@ export const plans: Plan[] = [
   },
   {
     id: "dynasty_elite_season",
+    billing: "season",
     name: "TwoBros Fantasy Elite",
     price: "$59.99",
     priceDetail: "2026 season pass",
@@ -54,6 +59,7 @@ export const plans: Plan[] = [
   },
   {
     id: "dynasty_elite_monthly",
+    billing: "monthly",
     name: "Fantasy Elite Monthly",
     price: "$14.99",
     priceDetail: "per month",
