@@ -1,0 +1,27 @@
+import { plans } from "@/config/pricing";
+import { CheckoutButton } from "./CheckoutButton";
+import { PremiumButton } from "./PremiumButton";
+
+export function PricingCards() {
+  return (
+    <div className="pricing-grid">
+      {plans.map((plan) => (
+        <article className={plan.highlighted ? "pricing-card highlighted" : "pricing-card"} key={plan.id}>
+          <span className="eyebrow">{plan.name}</span>
+          <div className="price">{plan.price}</div>
+          <p>{plan.audience}</p>
+          <ul>
+            {plan.features.map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
+          {plan.id === "preview" ? (
+            <PremiumButton href="/draft-room" variant="secondary">{plan.cta}</PremiumButton>
+          ) : (
+            <CheckoutButton plan={plan.id} highlighted={plan.highlighted}>{plan.cta}</CheckoutButton>
+          )}
+        </article>
+      ))}
+    </div>
+  );
+}
