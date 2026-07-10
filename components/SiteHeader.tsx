@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -16,7 +17,9 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Link className="brand-lockup" href="/" aria-label="TwoBros Fantasy home">
-        <span className="brand-mark">TB</span>
+        <span className="brand-mark">
+          <Image src="/twobros-logo-mark.png" alt="" width={46} height={46} priority />
+        </span>
         <span>
           <strong>TwoBros</strong>
           <small>Fantasy</small>
