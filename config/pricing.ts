@@ -45,7 +45,7 @@ export const plans: Plan[] = [
   {
     id: "dynasty_elite_season",
     name: "TwoBros Fantasy Elite",
-    price: "$59",
+    price: "$59.99",
     priceDetail: "2026 season pass",
     badge: "Full command center",
     audience: "The full command center for redraft and dynasty managers.",
