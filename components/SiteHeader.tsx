@@ -2,16 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { navItems } from "@/config/navigation";
 import { PremiumButton } from "./PremiumButton";
 
-const visibleNav = navItems.filter((item) => item.label !== "Billing");
+const toolNav = navItems.filter((item) => ["Command Center", "League Hub", "Power Rankings", "Rosters", "Trade Value", "Draft Room"].includes(item.label));
+const primaryNav = navItems.filter((item) => ["Pricing", "FAQ"].includes(item.label));
+const mobileNav = navItems.filter((item) => item.label !== "Home");
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolActive = toolNav.some((item) => pathname === item.href);
 
   return (
     <header className="site-header">
@@ -24,7 +28,33 @@ export function SiteHeader() {
       </Link>
 
       <nav className="desktop-nav" aria-label="Primary navigation">
-        {visibleNav.slice(0, 8).map((item) => {
+        <div className="nav-menu-wrap" onMouseLeave={() => setToolsOpen(false)}>
+          <button
+            className={toolActive ? "nav-link nav-menu-button active" : "nav-link nav-menu-button"}
+            onClick={() => setToolsOpen((current) => !current)}
+            onMouseEnter={() => setToolsOpen(true)}
+            type="button"
+          >
+            Product <ChevronDown size={14} />
+          </button>
+          {toolsOpen ? (
+            <div className="nav-dropdown">
+              {toolNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link className="nav-dropdown-item" href={item.href} key={item.href} onClick={() => setToolsOpen(false)}>
+                    <Icon size={17} />
+                    <span>
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+        {primaryNav.map((item) => {
           const active = pathname === item.href;
           return (
             <Link className={active ? "nav-link active" : "nav-link"} href={item.href} key={item.href}>
@@ -47,7 +77,7 @@ export function SiteHeader() {
             <button className="icon-button close-button" onClick={() => setOpen(false)} aria-label="Close menu">
               <X size={20} />
             </button>
-            {visibleNav.map((item) => {
+            {mobileNav.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
