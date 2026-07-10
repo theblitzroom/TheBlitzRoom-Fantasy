@@ -1,7 +1,8 @@
 export type Plan = {
-  id: "preview" | "draft_pro" | "dynasty_elite";
+  id: "preview" | "draft_pro_season" | "dynasty_elite_season";
   name: string;
   price: string;
+  priceDetail?: string;
   audience: string;
   features: string[];
   cta: string;
@@ -18,20 +19,22 @@ export const plans: Plan[] = [
     cta: "Start preview"
   },
   {
-    id: "draft_pro",
-    name: "Draft Pro",
-    price: "$20",
-    audience: "Live drafts, mocks, and serious prep.",
-    features: ["Sleeper live sync", "Full command center", "Roster-aware recommendations", "Saved league settings"],
-    cta: "Unlock Draft Pro",
+    id: "draft_pro_season",
+    name: "TwoBros Draft Pro",
+    price: "$39",
+    priceDetail: "2026 season pass",
+    audience: "Live draft help without another monthly bill.",
+    features: ["One-time payment", "Sleeper live sync", "Draft board and player rankings", "BPA and roster-need recommendations", "Access through the 2026 fantasy season"],
+    cta: "Get Draft Pro",
     highlighted: true
   },
   {
-    id: "dynasty_elite",
+    id: "dynasty_elite_season",
     name: "TwoBros Fantasy Elite",
-    price: "$50",
-    audience: "One premium suite for redraft and dynasty leagues.",
-    features: ["All Draft Pro tools", "Redraft and dynasty modes", "Power rankings", "Trade value lab", "Multi-league dashboard"],
-    cta: "Go Elite"
+    price: "$79",
+    priceDetail: "2026 season pass",
+    audience: "The full command center for redraft and dynasty managers.",
+    features: ["One-time payment", "All Draft Pro tools", "Redraft and dynasty command center", "Power rankings and roster strategy", "Trade value lab and multi-league dashboard"],
+    cta: "Get Elite"
   }
 ];

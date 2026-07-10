@@ -33,19 +33,27 @@ Copy `.env.example` to `.env.local` and fill in your Supabase and Stripe keys.
 
 ## Stripe Setup
 
-Create two recurring subscription prices in Stripe:
+Create two one-time season pass prices in Stripe:
 
-- Draft Pro: live draft support and saved league settings.
-- TwoBros Fantasy Elite: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
+- TwoBros Draft Pro 2026 Season Pass: live draft support, Sleeper sync, rankings, and draft recommendations.
+- TwoBros Fantasy Elite 2026 Season Pass: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
 
 Paste the price IDs into `.env.local`:
+
+```bash
+STRIPE_DRAFT_PRO_SEASON_PRICE_ID=price_...
+STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID=price_...
+```
+
+The app creates Stripe Checkout Sessions from `/api/stripe/create-checkout-session`. Season passes use one-time payment Checkout Sessions and grant access through February 15, 2027.
+
+Optional monthly subscription prices can also be configured later:
 
 ```bash
 STRIPE_DRAFT_PRO_PRICE_ID=price_...
 STRIPE_DYNASTY_ELITE_PRICE_ID=price_...
 ```
 
-The app creates Stripe Checkout Sessions from `/api/stripe/create-checkout-session`.
 Stripe webhooks should point to `/api/stripe/webhook` and listen for:
 
 - `checkout.session.completed`
@@ -53,7 +61,7 @@ Stripe webhooks should point to `/api/stripe/webhook` and listen for:
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
 
-Run the schema in `supabase-schema.sql` before relying on paid access in production.
+Run the schema in `supabase-schema.sql` before relying on paid access in production. One-time season pass purchases are stored in `access_grants`; recurring plans are stored in `subscriptions`.
 
 For production, make the billing routes derive the user ID from Supabase auth on the server.
 The current scaffold accepts a `userId` body field so the billing flow can be wired before auth UI exists.

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { attachStripeCustomerToProfile } from "@/lib/billingProfiles";
 import { getStripe } from "@/lib/stripe";
+import { upsertAccessGrantFromStripe } from "@/lib/stripeAccessGrants";
+import { getPlanFromPriceId, getSeasonAccessEndFromPriceId } from "@/lib/stripePlans";
 import { getPrimaryPriceId, upsertSubscriptionFromStripe } from "@/lib/stripeSubscriptionSync";
 
 export const runtime = "nodejs";
@@ -60,6 +62,31 @@ export async function POST(request: Request) {
           currentPeriodEnd: subscription.current_period_end ?? null,
           profileId
         });
+      }
+
+      if (session.mode === "payment" && session.payment_status === "paid") {
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+        const priceId = lineItems.data[0]?.price?.id ?? null;
+        const plan = getPlanFromPriceId(priceId);
+        const accessEndsAt = getSeasonAccessEndFromPriceId(priceId) ?? session.metadata?.access_ends_at ?? null;
+        const profileId = session.client_reference_id ?? null;
+        const stripeCustomerId = String(session.customer);
+
+        if (profileId && stripeCustomerId) {
+          await attachStripeCustomerToProfile(profileId, stripeCustomerId);
+        }
+
+        if (plan !== "preview" && accessEndsAt && stripeCustomerId) {
+          await upsertAccessGrantFromStripe({
+            stripeCustomerId,
+            stripeCheckoutSessionId: session.id,
+            stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+            stripePriceId: priceId,
+            profileId,
+            plan,
+            accessEndsAt
+          });
+        }
       }
     }
 

@@ -436,10 +436,18 @@ td {
 }
 
 .price {
-  margin: 14px 0;
+  margin: 14px 0 4px;
   color: var(--gold-2);
   font-size: 56px;
   font-weight: 850;
+}
+
+.price-detail {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .pricing-card ul {

@@ -3,7 +3,7 @@ import { SectionShell } from "@/components/SectionShell";
 const terms = [
   ["Service", "TwoBros Fantasy is a fantasy football software product that provides draft, roster, league, and trade analysis tools."],
   ["No guarantee", "Recommendations are informational and entertainment-focused. We do not guarantee fantasy sports results, league outcomes, winnings, or financial returns."],
-  ["Subscriptions", "Paid access renews according to the plan selected at checkout. Pricing and billing cadence are shown before purchase."],
+  ["Paid access", "Season passes are one-time purchases that provide access through the stated fantasy season. If recurring plans are offered, renewal terms are shown before purchase."],
   ["Acceptable use", "Customers may not use the service to violate laws, abuse connected services, attempt unauthorized access, or interfere with service operation."],
   ["Third-party services", "Sleeper and Stripe integrations depend on third-party availability and terms. TwoBros Fantasy is not affiliated with Sleeper."],
   ["Changes", "We may update features, pricing, and policies as the product evolves. Material billing changes will be communicated before they apply."]

@@ -9,6 +9,7 @@ export function PricingCards() {
         <article className={plan.highlighted ? "pricing-card highlighted" : "pricing-card"} key={plan.id}>
           <span className="eyebrow">{plan.name}</span>
           <div className="price">{plan.price}</div>
+          {plan.priceDetail ? <div className="price-detail">{plan.priceDetail}</div> : null}
           <p>{plan.audience}</p>
           <ul>
             {plan.features.map((feature) => (

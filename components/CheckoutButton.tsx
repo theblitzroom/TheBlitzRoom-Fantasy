@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { PaidPlan } from "@/lib/stripePlans";
+import type { CheckoutPlan } from "@/lib/stripePlans";
 
 type CheckoutButtonProps = {
-  plan: PaidPlan;
+  plan: CheckoutPlan;
   children: React.ReactNode;
   highlighted?: boolean;
 };

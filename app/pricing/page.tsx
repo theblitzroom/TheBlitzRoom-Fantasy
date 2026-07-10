@@ -5,8 +5,8 @@ export default function PricingPage() {
   return (
     <SectionShell
       eyebrow="Pricing"
-      title="Let users taste the tool, then make the upgrade obvious."
-      description="Preview mode shows the premium experience without giving away the fully functional live draft room."
+      title="Simple season passes. No surprise renewals."
+      description="Preview the product for free, then unlock the 2026 fantasy season with a one-time pass built for draft night and league management."
     >
       <PricingCards />
     </SectionShell>

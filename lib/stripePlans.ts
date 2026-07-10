@@ -1,25 +1,66 @@
 import type { SubscriptionPlan } from "@/lib/subscription";
 
-export type PaidPlan = Exclude<SubscriptionPlan, "preview">;
+export type CheckoutPlan =
+  | "draft_pro_season"
+  | "dynasty_elite_season"
+  | "draft_pro_monthly"
+  | "dynasty_elite_monthly";
 
 export type StripePlanConfig = {
-  plan: PaidPlan;
-  priceEnvKey: "STRIPE_DRAFT_PRO_PRICE_ID" | "STRIPE_DYNASTY_ELITE_PRICE_ID";
+  checkoutPlan: CheckoutPlan;
+  accessPlan: Exclude<SubscriptionPlan, "preview">;
+  checkoutMode: "payment" | "subscription";
+  priceEnvKey:
+    | "STRIPE_DRAFT_PRO_SEASON_PRICE_ID"
+    | "STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID"
+    | "STRIPE_DRAFT_PRO_PRICE_ID"
+    | "STRIPE_DYNASTY_ELITE_PRICE_ID";
+  accessEndsAt?: string;
 };
 
-export const stripePlans: Record<PaidPlan, StripePlanConfig> = {
-  draft_pro: {
-    plan: "draft_pro",
+export const seasonAccessEndsAt = "2027-02-15T23:59:59.000Z";
+
+export const stripePlans: Record<CheckoutPlan, StripePlanConfig> = {
+  draft_pro_season: {
+    checkoutPlan: "draft_pro_season",
+    accessPlan: "draft_pro",
+    checkoutMode: "payment",
+    priceEnvKey: "STRIPE_DRAFT_PRO_SEASON_PRICE_ID",
+    accessEndsAt: seasonAccessEndsAt
+  },
+  dynasty_elite_season: {
+    checkoutPlan: "dynasty_elite_season",
+    accessPlan: "dynasty_elite",
+    checkoutMode: "payment",
+    priceEnvKey: "STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID",
+    accessEndsAt: seasonAccessEndsAt
+  },
+  draft_pro_monthly: {
+    checkoutPlan: "draft_pro_monthly",
+    accessPlan: "draft_pro",
+    checkoutMode: "subscription",
     priceEnvKey: "STRIPE_DRAFT_PRO_PRICE_ID"
   },
-  dynasty_elite: {
-    plan: "dynasty_elite",
+  dynasty_elite_monthly: {
+    checkoutPlan: "dynasty_elite_monthly",
+    accessPlan: "dynasty_elite",
+    checkoutMode: "subscription",
     priceEnvKey: "STRIPE_DYNASTY_ELITE_PRICE_ID"
   }
 };
 
-export function getStripePriceId(plan: PaidPlan) {
+export function getStripePlanConfig(plan: CheckoutPlan) {
   const config = stripePlans[plan];
+
+  if (!config) {
+    throw new Error("Invalid checkout plan.");
+  }
+
+  return config;
+}
+
+export function getStripePriceId(plan: CheckoutPlan) {
+  const config = getStripePlanConfig(plan);
   const priceId = process.env[config.priceEnvKey];
 
   if (!priceId) {
@@ -29,18 +70,22 @@ export function getStripePriceId(plan: PaidPlan) {
   return priceId;
 }
 
-export function getPlanFromPriceId(priceId: string | null | undefined): PaidPlan | "preview" {
+export function getPlanFromPriceId(priceId: string | null | undefined): SubscriptionPlan {
   if (!priceId) {
     return "preview";
   }
 
-  if (priceId === process.env.STRIPE_DYNASTY_ELITE_PRICE_ID) {
-    return "dynasty_elite";
+  const matchingConfig = Object.values(stripePlans).find((config) => priceId === process.env[config.priceEnvKey]);
+
+  return matchingConfig?.accessPlan ?? "preview";
+}
+
+export function getSeasonAccessEndFromPriceId(priceId: string | null | undefined) {
+  if (!priceId) {
+    return null;
   }
 
-  if (priceId === process.env.STRIPE_DRAFT_PRO_PRICE_ID) {
-    return "draft_pro";
-  }
+  const matchingConfig = Object.values(stripePlans).find((config) => priceId === process.env[config.priceEnvKey]);
 
-  return "preview";
+  return matchingConfig?.accessEndsAt ?? null;
 }

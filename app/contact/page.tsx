@@ -17,12 +17,12 @@ export default function ContactPage() {
         <article className="insight-card">
           <span className="eyebrow">Product</span>
           <h3>What we sell</h3>
-          <p>TwoBros Fantasy provides subscription access to fantasy football analysis, roster strategy, trade value, and live draft support tools.</p>
+          <p>TwoBros Fantasy provides season-pass access to fantasy football analysis, roster strategy, trade value, and live draft support tools.</p>
         </article>
         <article className="insight-card">
           <span className="eyebrow">Billing</span>
-          <h3>Subscriptions</h3>
-          <p>Paid plans are managed through Stripe Checkout and Stripe Billing. Customers can manage billing from their account page after signup.</p>
+          <h3>Season passes</h3>
+          <p>Paid season passes are processed securely through Stripe Checkout. Customers can buy a new pass when the next fantasy season opens.</p>
         </article>
       </div>
     </SectionShell>
