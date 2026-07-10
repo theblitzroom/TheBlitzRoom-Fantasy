@@ -38,21 +38,21 @@ Create two one-time season pass prices in Stripe:
 - TwoBros Draft Pro 2026 Season Pass: live draft support, Sleeper sync, rankings, and draft recommendations.
 - TwoBros Fantasy Elite 2026 Season Pass: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
 
+Create two monthly subscription prices in Stripe:
+
+- TwoBros Draft Pro Monthly: $7.99 per month.
+- TwoBros Fantasy Elite Monthly: $14.99 per month.
+
 Paste the price IDs into `.env.local`:
 
 ```bash
 STRIPE_DRAFT_PRO_SEASON_PRICE_ID=price_...
 STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID=price_...
-```
-
-The app creates Stripe Checkout Sessions from `/api/stripe/create-checkout-session`. Season passes use one-time payment Checkout Sessions and grant access through February 15, 2027.
-
-Optional monthly subscription prices can also be configured later:
-
-```bash
 STRIPE_DRAFT_PRO_PRICE_ID=price_...
 STRIPE_DYNASTY_ELITE_PRICE_ID=price_...
 ```
+
+The app creates Stripe Checkout Sessions from `/api/stripe/create-checkout-session`. Season passes use one-time payment Checkout Sessions and grant access through February 15, 2027. Monthly plans use subscription Checkout Sessions and renew through Stripe Billing.
 
 Stripe webhooks should point to `/api/stripe/webhook` and listen for:
 
