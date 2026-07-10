@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getBillingProfile } from "@/lib/billingProfiles";
 import { getStripe } from "@/lib/stripe";
+import { hasSupabaseAdminConfig, hasSupabaseBrowserConfig } from "@/lib/supabase/config";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -8,12 +10,24 @@ export async function POST(request: Request) {
   try {
     const stripe = getStripe();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const body = await request.json().catch(() => ({})) as { userId?: string };
-    const profile = body.userId ? await getBillingProfile(body.userId) : null;
+    await request.json().catch(() => ({}));
+
+    if (!hasSupabaseBrowserConfig()) {
+      return NextResponse.json({ error: "Account login is not configured yet." }, { status: 401 });
+    }
+
+    if (!hasSupabaseAdminConfig()) {
+      return NextResponse.json({ error: "Billing profile access is not configured yet." }, { status: 401 });
+    }
+
+    const supabase = await createSupabaseServerClient();
+    const { data: userResult } = await supabase.auth.getUser();
+    const user = userResult.user;
+    const profile = user ? await getBillingProfile(user.id) : null;
 
     if (!profile?.stripe_customer_id) {
       return NextResponse.json(
-        { error: "No Stripe customer is connected yet. Wire this to the signed-in Supabase user." },
+        { error: "No Stripe customer is connected yet. Choose a plan first, then return here to manage billing." },
         { status: 401 }
       );
     }

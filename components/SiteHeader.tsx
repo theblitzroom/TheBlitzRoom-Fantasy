@@ -38,6 +38,9 @@ export function SiteHeader() {
       </nav>
 
       <div className="header-actions">
+        <span className="desktop-account-action">
+          <PremiumButton href="/account" variant="ghost">Account</PremiumButton>
+        </span>
         <PremiumButton href="/pricing" variant="secondary">Upgrade</PremiumButton>
         <button className="icon-button mobile-menu-button" onClick={() => setOpen(true)} aria-label="Open menu">
           <Menu size={20} />

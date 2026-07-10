@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { getBillingProfile } from "@/lib/billingProfiles";
+import { ensureBillingProfile } from "@/lib/billingProfiles";
 import { getStripe } from "@/lib/stripe";
 import { getStripePlanConfig, getStripePriceId, type CheckoutPlan } from "@/lib/stripePlans";
+import { hasSupabaseAdminConfig, hasSupabaseBrowserConfig } from "@/lib/supabase/config";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type CheckoutBody = {
   plan?: CheckoutPlan;
   email?: string;
-  userId?: string;
 };
 
 export const runtime = "nodejs";
@@ -24,7 +25,12 @@ export async function POST(request: Request) {
       : "draft_pro_season";
     const planConfig = getStripePlanConfig(plan);
     const price = getStripePriceId(plan);
-    const profile = body.userId ? await getBillingProfile(body.userId) : null;
+    const supabase = hasSupabaseBrowserConfig() ? await createSupabaseServerClient() : null;
+    const { data: userResult } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+    const user = userResult.user;
+    const profile = user && hasSupabaseAdminConfig()
+      ? await ensureBillingProfile(user.id, user.email)
+      : null;
 
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: planConfig.checkoutMode,
@@ -66,12 +72,12 @@ export async function POST(request: Request) {
 
     if (profile?.stripe_customer_id) {
       sessionConfig.customer = profile.stripe_customer_id;
-    } else if (profile?.email || body.email) {
-      sessionConfig.customer_email = profile?.email ?? body.email;
+    } else if (profile?.email || user?.email || body.email) {
+      sessionConfig.customer_email = profile?.email ?? user?.email ?? body.email;
     }
 
-    if (profile?.id ?? body.userId) {
-      sessionConfig.client_reference_id = profile?.id ?? body.userId;
+    if (profile?.id ?? user?.id) {
+      sessionConfig.client_reference_id = profile?.id ?? user?.id;
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);

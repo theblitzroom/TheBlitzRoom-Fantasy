@@ -11,6 +11,7 @@ A dynamic Next.js foundation for the premium fantasy football draft tool. The st
 - Read-only Sleeper API proxy routes using official public endpoints.
 - Stripe checkout, customer portal, and webhook routes.
 - Supabase browser/server client helpers.
+- Login, account creation, auth callback, and signed-in account hub pages.
 
 ## Run Locally
 
@@ -30,6 +31,33 @@ For the simplest setup, publish this folder as its own GitHub repository, then i
 ## Environment Setup
 
 Copy `.env.example` to `.env.local` and fill in your Supabase and Stripe keys.
+
+## Account Setup
+
+Accounts use Supabase Auth plus the tables in `supabase-schema.sql`.
+
+1. Create a Supabase project.
+2. Run `supabase-schema.sql` in the Supabase SQL editor.
+3. Add these variables locally and in Vercel:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+4. In Supabase Auth settings, add your site URL and redirect URL:
+
+```text
+https://twobrosfantasy.com
+https://twobrosfantasy.com/auth/callback
+```
+
+The live account routes are:
+
+- `/login` for sign in and account creation.
+- `/account` for signed-in subscription status, billing, and saved league foundations.
+- `/auth/callback` for Supabase email confirmation links.
 
 ## Stripe Setup
 
@@ -63,8 +91,7 @@ Stripe webhooks should point to `/api/stripe/webhook` and listen for:
 
 Run the schema in `supabase-schema.sql` before relying on paid access in production. One-time season pass purchases are stored in `access_grants`; recurring plans are stored in `subscriptions`.
 
-For production, make the billing routes derive the user ID from Supabase auth on the server.
-The current scaffold accepts a `userId` body field so the billing flow can be wired before auth UI exists.
+Billing routes now derive the user from the Supabase server session. When a signed-in user checks out, Stripe is tied back to that account through the profile row and webhook sync.
 
 Sleeper sync uses only official read-only endpoints:
 
@@ -76,8 +103,8 @@ The app does not auto-draft and does not use private APIs.
 
 ## Next Build Steps
 
-1. Create Supabase tables for profiles, leagues, subscriptions, drafts, picks, and saved rankings.
-2. Wire account state into `lib/subscription.ts`.
-3. Create Stripe products and paste price IDs into `.env.local`.
-4. Replace demo data with database-backed league and draft records.
+1. Create Supabase tables for leagues, drafts, picks, and saved rankings.
+2. Wire signed-in account plan state into `lib/subscription.ts` gates.
+3. Replace demo data with database-backed league and draft records.
+4. Add saved Sleeper league connections per user.
 5. Add a client-side Sleeper sync controller that polls every second while a draft room is open.
