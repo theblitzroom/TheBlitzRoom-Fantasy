@@ -13,16 +13,24 @@ type CheckoutBody = {
 
 export const runtime = "nodejs";
 
+const checkoutPlans: CheckoutPlan[] = [
+  "draft_pro_season",
+  "dynasty_elite_season",
+  "draft_pro_monthly",
+  "dynasty_elite_monthly"
+];
+
 export async function POST(request: Request) {
   try {
     const stripe = getStripe();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const body = await request.json().catch(() => ({})) as CheckoutBody;
-    const plan = body.plan === "dynasty_elite_season" ||
-      body.plan === "draft_pro_monthly" ||
-      body.plan === "dynasty_elite_monthly"
-      ? body.plan
-      : "draft_pro_season";
+    const plan = body.plan;
+
+    if (!plan || !checkoutPlans.includes(plan)) {
+      return NextResponse.json({ error: "A valid checkout plan is required." }, { status: 400 });
+    }
+
     const planConfig = getStripePlanConfig(plan);
     const price = getStripePriceId(plan);
     const supabase = hasSupabaseBrowserConfig() ? await createSupabaseServerClient() : null;
