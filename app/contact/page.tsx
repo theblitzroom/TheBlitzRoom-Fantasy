@@ -11,7 +11,7 @@ export default function ContactPage() {
         <article className="insight-card">
           <span className="eyebrow">Customer support</span>
           <h3>Email support</h3>
-          <p>support@twobrosfantasy.com</p>
+          <p>theblitzroom@gmail.com</p>
           <p>Typical response time: one to two business days.</p>
         </article>
         <article className="insight-card">

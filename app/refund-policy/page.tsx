@@ -5,7 +5,7 @@ const policies = [
   ["Future seasons", "Customers can buy a new season pass when the next fantasy season becomes available."],
   ["Refunds", "If a customer believes they were billed in error, they can contact support within 14 days of the charge. Refunds are reviewed case by case."],
   ["Recurring plans", "If recurring plans are offered, customers can cancel future renewals through the account billing portal once account billing is connected."],
-  ["Support", "Billing questions can be sent to support@twobrosfantasy.com."]
+  ["Support", "Billing questions can be sent to theblitzroom@gmail.com."]
 ];
 
 export default function RefundPolicyPage() {

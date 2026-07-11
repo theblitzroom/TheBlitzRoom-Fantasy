@@ -5,7 +5,7 @@ const sections = [
   ["How we use information", "We use information to provide paid access, save preferences, power draft tools, process billing, improve the product, and respond to support requests."],
   ["Payments", "Payments are processed by Stripe. TwoBros Fantasy does not store full card numbers or sensitive payment credentials on its own servers."],
   ["Third-party services", "The service may connect to Sleeper using official read-only public draft endpoints and to Stripe for checkout, billing, and subscription management."],
-  ["Data choices", "Customers can request account support, billing help, or deletion assistance by contacting support@twobrosfantasy.com."],
+  ["Data choices", "Customers can request account support, billing help, or deletion assistance by contacting theblitzroom@gmail.com."],
   ["Security", "We use reasonable technical and organizational measures to protect customer information, but no online service can guarantee absolute security."]
 ];
 
