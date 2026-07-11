@@ -16,12 +16,12 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link className="brand-lockup" href="/" aria-label="TwoBros Fantasy home">
+      <Link className="brand-lockup" href="/" aria-label="TheBlitzRoom Fantasy home">
         <span className="brand-mark">
-          <Image src="/twobros-logo-mark.png" alt="" width={46} height={46} priority />
+          <Image src="/theblitzroom-logo.png" alt="" width={46} height={46} priority />
         </span>
         <span>
-          <strong>TwoBros</strong>
+          <strong>TheBlitzRoom</strong>
           <small>Fantasy</small>
         </span>
       </Link>

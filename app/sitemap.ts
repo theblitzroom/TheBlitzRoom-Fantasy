@@ -17,7 +17,7 @@ const routes = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://twobrosfantasy.com";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://theblitzroom.com";
 
   return routes.map((route) => ({
     url: `${appUrl}${route}`,

@@ -17,7 +17,7 @@ export default function ContactPage() {
         <article className="insight-card">
           <span className="eyebrow">Product</span>
           <h3>What we sell</h3>
-          <p>TwoBros Fantasy provides season-pass access to fantasy football analysis, roster strategy, trade value, and live draft support tools.</p>
+          <p>TheBlitzRoom Fantasy provides season-pass access to fantasy football analysis, roster strategy, trade value, and live draft support tools.</p>
         </article>
         <article className="insight-card">
           <span className="eyebrow">Billing</span>

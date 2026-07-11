@@ -1,6 +1,6 @@
 # Stripe Integration Plan
 
-Business: TwoBros Fantasy is an all-in-one fantasy football dashboard for league analysis, power rankings, roster strategy, trade value, and live draft support.
+Business: TheBlitzRoom Fantasy is an all-in-one fantasy football dashboard for league analysis, power rankings, roster strategy, trade value, and live draft support.
 
 Stripe products:
 
@@ -15,7 +15,7 @@ Use Stripe-hosted Checkout for subscription signup. It is the lowest-maintenance
 Create two recurring prices:
 
 - Draft Pro: live Sleeper draft sync, full draft command center, saved league settings.
-- TwoBros Fantasy Elite: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
+- TheBlitzRoom Fantasy Elite: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
 
 Keep Preview as an app-side free tier, not a Stripe product.
 
@@ -36,7 +36,7 @@ Gate feature access from Supabase subscription state, not from a client-side fla
 
 ## Checkout Flow
 
-1. User chooses Draft Pro or TwoBros Fantasy Elite on `/pricing`.
+1. User chooses Draft Pro or TheBlitzRoom Fantasy Elite on `/pricing`.
 2. App calls `POST /api/stripe/create-checkout-session`.
 3. Server maps plan to the correct Stripe price ID.
 4. Server creates a subscription Checkout Session.

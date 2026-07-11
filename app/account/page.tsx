@@ -23,11 +23,11 @@ type AccessGrantRecord = {
 
 function formatPlan(plan: string) {
   if (plan === "dynasty_elite") {
-    return "TwoBros Fantasy Elite";
+    return "TheBlitzRoom Fantasy Elite";
   }
 
   if (plan === "draft_pro") {
-    return "TwoBros Draft Pro";
+    return "TheBlitzRoom Draft Pro";
   }
 
   return "Preview";
@@ -78,7 +78,7 @@ export default async function AccountPage() {
     return (
       <SectionShell
         eyebrow="Account"
-        title="Sign in or create your TwoBros account."
+        title="Sign in or create your TheBlitzRoom account."
         description="Accounts keep your subscription, billing, saved leagues, and draft setup tied to one login."
       >
         <div className="account-grid">
@@ -127,7 +127,7 @@ export default async function AccountPage() {
   return (
     <SectionShell
       eyebrow="Account"
-      title="Your TwoBros account is connected."
+      title="Your TheBlitzRoom account is connected."
       description="Manage subscription access, billing, and the league settings that will power the live fantasy tools."
     >
       <div className="account-grid">

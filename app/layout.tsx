@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "TwoBros Fantasy",
+  title: "TheBlitzRoom Fantasy",
   description: "A premium fantasy football command center with Sleeper sync, league analysis, roster strategy, and redraft plus dynasty recommendations."
 };
 

@@ -22,13 +22,13 @@ export default function LoginPage() {
   return (
     <SectionShell
       eyebrow="Login"
-      title="Access your TwoBros account."
+      title="Access your TheBlitzRoom account."
       description="Sign in or create an account to connect your subscription, billing, saved leagues, and draft room settings."
     >
       <div className="account-grid">
         <AuthPanel />
         <div className="account-benefits">
-          <span className="badge badge-premium">TwoBros account</span>
+          <span className="badge badge-premium">TheBlitzRoom account</span>
           <h2>One login for every fantasy tool.</h2>
           <p>Keep paid access, live draft prep, and future league analysis connected to the same account.</p>
           <div className="account-checklist">

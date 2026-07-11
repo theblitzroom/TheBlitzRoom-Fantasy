@@ -26,7 +26,7 @@ outputs/dynasty-command-center-app
 Set these in Vercel under Project Settings -> Environment Variables.
 
 ```bash
-NEXT_PUBLIC_APP_URL=https://twobrosfantasy.com
+NEXT_PUBLIC_APP_URL=https://theblitzroom.com
 
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=

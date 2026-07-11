@@ -6,7 +6,7 @@ import type { SleeperPick } from "@/lib/sleeper/client";
 
 type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
-const STORAGE_KEY = "twobros-fantasy.sleeper-sync";
+const STORAGE_KEY = "theblitzroom-fantasy.sleeper-sync";
 const POLL_MS = 1000;
 
 type SavedSyncState = {

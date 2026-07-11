@@ -1,4 +1,4 @@
-# TwoBros Fantasy App
+# TheBlitzRoom Fantasy App
 
 A dynamic Next.js foundation for the premium fantasy football draft tool. The static demo remains in `../fantasy-draft-tool`; this app is the path toward real accounts, paid subscriptions, saved leagues, and read-only Sleeper live sync.
 
@@ -49,8 +49,8 @@ SUPABASE_SERVICE_ROLE_KEY=...
 4. In Supabase Auth settings, add your site URL and redirect URL:
 
 ```text
-https://twobrosfantasy.com
-https://twobrosfantasy.com/auth/callback
+https://theblitzroom.com
+https://theblitzroom.com/auth/callback
 ```
 
 The live account routes are:
@@ -63,13 +63,13 @@ The live account routes are:
 
 Create two one-time season pass prices in Stripe:
 
-- TwoBros Draft Pro 2026 Season Pass: live draft support, Sleeper sync, rankings, and draft recommendations.
-- TwoBros Fantasy Elite 2026 Season Pass: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
+- TheBlitzRoom Draft Pro 2026 Season Pass: live draft support, Sleeper sync, rankings, and draft recommendations.
+- TheBlitzRoom Fantasy Elite 2026 Season Pass: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
 
 Create two monthly subscription prices in Stripe:
 
-- TwoBros Draft Pro Monthly: $7.99 per month.
-- TwoBros Fantasy Elite Monthly: $14.99 per month.
+- TheBlitzRoom Draft Pro Monthly: $7.99 per month.
+- TheBlitzRoom Fantasy Elite Monthly: $14.99 per month.
 
 Paste the price IDs into `.env.local`:
 

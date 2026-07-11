@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         plan,
         access_plan: planConfig.accessPlan,
         access_ends_at: planConfig.accessEndsAt ?? "",
-        source: "twobros_fantasy"
+        source: "theblitzroom_fantasy"
       },
       success_url: `${appUrl}/account?checkout=success`,
       cancel_url: `${appUrl}/pricing?checkout=cancelled`
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         metadata: {
           plan,
           access_plan: planConfig.accessPlan,
-          source: "twobros_fantasy"
+          source: "theblitzroom_fantasy"
         }
       };
     } else {
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
           plan,
           access_plan: planConfig.accessPlan,
           access_ends_at: planConfig.accessEndsAt ?? "",
-          source: "twobros_fantasy"
+          source: "theblitzroom_fantasy"
         }
       };
 
