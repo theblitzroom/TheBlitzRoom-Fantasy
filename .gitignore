@@ -32,3 +32,6 @@ Thumbs.db
 # local agent tooling
 .agents/
 skills-lock.json
+
+.vercel
+.env*
