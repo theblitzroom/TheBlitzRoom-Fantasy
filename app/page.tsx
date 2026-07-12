@@ -8,15 +8,15 @@ export default function HomePage() {
     <main>
       <section className="hero-shell">
         <div className="hero-copy">
-          <span className="eyebrow">Premium redraft and dynasty intelligence</span>
-          <h1>Live draft decisions with context, conviction, and speed.</h1>
+          <span className="eyebrow">Redraft and dynasty draft workspace</span>
+          <h1>Draft with a clearer board.</h1>
           <p>
-            A paid-grade command center for redraft and dynasty drafts: Sleeper sync,
-            roster construction, scarcity, BPA, tier cliffs, and recommendation logic in one polished interface.
+            TheBlitzRoom keeps live picks, roster needs, player value, and format context in one calm workspace,
+            so you can make the next pick without chasing five tabs.
           </p>
           <div className="button-row">
-            <PremiumButton href="/command-center">Open command center</PremiumButton>
-            <PremiumButton href="/pricing" variant="secondary">View plans</PremiumButton>
+            <PremiumButton href="/draft-room">Open draft preview</PremiumButton>
+            <PremiumButton href="/command-center" variant="secondary">View command center</PremiumButton>
           </div>
         </div>
         <DraftRoomPreview />
@@ -24,8 +24,8 @@ export default function HomePage() {
 
       <section className="product-grid-section">
         <div className="section-heading slim">
-          <span className="eyebrow">Dynamic app architecture</span>
-          <h2>Built as separate product areas, not one long page.</h2>
+          <span className="eyebrow">What the workspace tracks</span>
+          <h2>Board value, roster context, and league format stay connected.</h2>
         </div>
         <div className="product-grid">
           {productAreas.map((area) => (

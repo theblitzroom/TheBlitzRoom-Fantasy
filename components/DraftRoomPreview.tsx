@@ -11,9 +11,9 @@ export function DraftRoomPreview() {
   return (
     <div className="command-preview">
       <div className="recommendation-hero">
-        <span className="badge badge-premium"><Crown size={14} /> Top recommendation</span>
+        <span className="badge badge-premium"><Crown size={14} /> Current read</span>
         <h2>Jayden Daniels</h2>
-        <p>Superflex premium, elite rushing floor, and roster leverage make this the strongest pick if he falls into range.</p>
+        <p>Superflex value, rushing production, and roster leverage keep him ahead of the next tier at this spot.</p>
         <div className="score-grid">
           <span><strong>94</strong><small>Draft score</small></span>
           <span><strong>QB</strong><small>Scarcity</small></span>
@@ -49,9 +49,9 @@ export function DraftRoomPreview() {
       <div className="data-card compact-card">
         <div className="card-title">
           <Zap size={18} />
-          Sleeper sync target
+          Sleeper sync
         </div>
-        <p>Read-only polling is designed for one-second updates while the draft room is open. No auto-drafting. No private APIs.</p>
+        <p>Read-only updates are designed for quick live draft refreshes while keeping manual control in your hands.</p>
       </div>
     </div>
   );

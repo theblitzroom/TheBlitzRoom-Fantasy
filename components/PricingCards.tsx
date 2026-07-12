@@ -55,6 +55,16 @@ function PricingGroup({
   );
 }
 
+const comparisonRows = [
+  ["Live Sleeper sync", "Included", "Included"],
+  ["Draft board and rankings", "Included", "Included"],
+  ["BPA and roster need logic", "Included", "Included"],
+  ["Redraft command center", "Preview", "Included"],
+  ["Dynasty market lens", "Preview", "Included"],
+  ["Power rankings and rosters", "Preview", "Included"],
+  ["Trade value workspace", "Preview", "Included"]
+];
+
 export function PricingCards() {
   const previewPlan = plans.find((plan) => plan.billing === "preview");
   const paidPlans = plans.filter(isPaidPlan);
@@ -67,7 +77,7 @@ export function PricingCards() {
         <section className="pricing-preview-card" aria-label="Free preview">
           <div>
             <span className="eyebrow">{previewPlan.name}</span>
-            <h2>{previewPlan.price} product preview</h2>
+            <h2>Preview the draft room</h2>
             <p>{previewPlan.audience}</p>
             <div className="pricing-preview-features">
               {previewPlan.features.map((feature) => (
@@ -81,8 +91,8 @@ export function PricingCards() {
 
       <PricingGroup
         eyebrow="Season Passes"
-        title="Pay once for the 2026 fantasy season."
-        description="Best for managers who want draft-night tools and league prep covered without another monthly renewal."
+        title="Pay once for the 2026 season."
+        description="A clean option if you want draft night and league prep covered without a monthly renewal."
       >
         {seasonPlans.map((plan) => (
           <PricingPlanCard key={plan.id} plan={plan} />
@@ -91,19 +101,47 @@ export function PricingCards() {
 
       <PricingGroup
         eyebrow="Monthly Plans"
-        title="Flexible access while you are actively building."
-        description="Best if you want to start small, draft with the tools, and keep access only as long as you need it."
+        title="Month-to-month access."
+        description="Useful if you want to draft with the tools and keep access only while you are actively using them."
       >
         {monthlyPlans.map((plan) => (
           <PricingPlanCard key={plan.id} plan={plan} />
         ))}
       </PricingGroup>
 
+      <section className="pricing-compare" aria-labelledby="plan-comparison">
+        <div className="pricing-compare-header">
+          <span className="eyebrow">Plan comparison</span>
+          <h2 id="plan-comparison">Draft Pro covers the room. Elite adds the season workspace.</h2>
+          <p>Use this as the quick read before choosing monthly or season access.</p>
+        </div>
+        <div className="compare-table-wrap">
+          <table className="compare-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Draft Pro</th>
+                <th>Fantasy Elite</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparisonRows.map(([feature, draftPro, elite]) => (
+                <tr key={feature}>
+                  <td>{feature}</td>
+                  <td>{draftPro}</td>
+                  <td>{elite}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section className="pricing-trust-row" aria-label="Checkout details">
         <span>Secure Stripe checkout</span>
         <span>Monthly plans cancel anytime</span>
         <span>Read-only Sleeper sync</span>
-        <span>No auto-drafting</span>
+        <span>Support: theblitzroom@gmail.com</span>
       </section>
     </div>
   );

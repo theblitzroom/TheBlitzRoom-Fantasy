@@ -5,8 +5,8 @@ export default function PricingPage() {
   return (
     <SectionShell
       eyebrow="Pricing"
-      title="Choose monthly flexibility or season-pass value."
-      description="Preview the product for free, subscribe month to month, or lock in the 2026 fantasy season with one-time access built for draft night and league management."
+      title="Simple access for draft season."
+      description="Start with a preview, choose monthly access, or use a season pass if you want the draft room and league tools available through the 2026 fantasy season."
     >
       <PricingCards />
     </SectionShell>

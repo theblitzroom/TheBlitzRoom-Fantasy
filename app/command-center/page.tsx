@@ -12,8 +12,8 @@ export default function CommandCenterPage() {
   return (
     <SectionShell
       eyebrow="Draft command center"
-      title="The paid cockpit for live draft decisions."
-      description="A premium, fast-moving workspace for Sleeper drafts with recommendations that explain why a pick is strong."
+      title="A focused view for the next pick."
+      description="Use the preview to see how recommendations, tier movement, and roster context sit together during a Sleeper draft."
     >
       <PreviewGate>
         <DraftRoomPreview />

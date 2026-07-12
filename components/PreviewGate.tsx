@@ -17,13 +17,13 @@ export function PreviewGate({ requiredPlan = "draft_pro", children }: PreviewGat
 
   return (
     <div className="locked-panel">
-      <span className="badge badge-premium">Premium feature</span>
-      <h2>Unlock the live command layer</h2>
+      <span className="badge badge-premium">Preview mode</span>
+      <h2>Live controls are available with an active plan.</h2>
       <p>
-        The preview shows the shape of the tool. A paid account unlocks full draft sync,
-        saved league context, recommendations, and live roster intelligence.
+        This view shows the command center layout. Plans add live Sleeper sync,
+        saved league context, full recommendations, and roster tracking during the draft.
       </p>
-      <PremiumButton href="/pricing">View plans</PremiumButton>
+      <PremiumButton href="/pricing">Compare plans</PremiumButton>
     </div>
   );
 }
