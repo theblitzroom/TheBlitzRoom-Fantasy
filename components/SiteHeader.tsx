@@ -10,7 +10,7 @@ import { PremiumButton } from "./PremiumButton";
 
 const visibleNav = navItems.filter((item) => item.label !== "Billing");
 const productNav = visibleNav.filter((item) =>
-  ["Command Center", "League Hub", "Power Rankings", "Rosters", "Trade Value"].includes(item.label)
+  ["Command Center", "League Hub", "Power Rankings", "Team Hub", "Trade Value"].includes(item.label)
 );
 const primaryNav = visibleNav.filter((item) => ["Home", "Draft Room", "Pricing"].includes(item.label));
 

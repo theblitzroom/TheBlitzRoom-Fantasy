@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 const routes = [
   "",
   "/command-center",
+  "/team-hub/my-team",
   "/league-hub",
   "/power-rankings",
   "/rosters",

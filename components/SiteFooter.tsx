@@ -3,6 +3,8 @@ import Image from "next/image";
 
 const productLinks = [
   ["Command Center", "/command-center"],
+  ["Team Hub", "/team-hub/my-team"],
+  ["League Hub", "/league-hub"],
   ["Draft Room", "/draft-room"],
   ["Pricing", "/pricing"],
   ["FAQ", "/faq"]

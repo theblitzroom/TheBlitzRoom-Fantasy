@@ -44,7 +44,7 @@ type LeagueLookupResponse = {
 
 const commandNav = [
   { label: "Command Center", href: "/command-center" },
-  { label: "Team Hub", href: "/rosters" },
+  { label: "Team Hub", href: "/team-hub/my-team" },
   { label: "League Hub", href: "/league-hub" },
   { label: "Trade Room", href: "/trade-value" },
   { label: "Player Research", href: "/power-rankings" },
@@ -74,7 +74,7 @@ const tools = [
   {
     title: "Team Hub",
     body: "Separate contenders, rebuilders, fragile middle teams, and roster timelines.",
-    href: "/rosters",
+    href: "/team-hub/my-team",
     icon: Users
   },
   {

@@ -1745,6 +1745,188 @@ td {
   font-weight: 850;
 }
 
+.team-hub-page {
+  display: grid;
+  gap: 18px;
+}
+
+.team-hero-panel,
+.team-main-card,
+.team-side-card,
+.team-detail-card,
+.team-lineup-panel {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 36%),
+    linear-gradient(180deg, rgba(35, 26, 49, 0.88), rgba(16, 11, 24, 0.9));
+  box-shadow: var(--shadow-soft);
+}
+
+.team-hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 22px;
+  align-items: stretch;
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.team-hero-copy h2 {
+  margin: 14px 0 10px;
+  font-size: clamp(34px, 4vw, 56px);
+  line-height: 0.98;
+}
+
+.team-hero-copy p,
+.team-side-card p,
+.team-detail-card p,
+.team-lineup-panel p {
+  color: var(--muted);
+  line-height: 1.58;
+}
+
+.team-score-card {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at top right, rgba(217, 179, 95, 0.18), transparent 12rem),
+    rgba(255, 255, 255, 0.04);
+}
+
+.team-score-card strong {
+  color: var(--gold-2);
+  font-size: 68px;
+  line-height: 0.9;
+}
+
+.team-score-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.team-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 18px;
+}
+
+.team-main-card,
+.team-side-card,
+.team-lineup-panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 24px;
+}
+
+.team-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.team-metric-grid span {
+  display: grid;
+  gap: 7px;
+  min-height: 104px;
+  padding: 14px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.team-metric-grid small,
+.team-slot-grid small {
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.team-metric-grid strong {
+  color: var(--gold-2);
+  font-size: 28px;
+}
+
+.team-side-stack,
+.team-detail-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.team-detail-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.team-detail-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: var(--radius);
+}
+
+.team-detail-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  color: var(--gold-2);
+  background: rgba(217, 179, 95, 0.08);
+}
+
+.team-detail-card h3,
+.team-side-card h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.team-detail-card p,
+.team-side-card p {
+  margin: 0;
+}
+
+.team-slot-grid,
+.team-roster-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.team-slot-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.team-slot-grid span {
+  display: grid;
+  gap: 6px;
+  min-height: 104px;
+  padding: 12px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.team-slot-grid strong {
+  color: var(--text);
+}
+
+.team-slot-grid em {
+  color: var(--gold-2);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.team-roster-picker {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .score-cell {
   display: flex;
   align-items: center;
@@ -2177,6 +2359,20 @@ td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .team-hero-panel,
+  .team-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-detail-grid,
+  .team-roster-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team-slot-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .command-hero-panel,
   .command-workspace {
     grid-template-columns: 1fr;
@@ -2253,6 +2449,13 @@ td {
 
   .league-connect-form,
   .league-picker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-metric-grid,
+  .team-detail-grid,
+  .team-slot-grid,
+  .team-roster-picker {
     grid-template-columns: 1fr;
   }
 
