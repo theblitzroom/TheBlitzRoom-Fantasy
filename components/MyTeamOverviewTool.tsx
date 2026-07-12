@@ -65,6 +65,10 @@ function getStarterSlots(league?: LeagueToolLeague | null) {
   return (league?.roster_positions ?? []).filter((position) => position !== "BN" && position !== "IR" && position !== "TAXI");
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOverviewToolProps) {
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
@@ -101,6 +105,76 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
   const timeline = selectedBuild?.build ?? "Waiting";
   const priority = selectedBuild?.priority ?? "Scan a league";
   const healthScore = Math.min(99, Math.max(45, Math.round((selectedPower?.score ?? 70) - (bench < 10 ? 6 : 0) + (upsideGap > 120 ? 4 : 0))));
+  const dynastyValueByPosition = useMemo(() => {
+    const base = selectedPower?.score ?? 68;
+    const leagueType = formatLeagueType(activeLeague);
+    const scoring = formatScoring(activeLeague);
+    const superflexBoost = leagueType === "Superflex" ? 11 : 0;
+    const pprBoost = scoring === "PPR" ? 5 : scoring === "Half PPR" ? 3 : 0;
+    const winNowBoost = timeline === "Win-now" ? 7 : timeline === "Builder" ? -3 : 1;
+    const futureBoost = clamp(Math.round(upsideGap / 18), -4, 12);
+
+    return [
+      {
+        position: "QB",
+        score: clamp(Math.round(base + superflexBoost - (bench < 10 ? 3 : 0)), 42, 99),
+        note: leagueType === "Superflex" ? "Premium market in superflex builds." : "Stable but less scarce in 1QB."
+      },
+      {
+        position: "RB",
+        score: clamp(Math.round(base - 8 + winNowBoost - Math.max(0, bench < 10 ? 4 : 0)), 38, 96),
+        note: timeline === "Win-now" ? "Production window matters now." : "Treat short shelf-life backs carefully."
+      },
+      {
+        position: "WR",
+        score: clamp(Math.round(base + pprBoost + futureBoost + 2), 45, 99),
+        note: scoring === "Standard" ? "Still a core asset class." : "Receivers gain insulation in reception scoring."
+      },
+      {
+        position: "TE",
+        score: clamp(Math.round(base - 12 + (starterSlots.includes("TE") ? 5 : 0)), 34, 92),
+        note: "Only chase elite separation or discounted upside."
+      },
+      {
+        position: "Picks",
+        score: clamp(Math.round(56 + futureBoost * 2 + (timeline === "Builder" ? 12 : 0)), 32, 94),
+        note: upsideGap > 120 ? "Future value should be protected." : "Use picks for targeted upgrades."
+      }
+    ];
+  }, [activeLeague, bench, selectedPower?.score, starterSlots, timeline, upsideGap]);
+  const rosterAgeProfile = useMemo(() => {
+    const futurePressure = clamp(Math.round(upsideGap / 12), -6, 16);
+    const young = clamp(26 + (timeline === "Builder" ? 20 : 0) + futurePressure, 14, 64);
+    const veteran = clamp(22 + (timeline === "Win-now" ? 18 : 0) - Math.round(futurePressure / 2), 12, 54);
+    const prime = clamp(100 - young - veteran, 18, 58);
+    const normalizedVeteran = 100 - young - prime;
+    const averageAge = timeline === "Builder" ? "24.8" : timeline === "Win-now" ? "27.4" : "26.1";
+
+    return {
+      averageAge,
+      groups: [
+        { label: "Rookie window", value: young, note: "Development and trade insulation." },
+        { label: "Prime years", value: prime, note: "Peak production window." },
+        { label: "Veteran value", value: normalizedVeteran, note: "Win-now scoring leverage." }
+      ]
+    };
+  }, [timeline, upsideGap]);
+  const assetTierBreakdown = useMemo(() => {
+    const score = selectedPower?.score ?? 70;
+    const cornerstones = clamp(Math.round((score - 52) / 11), 1, 5);
+    const weeklyStarters = clamp(starters || starterSlots.length || 8, 6, 12);
+    const depthAssets = clamp(bench, 4, 18);
+    const development = clamp(Math.round(Math.max(bench, 8) * (timeline === "Builder" ? 0.45 : 0.28)), 2, 10);
+    const optionality = clamp(Math.round(upsideGap / 28) + (timeline === "Builder" ? 3 : 1), 1, 9);
+
+    return [
+      { tier: "Cornerstones", count: cornerstones, note: "Assets you build around, not quick-flip pieces." },
+      { tier: "Weekly starters", count: weeklyStarters, note: "Lineup-caliber production for the current format." },
+      { tier: "Depth assets", count: depthAssets, note: bench < 10 ? "Thin enough to prioritize insulation." : "Enough volume to trade from strength." },
+      { tier: "Development", count: development, note: "Upside bench, taxi-style, or patience plays." },
+      { tier: "Optionality", count: optionality, note: "Modeled pick and future leverage from the roster profile." }
+    ];
+  }, [bench, selectedPower?.score, starterSlots.length, starters, timeline, upsideGap]);
 
   async function loadLeagueSummary(leagueId: string, user?: LeagueToolUser | null) {
     if (!paidAccess) {
@@ -298,6 +372,73 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
           <span className="eyebrow">Market read</span>
           <h3>{upsideGap > 120 ? "Future value" : "Current value"}</h3>
           <p>{upsideGap > 120 ? "Potential points outpace current output, so avoid selling future pieces too cheaply." : "Current output is close to potential, so upgrades need to be meaningful."}</p>
+        </article>
+      </section>
+
+      <section className="team-analytics-grid">
+        <article className="team-analytics-card position-value-card">
+          <div className="league-card-header compact">
+            <div>
+              <span className="eyebrow">Dynasty Value by Position</span>
+              <h2>Where your portfolio has leverage</h2>
+            </div>
+            <span className="league-filter-pill">Modeled</span>
+          </div>
+          <div className="position-value-list">
+            {dynastyValueByPosition.map((item) => (
+              <div className="position-value-row" key={item.position}>
+                <div>
+                  <strong>{item.position}</strong>
+                  <small>{item.note}</small>
+                </div>
+                <div className="portfolio-meter" aria-label={`${item.position} value ${item.score}`}>
+                  <span style={{ width: `${item.score}%` }} />
+                </div>
+                <em>{item.score}</em>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="team-analytics-card age-profile-card">
+          <div>
+            <span className="eyebrow">Roster Age Profile</span>
+            <h2>{rosterAgeProfile.averageAge} avg age</h2>
+            <p>Estimated from build direction, production gap, and roster construction until player-level age data is connected.</p>
+          </div>
+          <div className="age-profile-stack">
+            {rosterAgeProfile.groups.map((group) => (
+              <div className="age-profile-row" key={group.label}>
+                <div>
+                  <strong>{group.label}</strong>
+                  <small>{group.note}</small>
+                </div>
+                <span>{group.value}%</span>
+                <div className="portfolio-meter">
+                  <span style={{ width: `${group.value}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="team-analytics-card asset-tier-card">
+          <div>
+            <span className="eyebrow">Asset Tier Breakdown</span>
+            <h2>{assetTierBreakdown.reduce((total, item) => total + item.count, 0)} modeled assets</h2>
+            <p>A quick read on how much of the roster is core value, weekly production, depth, and future optionality.</p>
+          </div>
+          <div className="asset-tier-list">
+            {assetTierBreakdown.map((item) => (
+              <div className="asset-tier-row" key={item.tier}>
+                <span>{item.count}</span>
+                <div>
+                  <strong>{item.tier}</strong>
+                  <small>{item.note}</small>
+                </div>
+              </div>
+            ))}
+          </div>
         </article>
       </section>
 
