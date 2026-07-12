@@ -8,6 +8,7 @@ export function ResetPasswordPanel() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [ready, setReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -16,19 +17,80 @@ export function ResetPasswordPanel() {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session) {
-        setReady(true);
+    async function activateRecoverySession() {
+      setChecking(true);
+      setError("");
+
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const code = searchParams.get("code");
+
+        if (code) {
+          const { error: codeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (codeError) {
+            throw codeError;
+          }
+
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          if (mounted) {
+            setReady(true);
+          }
+
+          return;
+        }
+
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (sessionError) {
+            throw sessionError;
+          }
+
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          if (mounted) {
+            setReady(true);
+          }
+
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+
+        if (mounted) {
+          setReady(Boolean(data.session));
+        }
+      } catch (caught) {
+        if (mounted) {
+          setReady(false);
+          setError(caught instanceof Error ? caught.message : "Password reset link could not be verified.");
+        }
+      } finally {
+        if (mounted) {
+          setChecking(false);
+        }
       }
-    });
+    }
 
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session) {
+      if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
         setReady(true);
+        setChecking(false);
       }
     });
+
+    activateRecoverySession();
 
     return () => {
       mounted = false;
@@ -71,10 +133,15 @@ export function ResetPasswordPanel() {
       <span className="badge badge-premium">Account recovery</span>
       <h2>Choose a new password</h2>
       <p>Open this page from the password reset email. Once the recovery session is active, set a new password below.</p>
-      {!ready ? (
+      {checking ? (
         <div className="account-checklist">
-          <span>Waiting for a valid reset email session.</span>
-          <span>If you opened this page directly, go back to sign in and request a new reset email.</span>
+          <span>Checking your secure reset link.</span>
+          <span>This usually takes a moment after opening the email.</span>
+        </div>
+      ) : !ready ? (
+        <div className="account-checklist">
+          <span>This reset link is missing, expired, or has already been used.</span>
+          <span>Go back to sign in and request a fresh password reset email.</span>
         </div>
       ) : (
         <form className="auth-form" onSubmit={submitNewPassword}>

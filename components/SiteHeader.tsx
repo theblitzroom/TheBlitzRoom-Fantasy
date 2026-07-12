@@ -3,9 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, LogOut, Menu, UserCircle, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import { navItems } from "@/config/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { PremiumButton } from "./PremiumButton";
 
 const visibleNav = navItems.filter((item) => item.label !== "Billing");
@@ -17,7 +19,59 @@ const primaryNav = visibleNav.filter((item) => ["Home", "Draft Room", "Pricing"]
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const productActive = productNav.some((item) => pathname === item.href);
+  const supabase = useMemo(() => {
+    try {
+      return createSupabaseBrowserClient();
+    } catch {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) {
+      setAuthReady(true);
+      return;
+    }
+
+    let mounted = true;
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (mounted) {
+        setUser(data.user);
+        setAuthReady(true);
+      }
+    });
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  async function signOut() {
+    if (!supabase) {
+      return;
+    }
+
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    setUser(null);
+    window.location.assign("/");
+  }
+
+  const userEmail = user?.email ?? "";
+  const shortEmail = userEmail.length > 28 ? `${userEmail.slice(0, 25)}...` : userEmail;
 
   return (
     <header className="site-header">
@@ -73,7 +127,24 @@ export function SiteHeader() {
 
       <div className="header-actions">
         <span className="desktop-account-action">
-          <PremiumButton href="/login" variant="ghost">Sign in</PremiumButton>
+          {user ? (
+            <div className="header-account-pill" aria-label={`Signed in as ${userEmail}`}>
+              <Link className="header-account-link" href="/account">
+                <UserCircle size={16} />
+                <span>
+                  <small>Signed in</small>
+                  <strong>{shortEmail}</strong>
+                </span>
+              </Link>
+              <button className="header-signout-button" disabled={signingOut} onClick={signOut} type="button" aria-label="Sign out">
+                <LogOut size={15} />
+              </button>
+            </div>
+          ) : authReady ? (
+            <PremiumButton href="/login" variant="ghost">Sign in</PremiumButton>
+          ) : (
+            <span className="header-auth-loading" aria-label="Checking account status" />
+          )}
         </span>
         <PremiumButton href="/pricing" variant="secondary">Plans</PremiumButton>
         <button className="icon-button mobile-menu-button" onClick={() => setOpen(true)} aria-label="Open menu">
@@ -87,6 +158,26 @@ export function SiteHeader() {
             <button className="icon-button close-button" onClick={() => setOpen(false)} aria-label="Close menu">
               <X size={20} />
             </button>
+            {user ? (
+              <div className="mobile-account-card">
+                <UserCircle size={18} />
+                <span>
+                  <small>Signed in</small>
+                  <strong>{shortEmail}</strong>
+                </span>
+                <button disabled={signingOut} onClick={signOut} type="button">
+                  {signingOut ? "..." : "Sign out"}
+                </button>
+              </div>
+            ) : authReady ? (
+              <Link className="mobile-account-card" href="/login" onClick={() => setOpen(false)}>
+                <UserCircle size={18} />
+                <span>
+                  <small>Account</small>
+                  <strong>Sign in</strong>
+                </span>
+              </Link>
+            ) : null}
             {visibleNav.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;

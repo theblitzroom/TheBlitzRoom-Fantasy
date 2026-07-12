@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
     if (error) {
       const loginUrl = new URL("/login", requestUrl.origin);
-      loginUrl.searchParams.set("auth_error", "The sign-in link expired or could not be verified. Please request a new link.");
+      loginUrl.searchParams.set("auth_error", "The account link expired or could not be verified. Please request a new link.");
       loginUrl.searchParams.set("next", next);
       return NextResponse.redirect(loginUrl);
     }
