@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -32,12 +32,21 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [linkLoading, setLinkLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+
+  useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get("auth_error");
+
+    if (authError) {
+      setError(authError);
+    }
+  }, []);
 
   function requestedRedirect() {
     const next = new URLSearchParams(window.location.search).get("next");
@@ -130,6 +139,39 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
     }
   }
 
+  async function sendSignInLink() {
+    setLinkLoading(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const trimmedEmail = email.trim();
+
+      if (!trimmedEmail) {
+        throw new Error("Enter your email address first, then request a sign-in link.");
+      }
+
+      const redirectTarget = requestedRedirect() ?? "/account";
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: trimmedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTarget)}`,
+          shouldCreateUser: true
+        }
+      });
+
+      if (otpError) {
+        throw otpError;
+      }
+
+      setMessage("Sign-in link sent. Open the email on this device to finish logging in.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Sign-in link failed.");
+    } finally {
+      setLinkLoading(false);
+    }
+  }
+
   return (
     <div className="auth-card">
       <div className="auth-tabs" role="tablist" aria-label="Account access">
@@ -170,9 +212,14 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
           {loading ? "Working..." : mode === "signin" ? "Sign in" : "Create account"}
         </button>
         {mode === "signin" ? (
-          <button className="auth-reset-link" disabled={resetLoading} onClick={sendPasswordReset} type="button">
-            {resetLoading ? "Sending reset email..." : "Forgot password?"}
-          </button>
+          <div className="auth-secondary-actions">
+            <button className="auth-link-button" disabled={linkLoading} onClick={sendSignInLink} type="button">
+              {linkLoading ? "Sending sign-in link..." : "Email me a sign-in link"}
+            </button>
+            <button className="auth-reset-link" disabled={resetLoading} onClick={sendPasswordReset} type="button">
+              {resetLoading ? "Sending reset email..." : "Forgot password?"}
+            </button>
+          </div>
         ) : null}
         {message ? <p className="auth-message">{message}</p> : null}
         {error ? <p className="sync-error">{error}</p> : null}
