@@ -1,23 +1,23 @@
+import { RostersTool } from "@/components/RostersTool";
 import { SectionShell } from "@/components/SectionShell";
+import { getEntitlementState } from "@/lib/entitlements";
 
-const rosterSlots = ["QB", "RB", "RB", "WR", "WR", "WR", "TE", "FLEX", "FLEX", "SUPERFLEX", "BENCH"];
+export const dynamic = "force-dynamic";
 
-export default function RostersPage() {
+export default async function RostersPage() {
+  const entitlement = await getEntitlementState("draft_pro");
+
   return (
     <SectionShell
       eyebrow="Roster construction"
-      title="Track roster needs without letting need overpower value."
-      description="The draft room should know when you are thin at QB, overloaded at RB, or creating avoidable bye-week pressure."
+      title="See every roster's shape before you make a move."
+      description="Scan Sleeper leagues and compare starter strength, bench depth, current scoring, potential points, and each team's next roster priority."
     >
-      <div className="insight-grid">
-        {rosterSlots.map((slot, index) => (
-          <article className="insight-card" key={`${slot}-${index}`}>
-            <span className="eyebrow">Slot {index + 1}</span>
-            <h3>{slot}</h3>
-            <p>{slot === "SUPERFLEX" ? "Highest leverage slot in this build." : "Tracked against team need and board value."}</p>
-          </article>
-        ))}
-      </div>
+      <RostersTool
+        paidAccess={entitlement.hasPaidAccess}
+        signedIn={entitlement.signedIn}
+        plan={entitlement.plan}
+      />
     </SectionShell>
   );
 }

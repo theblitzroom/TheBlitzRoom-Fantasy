@@ -514,7 +514,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
                 >
                   <span>{league.status?.replaceAll("_", " ")}</span>
                   <strong>{league.name}</strong>
-                  <small>{league.total_rosters ?? "-"} teams · {formatLeagueType(league)} · {formatScoring(league)}</small>
+                  <small>{league.total_rosters ?? "-"} teams - {formatLeagueType(league)} - {formatScoring(league)}</small>
                   <em>{league.draft_id ? "Draft connected" : "No draft found"}</em>
                 </button>
               );

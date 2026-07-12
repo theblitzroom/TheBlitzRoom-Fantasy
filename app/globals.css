@@ -1732,6 +1732,19 @@ td {
   background: rgba(155, 123, 234, 0.11);
 }
 
+.roster-warning-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 9px;
+  border: 1px solid rgba(215, 155, 77, 0.28);
+  border-radius: 999px;
+  color: var(--gold-2);
+  background: rgba(215, 155, 77, 0.1);
+  font-size: 12px;
+  font-weight: 850;
+}
+
 .score-cell {
   display: flex;
   align-items: center;

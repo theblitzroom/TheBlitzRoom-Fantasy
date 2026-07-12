@@ -1,35 +1,23 @@
-import { PreviewGate } from "@/components/PreviewGate";
+import { PowerRankingsTool } from "@/components/PowerRankingsTool";
 import { SectionShell } from "@/components/SectionShell";
+import { getEntitlementState } from "@/lib/entitlements";
 
-const teams = [
-  ["Apex Value", "92", "QB room, young WR core"],
-  ["Golden Window", "88", "Contender build"],
-  ["Future Bank", "83", "Picks plus insulation"],
-  ["Needs Leverage", "76", "Thin QB2"]
-];
+export const dynamic = "force-dynamic";
 
-export default function PowerRankingsPage() {
+export default async function PowerRankingsPage() {
+  const entitlement = await getEntitlementState("draft_pro");
+
   return (
     <SectionShell
       eyebrow="Power rankings"
-      title="Rank teams by strength, timeline, and dynasty leverage."
-      description="Move beyond simple roster totals with a view that separates contenders, rebuilders, and fragile middle teams."
+      title="Rank teams by strength, timeline, and league leverage."
+      description="Scan Sleeper leagues, separate contenders from builders, and use roster data to understand who has the cleanest path."
     >
-      <PreviewGate requiredPlan="dynasty_elite">
-        <div className="data-card">
-          <div className="card-title">League power snapshot</div>
-          <table>
-            <thead>
-              <tr><th>Team</th><th>Score</th><th>Primary edge</th></tr>
-            </thead>
-            <tbody>
-              {teams.map((team) => (
-                <tr key={team[0]}><td>{team[0]}</td><td>{team[1]}</td><td>{team[2]}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </PreviewGate>
+      <PowerRankingsTool
+        paidAccess={entitlement.hasPaidAccess}
+        signedIn={entitlement.signedIn}
+        plan={entitlement.plan}
+      />
     </SectionShell>
   );
 }

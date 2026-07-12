@@ -246,8 +246,8 @@ export function CommandCenterLaunch() {
   const selectedLineup = formatLineup(selectedLeague);
   const draftRoomHref = selectedLeague?.draft_id ? `/draft-room?draftId=${encodeURIComponent(selectedLeague.draft_id)}` : "/draft-room";
   const roomSignals = [
-    ["League", selectedLeague?.name ?? "No league selected", selectedLeague ? `${selectedLeague.total_rosters ?? "-"} teams · ${selectedLeague.status}` : "Scan to load leagues"],
-    ["Format", selectedFormat, `${selectedScoring} · ${selectedLineup}`],
+    ["League", selectedLeague?.name ?? "No league selected", selectedLeague ? `${selectedLeague.total_rosters ?? "-"} teams - ${selectedLeague.status}` : "Scan to load leagues"],
+    ["Format", selectedFormat, `${selectedScoring} - ${selectedLineup}`],
     ["Draft handoff", selectedLeague?.draft_id ? "Draft ID ready" : "No draft ID", selectedLeague?.draft_id ? "Open Draft Room with this league draft" : "Paste a draft ID in Draft Room"]
   ];
 
@@ -372,7 +372,7 @@ export function CommandCenterLaunch() {
                   >
                     <span>{league.status}</span>
                     <strong>{league.name}</strong>
-                    <small>{league.total_rosters ?? "-"} teams · {formatLeagueType(league)} · {formatScoring(league)}</small>
+                    <small>{league.total_rosters ?? "-"} teams - {formatLeagueType(league)} - {formatScoring(league)}</small>
                     {league.draft_id ? <em>Draft ID connected</em> : <em>No draft ID</em>}
                   </button>
                 );
@@ -407,7 +407,7 @@ export function CommandCenterLaunch() {
               <span className="eyebrow">Decision board</span>
               <h2>Best available with context</h2>
             </div>
-            <span className="league-filter-pill">{selectedLeague ? `${selectedFormat} · ${selectedScoring}` : "Superflex dynasty"}</span>
+            <span className="league-filter-pill">{selectedLeague ? `${selectedFormat} - ${selectedScoring}` : "Superflex dynasty"}</span>
           </div>
           <div className="command-board-table-wrap">
             <table className="command-board-table">
