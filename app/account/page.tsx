@@ -141,11 +141,6 @@ export default async function AccountPage() {
   const paidAccess = adminAccess || hasActiveAccess(activeSubscription, activeGrant);
   const eliteAccess = adminAccess || (paidAccess && activePlan === "dynasty_elite");
   const launchTools = [
-    ...(adminAccess ? [{
-      title: "Admin Console",
-      href: "/admin",
-      description: "Internal command surface with full Elite preview access."
-    }] : []),
     ...(paidAccess ? [
       {
         title: "League Hub",
@@ -206,7 +201,6 @@ export default async function AccountPage() {
             </span>
           </div>
           <div className="button-row">
-            {adminAccess ? <PremiumButton href="/admin" variant="secondary">Admin console</PremiumButton> : null}
             <PremiumButton href="/pricing">Choose or upgrade plan</PremiumButton>
             <ManageBillingButton />
             <SignOutButton />
@@ -218,7 +212,6 @@ export default async function AccountPage() {
           <h2>What this unlocks next</h2>
           <div className="account-checklist">
             <span>Stripe customer ID: {profile?.stripe_customer_id ? "Connected" : "Pending checkout"}</span>
-            <span>Admin preview access: {adminAccess ? "Enabled" : "Not enabled"}</span>
             <span>Saved Sleeper leagues: Coming next</span>
             <span>Draft room preferences: Ready to store</span>
             <span>Roster and trade tools: Account-gated foundation</span>
