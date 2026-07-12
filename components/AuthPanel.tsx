@@ -32,7 +32,6 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [linkLoading, setLinkLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -76,10 +75,12 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
     setError("");
 
     try {
+      const trimmedEmail = email.trim();
+
       if (mode === "signup") {
         const redirectTarget = requestedRedirect() ?? "/account";
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
+          email: trimmedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTarget)}`
@@ -99,7 +100,7 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
         return;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
 
       if (signInError) {
         throw signInError;
@@ -107,7 +108,12 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
 
       window.location.assign(await postAuthRedirect());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authentication failed.");
+      const message = caught instanceof Error ? caught.message : "Authentication failed.";
+      setError(
+        mode === "signin" && message.toLowerCase().includes("invalid login credentials")
+          ? "That email and password do not match. Use Forgot password to set a new password, then sign in again."
+          : message
+      );
     } finally {
       setLoading(false);
     }
@@ -136,39 +142,6 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
       setError(caught instanceof Error ? caught.message : "Password reset failed.");
     } finally {
       setResetLoading(false);
-    }
-  }
-
-  async function sendSignInLink() {
-    setLinkLoading(true);
-    setMessage("");
-    setError("");
-
-    try {
-      const trimmedEmail = email.trim();
-
-      if (!trimmedEmail) {
-        throw new Error("Enter your email address first, then request a sign-in link.");
-      }
-
-      const redirectTarget = requestedRedirect() ?? "/account";
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: trimmedEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTarget)}`,
-          shouldCreateUser: true
-        }
-      });
-
-      if (otpError) {
-        throw otpError;
-      }
-
-      setMessage("Sign-in link sent. Open the email on this device to finish logging in.");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Sign-in link failed.");
-    } finally {
-      setLinkLoading(false);
     }
   }
 
@@ -213,9 +186,6 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
         </button>
         {mode === "signin" ? (
           <div className="auth-secondary-actions">
-            <button className="auth-link-button" disabled={linkLoading} onClick={sendSignInLink} type="button">
-              {linkLoading ? "Sending sign-in link..." : "Email me a sign-in link"}
-            </button>
             <button className="auth-reset-link" disabled={resetLoading} onClick={sendPasswordReset} type="button">
               {resetLoading ? "Sending reset email..." : "Forgot password?"}
             </button>

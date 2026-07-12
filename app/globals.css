@@ -849,33 +849,6 @@ td {
   gap: 8px 14px;
 }
 
-.auth-link-button {
-  border: 1px solid rgba(217, 179, 95, 0.4);
-  border-radius: 999px;
-  color: var(--gold);
-  cursor: pointer;
-  background: rgba(217, 179, 95, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  font-size: 13px;
-  font-weight: 850;
-  padding: 9px 13px;
-  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-.auth-link-button:hover {
-  border-color: rgba(217, 179, 95, 0.7);
-  background: rgba(217, 179, 95, 0.14);
-  color: var(--gold-2);
-  transform: translateY(-1px);
-}
-
-.auth-link-button:disabled {
-  border-color: var(--border);
-  color: var(--faint);
-  cursor: wait;
-  transform: none;
-}
-
 .auth-reset-link {
   justify-self: start;
   border: 0;
