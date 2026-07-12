@@ -141,12 +141,17 @@ export default async function AccountPage() {
   const paidAccess = adminAccess || hasActiveAccess(activeSubscription, activeGrant);
   const eliteAccess = adminAccess || (paidAccess && activePlan === "dynasty_elite");
   const launchTools = [
+    {
+      title: "Command Center",
+      href: "/command-center",
+      description: "Open the signed-in command surface for league scans, tool handoffs, and live workflow."
+    },
+    {
+      title: "League Hub",
+      href: "/league-hub",
+      description: "Scan Sleeper leagues, rank teams, and read league leverage."
+    },
     ...(paidAccess ? [
-      {
-        title: "League Hub",
-        href: "/league-hub",
-        description: "Scan Sleeper leagues, rank teams, and read league leverage."
-      },
       {
         title: "Team Hub",
         href: "/team-hub/my-team",

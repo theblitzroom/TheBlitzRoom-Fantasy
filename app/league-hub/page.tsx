@@ -16,7 +16,6 @@ export default async function LeagueHubPage() {
       <LeagueHubDashboard
         paidAccess={entitlement.hasPaidAccess}
         signedIn={entitlement.signedIn}
-        plan={entitlement.plan}
       />
     </SectionShell>
   );

@@ -17,7 +17,6 @@ import {
   Trophy,
   Users
 } from "lucide-react";
-import type { SubscriptionPlan } from "@/lib/subscription";
 
 type SleeperUser = {
   user_id?: string;
@@ -87,7 +86,6 @@ type LeagueSummary = {
 type LeagueHubDashboardProps = {
   paidAccess: boolean;
   signedIn: boolean;
-  plan: SubscriptionPlan;
 };
 
 type PowerRow = {
@@ -303,17 +301,18 @@ function TrendBadge({ trend }: { trend: string }) {
   );
 }
 
-export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDashboardProps) {
+export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardProps) {
+  const liveAccess = signedIn || paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
-  const [scanStatus, setScanStatus] = useState<"idle" | "loading" | "ready" | "error">(paidAccess ? "idle" : "ready");
-  const [summaryStatus, setSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">(paidAccess ? "idle" : "ready");
+  const [scanStatus, setScanStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
+  const [summaryStatus, setSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
   const [error, setError] = useState("");
-  const [leagues, setLeagues] = useState<SleeperLeague[]>(paidAccess ? [] : demoLeagues);
-  const [selectedLeagueId, setSelectedLeagueId] = useState(paidAccess ? "" : demoSummary.league.league_id);
-  const [summary, setSummary] = useState<LeagueSummary | null>(paidAccess ? null : demoSummary);
+  const [leagues, setLeagues] = useState<SleeperLeague[]>(liveAccess ? [] : demoLeagues);
+  const [selectedLeagueId, setSelectedLeagueId] = useState(liveAccess ? "" : demoSummary.league.league_id);
+  const [summary, setSummary] = useState<LeagueSummary | null>(liveAccess ? null : demoSummary);
   const [loadedUser, setLoadedUser] = useState<SleeperUser | null>(
-    paidAccess ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
+    liveAccess ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
   );
 
   const selectedLeague = leagues.find((league) => league.league_id === selectedLeagueId) ?? null;
@@ -336,8 +335,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
   async function scanLeagues(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!paidAccess) {
-      setError("Live Sleeper scanning is available with an active plan. Use the demo below to preview the workflow.");
+    if (!liveAccess) {
+      setError("Sign in to run live Sleeper scans. Use the demo below to preview the workflow.");
       setScanStatus("error");
       return;
     }
@@ -383,7 +382,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
   }
 
   async function loadLeagueSummary(leagueId: string) {
-    if (!paidAccess) {
+    if (!liveAccess) {
       return;
     }
 
@@ -433,18 +432,18 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
         <div className="league-command-copy">
           <span className="badge badge-premium">
             <Activity size={14} />
-            {paidAccess ? "Live League Hub" : "League Hub preview"}
+            {liveAccess ? "Live League Hub" : "League Hub preview"}
           </span>
           <h2>{activeLeague ? activeLeague.name : "Connect Sleeper and load the league."}</h2>
           <p>
             Scan a Sleeper username, choose a league, and turn public league settings,
             rosters, managers, and draft state into a usable power board.
           </p>
-          {!paidAccess ? (
+          {!liveAccess ? (
             <div className="league-access-note">
               <CircleAlert size={18} />
-              <span>{signedIn ? `Your current plan is ${plan}. Upgrade to unlock live League Hub scans.` : "Sign in and choose a plan to unlock live League Hub scans."}</span>
-              <Link href={signedIn ? "/pricing" : "/login?next=/league-hub"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+              <span>Logged-out visitors see a demo preview. Sign in to unlock live Sleeper scans, power rankings, roster tables, and draft handoff.</span>
+              <Link href="/login?next=/league-hub">Sign in <ArrowRight size={14} /></Link>
             </div>
           ) : null}
         </div>
@@ -467,7 +466,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               placeholder="Enter Sleeper username"
-              disabled={!paidAccess}
+              disabled={!liveAccess}
             />
           </label>
           <label className="league-season-field">
@@ -475,10 +474,10 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
             <input
               value={season}
               onChange={(event) => setSeason(event.target.value)}
-              disabled={!paidAccess}
+              disabled={!liveAccess}
             />
           </label>
-          <button className="premium-button premium-button-primary" disabled={!paidAccess || scanStatus === "loading"}>
+          <button className="premium-button premium-button-primary" disabled={!liveAccess || scanStatus === "loading"}>
             <RefreshCcw size={16} />
             {scanStatus === "loading" ? "Scanning" : "Scan leagues"}
           </button>
@@ -509,7 +508,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
                 <button
                   className={active ? "league-picker-card active" : "league-picker-card"}
                   key={league.league_id}
-                  onClick={() => paidAccess ? void loadLeagueSummary(league.league_id) : selectPreviewLeague(league.league_id)}
+                  onClick={() => liveAccess ? void loadLeagueSummary(league.league_id) : selectPreviewLeague(league.league_id)}
                   type="button"
                 >
                   <span>{league.status?.replaceAll("_", " ")}</span>

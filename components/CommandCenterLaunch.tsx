@@ -42,6 +42,10 @@ type LeagueLookupResponse = {
   leagues: SleeperLeague[];
 };
 
+type CommandCenterLaunchProps = {
+  signedIn: boolean;
+};
+
 const commandNav = [
   { label: "Command Center", href: "/command-center" },
   { label: "Team Hub", href: "/team-hub/my-team" },
@@ -183,17 +187,26 @@ function getLeagueSignal(league?: SleeperLeague | null) {
   return `${teams || "This"} team 1QB room gives elite WR/RB/TE values more room to breathe.`;
 }
 
-export function CommandCenterLaunch() {
+export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
   const [username, setUsername] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "found" | "error">("idle");
-  const [user, setUser] = useState<SleeperUser | null>(null);
+  const [status, setStatus] = useState<"idle" | "loading" | "found" | "error">(signedIn ? "idle" : "found");
+  const [user, setUser] = useState<SleeperUser | null>(
+    signedIn ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
+  );
   const [season, setSeason] = useState(String(new Date().getFullYear()));
-  const [leagues, setLeagues] = useState<SleeperLeague[]>([]);
-  const [selectedLeagueId, setSelectedLeagueId] = useState("");
+  const [leagues, setLeagues] = useState<SleeperLeague[]>(signedIn ? [] : demoLeagues);
+  const [selectedLeagueId, setSelectedLeagueId] = useState(signedIn ? "" : demoLeagues[0].league_id);
   const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!signedIn) {
+      setStatus("error");
+      setError("Sign in to run live Sleeper scans. The demo preview below shows the workflow.");
+      return;
+    }
+
     const trimmed = username.trim();
 
     if (!trimmed) {
@@ -292,18 +305,27 @@ export function CommandCenterLaunch() {
               <input
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                placeholder="Enter Sleeper username"
+                placeholder={signedIn ? "Enter Sleeper username" : "Sign in to scan live leagues"}
                 autoComplete="off"
+                disabled={!signedIn}
               />
             </label>
-            <button className="premium-button premium-button-primary" disabled={status === "loading"}>
+            <button className="premium-button premium-button-primary" disabled={!signedIn || status === "loading"}>
               <Search size={16} />
-              {status === "loading" ? "Scanning" : "Start league scan"}
+              {status === "loading" ? "Scanning" : signedIn ? "Start league scan" : "Sign in to scan"}
             </button>
             <button className="premium-button premium-button-secondary" onClick={loadDemoLeagues} type="button">
               Demo league
             </button>
           </form>
+
+          {!signedIn ? (
+            <div className="league-access-note">
+              <CircleAlert size={18} />
+              <span>Logged-out visitors get this demo preview. Sign in to unlock live Sleeper scans, saved league context, and working tool handoffs.</span>
+              <Link href="/login?next=/command-center">Sign in <ArrowRight size={14} /></Link>
+            </div>
+          ) : null}
 
           {status === "found" ? (
             <div className="command-lookup-result">
@@ -390,11 +412,11 @@ export function CommandCenterLaunch() {
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
-            <Link className="command-tool-card" href={tool.href} key={tool.title}>
+            <Link className="command-tool-card" href={signedIn ? tool.href : `/login?next=${encodeURIComponent(tool.href)}`} key={tool.title}>
               <span className="command-tool-icon"><Icon size={19} /></span>
               <h2>{tool.title}</h2>
               <p>{tool.body}</p>
-              <strong>Open tool <ArrowRight size={14} /></strong>
+              <strong>{signedIn ? "Open tool" : "Sign in to open"} <ArrowRight size={14} /></strong>
             </Link>
           );
         })}
