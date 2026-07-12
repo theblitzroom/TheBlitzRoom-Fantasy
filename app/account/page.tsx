@@ -3,6 +3,7 @@ import { ManageBillingButton } from "@/components/ManageBillingButton";
 import { PremiumButton } from "@/components/PremiumButton";
 import { SectionShell } from "@/components/SectionShell";
 import { SignOutButton } from "@/components/SignOutButton";
+import { isAdminEmail } from "@/lib/admin";
 import { ensureBillingProfile } from "@/lib/billingProfiles";
 import { hasSupabaseAdminConfig, hasSupabaseBrowserConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -123,6 +124,7 @@ export default async function AccountPage() {
   const activePlan = activeSubscription?.plan ?? activeGrant?.plan ?? "preview";
   const renewalOrAccessDate = activeSubscription?.current_period_end ?? activeGrant?.access_ends_at ?? null;
   const billingStatus = activeSubscription?.status ?? activeGrant?.status ?? "preview";
+  const adminAccess = isAdminEmail(user.email);
 
   return (
     <SectionShell
@@ -150,6 +152,7 @@ export default async function AccountPage() {
             </span>
           </div>
           <div className="button-row">
+            {adminAccess ? <PremiumButton href="/admin" variant="secondary">Admin console</PremiumButton> : null}
             <PremiumButton href="/pricing">Choose or upgrade plan</PremiumButton>
             <ManageBillingButton />
             <SignOutButton />
@@ -161,6 +164,7 @@ export default async function AccountPage() {
           <h2>What this unlocks next</h2>
           <div className="account-checklist">
             <span>Stripe customer ID: {profile?.stripe_customer_id ? "Connected" : "Pending checkout"}</span>
+            <span>Admin preview access: {adminAccess ? "Enabled" : "Not enabled"}</span>
             <span>Saved Sleeper leagues: Coming next</span>
             <span>Draft room preferences: Ready to store</span>
             <span>Roster and trade tools: Account-gated foundation</span>

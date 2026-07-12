@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { hasPlanAccess, previewSubscription, type SubscriptionPlan } from "@/lib/subscription";
+import { getEntitlementState } from "@/lib/entitlements";
+import type { SubscriptionPlan } from "@/lib/subscription";
 import { PremiumButton } from "./PremiumButton";
 
 type PreviewGateProps = {
@@ -7,9 +8,9 @@ type PreviewGateProps = {
   children: ReactNode;
 };
 
-export function PreviewGate({ requiredPlan = "draft_pro", children }: PreviewGateProps) {
-  const subscription = previewSubscription;
-  const unlocked = hasPlanAccess(subscription.plan, requiredPlan);
+export async function PreviewGate({ requiredPlan = "draft_pro", children }: PreviewGateProps) {
+  const entitlement = await getEntitlementState(requiredPlan);
+  const unlocked = entitlement.hasPaidAccess;
 
   if (unlocked) {
     return <>{children}</>;
@@ -23,7 +24,7 @@ export function PreviewGate({ requiredPlan = "draft_pro", children }: PreviewGat
         This view shows the command center layout. Plans add live Sleeper sync,
         saved league context, full recommendations, and roster tracking during the draft.
       </p>
-      <PremiumButton href="/pricing">Compare plans</PremiumButton>
+      <PremiumButton href={entitlement.signedIn ? "/pricing" : "/account"}>{entitlement.signedIn ? "Compare plans" : "Sign in"}</PremiumButton>
     </div>
   );
 }

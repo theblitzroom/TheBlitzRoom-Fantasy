@@ -44,6 +44,7 @@ Accounts use Supabase Auth plus the tables in `supabase-schema.sql`.
 NEXT_PUBLIC_SUPABASE_URL=https://...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
+ADMIN_EMAILS=owner@example.com
 ```
 
 4. In Supabase Auth settings, add your site URL and redirect URL:
@@ -57,6 +58,7 @@ The live account routes are:
 
 - `/login` for sign in and account creation.
 - `/account` for signed-in subscription status, billing, and saved league foundations.
+- `/admin` for approved admin emails to preview paid tools without Stripe checkout.
 - `/auth/callback` for Supabase email confirmation links.
 
 ## Stripe Setup

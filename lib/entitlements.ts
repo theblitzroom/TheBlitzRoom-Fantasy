@@ -1,3 +1,4 @@
+import { isAdminEmail } from "@/lib/admin";
 import { hasSupabaseBrowserConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasPlanAccess, type SubscriptionPlan } from "@/lib/subscription";
@@ -47,11 +48,12 @@ export type EntitlementState = {
   plan: SubscriptionPlan;
   status: "preview" | "active";
   hasPaidAccess: boolean;
+  isAdmin: boolean;
 };
 
 export async function getEntitlementState(requiredPlan: SubscriptionPlan = "draft_pro"): Promise<EntitlementState> {
   if (!hasSupabaseBrowserConfig()) {
-    return { signedIn: false, plan: "preview", status: "preview", hasPaidAccess: false };
+    return { signedIn: false, plan: "preview", status: "preview", hasPaidAccess: false, isAdmin: false };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -59,7 +61,17 @@ export async function getEntitlementState(requiredPlan: SubscriptionPlan = "draf
   const user = userResult.user;
 
   if (!user) {
-    return { signedIn: false, plan: "preview", status: "preview", hasPaidAccess: false };
+    return { signedIn: false, plan: "preview", status: "preview", hasPaidAccess: false, isAdmin: false };
+  }
+
+  if (isAdminEmail(user.email)) {
+    return {
+      signedIn: true,
+      plan: "dynasty_elite",
+      status: "active",
+      hasPaidAccess: true,
+      isAdmin: true
+    };
   }
 
   const [{ data: subscriptions }, { data: accessGrants }] = await Promise.all([
@@ -91,6 +103,7 @@ export async function getEntitlementState(requiredPlan: SubscriptionPlan = "draf
     signedIn: true,
     plan,
     status: plan === "preview" ? "preview" : "active",
-    hasPaidAccess: hasPlanAccess(plan, requiredPlan)
+    hasPaidAccess: hasPlanAccess(plan, requiredPlan),
+    isAdmin: false
   };
 }
