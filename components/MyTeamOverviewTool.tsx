@@ -38,6 +38,13 @@ import {
   subscribeStoredLeagueConnection,
   updateStoredLeagueSelection
 } from "@/lib/sleeper/leagueConnection";
+import {
+  deriveLeagueProfile,
+  estimateFantasyValue,
+  playerPosition as modelPlayerPosition,
+  positionCounts as modelPositionCounts,
+  positionTargets as modelPositionTargets
+} from "@/lib/fantasyModel";
 
 type MyTeamOverviewToolProps = {
   paidAccess: boolean;
@@ -182,42 +189,59 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
   const priority = selectedBuild?.priority ?? "Scan a league";
   const healthScore = Math.min(99, Math.max(45, Math.round((selectedPower?.score ?? 70) - (bench < 10 ? 6 : 0) + (upsideGap > 120 ? 4 : 0))));
   const dynastyValueByPosition = useMemo(() => {
-    const base = selectedPower?.score ?? 68;
-    const leagueType = formatLeagueType(activeLeague);
-    const scoring = formatScoring(activeLeague);
-    const superflexBoost = leagueType === "Superflex" ? 11 : 0;
-    const pprBoost = scoring === "PPR" ? 5 : scoring === "Half PPR" ? 3 : 0;
-    const winNowBoost = timeline === "Win-now" ? 7 : timeline === "Builder" ? -3 : 1;
-    const futureBoost = clamp(Math.round(upsideGap / 18), -4, 12);
+    const profile = deriveLeagueProfile(activeLeague, "dynasty");
+    const counts: Record<string, number> = modelPositionCounts(selectedRoster, playerDirectory);
+    const targets: Record<string, number> = modelPositionTargets(activeLeague);
+    const values = (selectedRoster?.players ?? []).reduce<Record<string, number>>((total, playerId) => {
+      const player = playerDirectory[playerId];
+      const position = modelPlayerPosition(player);
+      total[position] = (total[position] ?? 0) + estimateFantasyValue({
+        playerId,
+        player,
+        league: activeLeague,
+        mode: "dynasty",
+        role: selectedRoster?.starters?.includes(playerId) ? "Starter" : selectedRoster?.taxi?.includes(playerId) ? "Development" : "Bench"
+      });
+      return total;
+    }, { QB: 0, RB: 0, WR: 0, TE: 0 });
+
+    const scoreFor = (position: string) => {
+      const target = Math.max(targets[position] ?? 1, 1);
+      const count = counts[position] ?? 0;
+      const averageValue = (values[position] ?? 0) / Math.max(count, 1);
+      const depthFit = clamp((count / target) * 32, 0, 32);
+      const valueFit = clamp(averageValue / 105, 12, 62);
+      return clamp(Math.round(depthFit + valueFit), 28, 99);
+    };
 
     return [
       {
         position: "QB",
-        score: clamp(Math.round(base + superflexBoost - (bench < 10 ? 3 : 0)), 42, 99),
-        note: leagueType === "Superflex" ? "Premium market in superflex builds." : "Stable but less scarce in 1QB."
+        score: scoreFor("QB"),
+        note: profile.isSuperflex ? "Premium market in superflex builds." : "Stable, but less scarce in 1QB."
       },
       {
         position: "RB",
-        score: clamp(Math.round(base - 8 + winNowBoost - Math.max(0, bench < 10 ? 4 : 0)), 38, 96),
+        score: scoreFor("RB"),
         note: timeline === "Win-now" ? "Production window matters now." : "Treat short shelf-life backs carefully."
       },
       {
         position: "WR",
-        score: clamp(Math.round(base + pprBoost + futureBoost + 2), 45, 99),
-        note: scoring === "Standard" ? "Still a core asset class." : "Receivers gain insulation in reception scoring."
+        score: scoreFor("WR"),
+        note: profile.scoring === "standard" ? "Still a core asset class." : "Receivers gain insulation in reception scoring."
       },
       {
         position: "TE",
-        score: clamp(Math.round(base - 12 + (starterSlots.includes("TE") ? 5 : 0)), 34, 92),
-        note: "Only chase elite separation or discounted upside."
+        score: scoreFor("TE"),
+        note: profile.tePremium ? "TE premium adds real leverage to elite starters." : "Only chase elite separation or discounted upside."
       },
       {
         position: "Picks",
-        score: clamp(Math.round(56 + futureBoost * 2 + (timeline === "Builder" ? 12 : 0)), 32, 94),
+        score: clamp(Math.round(56 + clamp(Math.round(upsideGap / 18), -4, 12) * 2 + (timeline === "Builder" ? 12 : 0)), 32, 94),
         note: upsideGap > 120 ? "Future value should be protected." : "Use picks for targeted upgrades."
       }
     ];
-  }, [activeLeague, bench, selectedPower?.score, starterSlots, timeline, upsideGap]);
+  }, [activeLeague, playerDirectory, selectedRoster, timeline, upsideGap]);
   const rosterAgeProfile = useMemo(() => {
     const futurePressure = clamp(Math.round(upsideGap / 12), -6, 16);
     const young = clamp(26 + (timeline === "Builder" ? 20 : 0) + futurePressure, 14, 64);

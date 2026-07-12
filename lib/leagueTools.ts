@@ -1,3 +1,9 @@
+import {
+  deriveLeagueProfile,
+  formatLeagueScoringLabel,
+  formatLeagueTypeLabel
+} from "@/lib/fantasyModel";
+
 export type LeagueToolUser = {
   user_id?: string;
   username?: string;
@@ -56,10 +62,14 @@ export type LeagueToolPlayer = {
   first_name?: string;
   last_name?: string;
   position?: string;
-  team?: string;
+  team?: string | null;
   age?: number;
   years_exp?: number;
   fantasy_positions?: string[];
+  active?: boolean;
+  injury_status?: string | null;
+  search_rank?: number | string | null;
+  status?: string | null;
 };
 
 export type LeagueToolSummary = {
@@ -365,24 +375,11 @@ export function decimalPoints(base = 0, decimal = 0) {
 }
 
 export function formatLeagueType(league?: LeagueToolLeague | null) {
-  const positions = league?.roster_positions ?? [];
-  const hasSuperflex = positions.some((position) => ["SUPER_FLEX", "SUPERFLEX", "SF"].includes(position));
-  const hasTwoQb = positions.filter((position) => position === "QB").length > 1;
-  return hasSuperflex || hasTwoQb ? "Superflex" : "1QB";
+  return formatLeagueTypeLabel(league);
 }
 
 export function formatScoring(league?: LeagueToolLeague | null) {
-  const receptionValue = league?.scoring_settings?.rec;
-
-  if (receptionValue === 1) {
-    return "PPR";
-  }
-
-  if (receptionValue === 0.5) {
-    return "Half PPR";
-  }
-
-  return "Standard";
+  return formatLeagueScoringLabel(league);
 }
 
 export function managerName(users: LeagueToolManager[], roster: LeagueToolRoster) {
@@ -407,7 +404,10 @@ export function buildPowerRows(summary: LeagueToolSummary | null): PowerRankingR
       const wins = roster.settings?.wins ?? 0;
       const losses = roster.settings?.losses ?? 0;
       const depthCount = roster.players?.length ?? 0;
-      const score = Math.round(42 + (fpts / maxPoints) * 34 + (ppts / maxPotential) * 16 + Math.min(depthCount, 28) * 0.28 + wins * 0.9);
+      const profile = deriveLeagueProfile(summary.league);
+      const starterPressure = Math.min(roster.starters?.length ?? 0, profile.starters.length || 10) * (profile.isSuperflex ? 0.65 : 0.48);
+      const formatDepth = profile.isSuperflex ? Math.min(depthCount, 30) * 0.34 : Math.min(depthCount, 28) * 0.28;
+      const score = Math.round(40 + (fpts / maxPoints) * 32 + (ppts / maxPotential) * 17 + formatDepth + starterPressure + wins * 0.9);
       const upsideGap = Math.round(ppts - fpts);
       return { roster, score, fpts, ppts, wins, losses, depthCount, upsideGap };
     })

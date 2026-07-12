@@ -12,6 +12,7 @@ A dynamic Next.js foundation for the premium fantasy football draft tool. The st
 - Stripe checkout, customer portal, and webhook routes.
 - Supabase browser/server client helpers.
 - Login, account creation, auth callback, and signed-in account hub pages.
+- Shared format-aware fantasy model for redraft, dynasty, superflex dynasty, Half PPR, Full PPR, and TE premium logic. See `RANKING_METHODOLOGY.md`.
 
 ## Run Locally
 
@@ -101,6 +102,10 @@ Sleeper sync uses only official read-only endpoints:
 - `GET https://api.sleeper.app/v1/user/<username>`
 - `GET https://api.sleeper.app/v1/draft/<draft_id>`
 - `GET https://api.sleeper.app/v1/draft/<draft_id>/picks`
+- `GET https://api.sleeper.app/v1/league/<league_id>`
+- `GET https://api.sleeper.app/v1/league/<league_id>/rosters`
+- `GET https://api.sleeper.app/v1/league/<league_id>/users`
+- `GET https://api.sleeper.app/v1/league/<league_id>/matchups/<week>`
 
 The app does not auto-draft and does not use private APIs.
 

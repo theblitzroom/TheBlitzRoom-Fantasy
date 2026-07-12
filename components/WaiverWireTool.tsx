@@ -35,6 +35,11 @@ import {
   subscribeStoredLeagueConnection,
   updateStoredLeagueSelection
 } from "@/lib/sleeper/leagueConnection";
+import {
+  playerPosition,
+  positionCounts as modelPositionCounts,
+  positionTargets as modelPositionTargets
+} from "@/lib/fantasyModel";
 
 type WaiverWireToolProps = {
   paidAccess: boolean;
@@ -72,39 +77,12 @@ function playerName(playerId: string, player?: LeagueToolPlayer) {
   return player?.full_name || [player?.first_name, player?.last_name].filter(Boolean).join(" ") || playerId;
 }
 
-function playerPosition(player?: LeagueToolPlayer) {
-  return player?.position || player?.fantasy_positions?.[0] || "FLEX";
-}
-
 function countRosterPositions(roster: LeagueToolRoster | null, directory: Record<string, LeagueToolPlayer>) {
-  const counts: Record<string, number> = { QB: 0, RB: 0, WR: 0, TE: 0 };
-
-  for (const playerId of roster?.players ?? []) {
-    const position = playerPosition(directory[playerId]);
-    if (position in counts) {
-      counts[position] += 1;
-    }
-  }
-
-  return counts;
+  return modelPositionCounts(roster, directory);
 }
 
 function targetCounts(league?: LeagueToolLeague | null) {
-  const positions = league?.roster_positions ?? [];
-  const superflex = positions.some((position) => ["SUPER_FLEX", "SUPERFLEX", "SF"].includes(position));
-  const starterCounts = positions.reduce<Record<string, number>>((total, position) => {
-    if (position in total) {
-      total[position] += 1;
-    }
-    return total;
-  }, { QB: 0, RB: 0, WR: 0, TE: 0 });
-
-  return {
-    QB: superflex ? 3 : Math.max(2, starterCounts.QB + 1),
-    RB: Math.max(5, starterCounts.RB + 3),
-    WR: Math.max(7, starterCounts.WR + 4),
-    TE: Math.max(2, starterCounts.TE + 1)
-  };
+  return modelPositionTargets(league);
 }
 
 function needBoost(position: string, counts: Record<string, number>, targets: Record<string, number>) {

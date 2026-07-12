@@ -19,6 +19,11 @@ import {
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
 import {
+  deriveLeagueProfile,
+  formatLeagueScoringLabel,
+  formatLeagueTypeLabel
+} from "@/lib/fantasyModel";
+import {
   getStoredLeagueConnection,
   saveStoredLeagueConnection,
   subscribeStoredLeagueConnection,
@@ -185,24 +190,11 @@ function decimalPoints(base = 0, decimal = 0) {
 }
 
 function formatLeagueType(league?: SleeperLeague | null) {
-  const positions = league?.roster_positions ?? [];
-  const hasSuperflex = positions.some((position) => ["SUPER_FLEX", "SUPERFLEX", "SF"].includes(position));
-  const hasTwoQb = positions.filter((position) => position === "QB").length > 1;
-  return hasSuperflex || hasTwoQb ? "Superflex" : "1QB";
+  return formatLeagueTypeLabel(league);
 }
 
 function formatScoring(league?: SleeperLeague | null) {
-  const receptionValue = league?.scoring_settings?.rec;
-
-  if (receptionValue === 1) {
-    return "PPR";
-  }
-
-  if (receptionValue === 0.5) {
-    return "Half PPR";
-  }
-
-  return "Standard";
+  return formatLeagueScoringLabel(league);
 }
 
 function formatLineup(league?: SleeperLeague | null) {
@@ -225,6 +217,7 @@ function buildPowerRows(summary: LeagueSummary | null): PowerRow[] {
   const potential = summary.rosters.map((roster) => decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal));
   const maxPoints = Math.max(...points, 1);
   const maxPotential = Math.max(...potential, 1);
+  const profile = deriveLeagueProfile(summary.league);
 
   return summary.rosters
     .map((roster) => {
@@ -234,11 +227,14 @@ function buildPowerRows(summary: LeagueSummary | null): PowerRow[] {
       const losses = roster.settings?.losses ?? 0;
       const depthCount = roster.players?.length ?? 0;
       const starterCount = roster.starters?.length ?? 0;
+      const formatDepth = profile.isSuperflex ? Math.min(depthCount, 30) * 0.35 : Math.min(depthCount, 28) * 0.28;
+      const starterPressure = Math.min(starterCount, profile.starters.length || 10) * (profile.isSuperflex ? 0.66 : 0.5);
       const score = Math.round(
-        42 +
-        (fpts / maxPoints) * 34 +
-        (ppts / maxPotential) * 16 +
-        Math.min(depthCount, 28) * 0.28 +
+        40 +
+        (fpts / maxPoints) * 32 +
+        (ppts / maxPotential) * 17 +
+        formatDepth +
+        starterPressure +
         wins * 0.9
       );
       const upsideGap = Math.round(ppts - fpts);
@@ -328,6 +324,7 @@ function buildValueStandings(summary: LeagueSummary | null, kind: "dynasty" | "r
   }
 
   const selectedPosition = position === "All" ? "All" : position;
+  const profile = deriveLeagueProfile(summary.league, kind === "redraft" ? "redraft" : "dynasty");
 
   return summary.rosters
     .map((roster) => {
@@ -338,9 +335,15 @@ function buildValueStandings(summary: LeagueSummary | null, kind: "dynasty" | "r
       const baseValue = kind === "dynasty"
         ? potential * 42 + Math.max(potential - points, 0) * 31 + depth * 540
         : points * 47 + wins * 760 + Math.min(depth, 24) * 260;
+      const formatModifier =
+        selectedPosition === "QB" && profile.isSuperflex ? 1.28 :
+        selectedPosition === "TE" && profile.tePremium ? 1.2 :
+        selectedPosition === "WR" && profile.scoring !== "standard" ? 1.08 :
+        selectedPosition === "RB" && kind === "redraft" ? 1.07 :
+        1;
       const value = selectedPosition === "All"
-        ? baseValue
-        : baseValue * positionWeight(selectedPosition, roster.roster_id, kind);
+        ? baseValue * (profile.isSuperflex ? 1.04 : 1)
+        : baseValue * positionWeight(selectedPosition, roster.roster_id, kind) * formatModifier;
 
       return {
         rank: 0,

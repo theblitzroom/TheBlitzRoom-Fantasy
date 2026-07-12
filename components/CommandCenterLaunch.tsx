@@ -25,6 +25,7 @@ import {
   saveStoredLeagueConnection,
   subscribeStoredLeagueConnection
 } from "@/lib/sleeper/leagueConnection";
+import { formatLeagueScoringLabel, formatLeagueTypeLabel } from "@/lib/fantasyModel";
 
 type SleeperUser = {
   user_id?: string;
@@ -164,29 +165,11 @@ const demoLeagues: SleeperLeague[] = [
 ];
 
 function formatLeagueType(league?: SleeperLeague | null) {
-  const positions = league?.roster_positions ?? [];
-  const hasSuperflex = positions.some((position) => ["SUPER_FLEX", "SUPERFLEX", "SF"].includes(position));
-  const hasTwoQb = positions.filter((position) => position === "QB").length > 1;
-
-  if (hasSuperflex || hasTwoQb) {
-    return "Superflex";
-  }
-
-  return "1QB";
+  return formatLeagueTypeLabel(league);
 }
 
 function formatScoring(league?: SleeperLeague | null) {
-  const receptionValue = league?.scoring_settings?.rec;
-
-  if (receptionValue === 1) {
-    return "PPR";
-  }
-
-  if (receptionValue === 0.5) {
-    return "Half PPR";
-  }
-
-  return "Standard";
+  return formatLeagueScoringLabel(league);
 }
 
 function formatLineup(league?: SleeperLeague | null) {

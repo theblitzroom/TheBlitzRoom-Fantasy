@@ -6,39 +6,13 @@ import {
   getSleeperNflPlayers,
   type SleeperPlayer
 } from "@/lib/sleeper/client";
+import { playerDisplayName, scoreWaiverCandidate } from "@/lib/fantasyModel";
 
 const fantasyPositions = new Set(["QB", "RB", "WR", "TE"]);
 
 function normalizedRank(player: SleeperPlayer) {
   const rank = Number(player.search_rank);
   return Number.isFinite(rank) && rank > 0 ? rank : 9999;
-}
-
-function playerName(player: SleeperPlayer) {
-  return player.full_name || [player.first_name, player.last_name].filter(Boolean).join(" ") || player.player_id;
-}
-
-function scoreWaiverCandidate(player: SleeperPlayer, leagueType: "superflex" | "oneqb") {
-  const rank = normalizedRank(player);
-  const position = player.position ?? "";
-  const age = player.age ?? 28;
-  const youthBonus = position === "RB" ? Math.max(0, 28 - age) * 1.4 : Math.max(0, 31 - age) * 1.1;
-  const positionBonus =
-    position === "QB" && leagueType === "superflex" ? 18 :
-    position === "RB" ? 11 :
-    position === "WR" ? 9 :
-    position === "TE" ? 7 :
-    0;
-  const healthPenalty = player.injury_status ? 8 : 0;
-
-  return Math.round(Math.max(1, 100 - rank / 18 + youthBonus + positionBonus - healthPenalty));
-}
-
-function leagueType(rosterPositions?: string[]) {
-  const positions = rosterPositions ?? [];
-  return positions.some((position) => ["SUPER_FLEX", "SUPERFLEX", "SF"].includes(position)) || positions.filter((position) => position === "QB").length > 1
-    ? "superflex"
-    : "oneqb";
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ leagueId: string }> }) {
@@ -57,7 +31,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ lea
     ]);
 
     const rosteredIds = new Set(rosters.flatMap((roster) => roster.players ?? []));
-    const type = leagueType(league.roster_positions);
     const candidates = Object.values(playerDirectory)
       .filter((player) => {
         const position = player.position ?? "";
@@ -73,13 +46,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ lea
       })
       .map((player) => ({
         player_id: player.player_id,
-        name: playerName(player),
+        name: playerDisplayName(player.player_id, player),
         position: player.position ?? "FLEX",
         team: player.team ?? "FA",
         age: player.age ?? null,
         injury_status: player.injury_status ?? null,
         search_rank: normalizedRank(player),
-        score: scoreWaiverCandidate(player, type)
+        score: scoreWaiverCandidate(player.player_id, player, league)
       }))
       .sort((a, b) => b.score - a.score || a.search_rank - b.search_rank)
       .slice(0, 90);

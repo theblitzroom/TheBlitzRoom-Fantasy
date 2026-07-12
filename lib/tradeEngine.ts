@@ -1,12 +1,14 @@
+import { managerName, type LeagueToolLeague, type LeagueToolPlayer, type LeagueToolRoster, type LeagueToolSummary, type LeagueToolUser } from "@/lib/leagueTools";
 import {
-  formatLeagueType,
-  managerName,
-  type LeagueToolLeague,
-  type LeagueToolPlayer,
-  type LeagueToolRoster,
-  type LeagueToolSummary,
-  type LeagueToolUser
-} from "@/lib/leagueTools";
+  estimateFantasyValue,
+  formatLeagueTypeLabel,
+  playerDisplayName,
+  playerPosition,
+  positionCounts,
+  positionTargets
+} from "@/lib/fantasyModel";
+
+export { playerDisplayName, playerPosition, positionCounts, positionTargets };
 
 export type TradeAssetType = "player" | "pick";
 
@@ -38,72 +40,19 @@ export type TradeCalculation = {
   adjustment: number;
 };
 
-const positionBase = {
-  QB: { superflex: 4100, oneQb: 2500 },
-  RB: { superflex: 3150, oneQb: 3300 },
-  WR: { superflex: 3850, oneQb: 3950 },
-  TE: { superflex: 2450, oneQb: 2600 }
-};
-
-const playerValueOverrides: Record<string, number> = {
-  "Josh Allen": 10200,
-  "Jayden Daniels": 9800,
-  "Joe Burrow": 9300,
-  "Justin Herbert": 8800,
-  "Anthony Richardson": 7900,
-  "Drake Maye": 7600,
-  "J.J. McCarthy": 6900,
-  "Michael Penix Jr.": 6100,
-  "Bijan Robinson": 8800,
-  "Jahmyr Gibbs": 8500,
-  "Breece Hall": 7900,
-  "De'Von Achane": 7200,
-  "Christian McCaffrey": 6500,
-  "Saquon Barkley": 6200,
-  "Kyren Williams": 6100,
-  "Jonathon Brooks": 5600,
-  "CeeDee Lamb": 9400,
-  "Ja'Marr Chase": 9600,
-  "Amon-Ra St. Brown": 9200,
-  "Malik Nabers": 9000,
-  "Puka Nacua": 8600,
-  "Drake London": 8100,
-  "Brian Thomas Jr.": 7600,
-  "Rome Odunze": 7400,
-  "A.J. Brown": 7200,
-  "Brock Bowers": 7900,
-  "Trey McBride": 7000,
-  "Sam LaPorta": 6600,
-  "Dalton Kincaid": 5600,
-  "Kyle Pitts": 5200
-};
-
 export const pickAssets: TradeAsset[] = [
-  { id: "2026-early-1st", type: "pick", name: "2026 Early 1st", position: "PICK", value: 5600, note: "Premium rookie optionality" },
-  { id: "2026-mid-1st", type: "pick", name: "2026 Mid 1st", position: "PICK", value: 4450, note: "Core rookie value" },
-  { id: "2026-late-1st", type: "pick", name: "2026 Late 1st", position: "PICK", value: 3400, note: "Back-half first value" },
-  { id: "2026-early-2nd", type: "pick", name: "2026 Early 2nd", position: "PICK", value: 2200, note: "Upside tier access" },
+  { id: "2026-early-1st", type: "pick", name: "2026 Early 1st", position: "PICK", value: 5750, note: "Premium rookie optionality" },
+  { id: "2026-mid-1st", type: "pick", name: "2026 Mid 1st", position: "PICK", value: 4550, note: "Core rookie value" },
+  { id: "2026-late-1st", type: "pick", name: "2026 Late 1st", position: "PICK", value: 3450, note: "Back-half first value" },
+  { id: "2026-early-2nd", type: "pick", name: "2026 Early 2nd", position: "PICK", value: 2250, note: "Upside tier access" },
   { id: "2026-mid-2nd", type: "pick", name: "2026 Mid 2nd", position: "PICK", value: 1650, note: "Depth rookie value" },
   { id: "2026-3rd", type: "pick", name: "2026 3rd", position: "PICK", value: 750, note: "Throw-in value" },
-  { id: "2027-1st", type: "pick", name: "2027 1st", position: "PICK", value: 3800, note: "Future first discount" },
-  { id: "2027-2nd", type: "pick", name: "2027 2nd", position: "PICK", value: 1400, note: "Future depth pick" }
+  { id: "2027-1st", type: "pick", name: "2027 1st", position: "PICK", value: 3900, note: "Future first discount" },
+  { id: "2027-2nd", type: "pick", name: "2027 2nd", position: "PICK", value: 1450, note: "Future depth pick" }
 ];
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-export function playerDisplayName(playerId: string, player?: LeagueToolPlayer) {
-  return player?.full_name || [player?.first_name, player?.last_name].filter(Boolean).join(" ") || playerId
-    .replace(/^demo-/, "")
-    .split("-")
-    .map((part) => part ? part[0].toUpperCase() + part.slice(1) : part)
-    .join(" ");
-}
-
-export function playerPosition(player?: LeagueToolPlayer) {
-  const position = player?.position || player?.fantasy_positions?.[0] || "FLEX";
-  return ["QB", "RB", "WR", "TE"].includes(position) ? position : "FLEX";
 }
 
 function rosterRole(playerId: string, roster?: LeagueToolRoster) {
@@ -123,32 +72,13 @@ function rosterRole(playerId: string, roster?: LeagueToolRoster) {
 }
 
 export function estimatePlayerValue(playerId: string, player: LeagueToolPlayer | undefined, league?: LeagueToolLeague | null, role = "Bench") {
-  const name = playerDisplayName(playerId, player);
-  const override = playerValueOverrides[name];
-
-  if (override) {
-    return override + (role === "Starter" ? 250 : 0);
-  }
-
-  const position = playerPosition(player);
-  const superflex = formatLeagueType(league) === "Superflex";
-  const base = position === "QB"
-    ? positionBase.QB[superflex ? "superflex" : "oneQb"]
-    : position === "RB"
-      ? positionBase.RB[superflex ? "superflex" : "oneQb"]
-      : position === "WR"
-        ? positionBase.WR[superflex ? "superflex" : "oneQb"]
-        : position === "TE"
-          ? positionBase.TE[superflex ? "superflex" : "oneQb"]
-          : 1300;
-  const age = player?.age ?? (role === "Development" ? 23 : 27);
-  const agePrime = position === "RB" ? 24 : position === "WR" ? 25 : position === "QB" ? 28 : 26;
-  const ageAdjustment = clamp((agePrime - age) * (position === "RB" ? 260 : 190), -1750, 1550);
-  const experience = player?.years_exp ?? 3;
-  const roleAdjustment = role === "Starter" ? 620 : role === "Development" ? 360 : role === "Reserve" ? -360 : -120;
-  const experienceAdjustment = experience <= 2 ? 380 : experience >= 8 ? -480 : 0;
-
-  return Math.round(clamp(base + ageAdjustment + roleAdjustment + experienceAdjustment, 250, 9800));
+  return estimateFantasyValue({
+    playerId,
+    player,
+    league,
+    mode: "dynasty",
+    role: role === "Starter" || role === "Development" || role === "Reserve" ? role : "Bench"
+  });
 }
 
 export function buildRosterTradeAssets(
@@ -172,7 +102,7 @@ export function buildRosterTradeAssets(
         name: playerDisplayName(playerId, player),
         position: playerPosition(player),
         value,
-        note: `${role} value in ${formatLeagueType(summary.league)}`,
+        note: `${role} value in ${formatLeagueTypeLabel(summary.league)}`,
         team: player?.team || "-",
         age: player?.age,
         rosterId: roster.roster_id,
@@ -215,35 +145,4 @@ export function findUserRoster(summary: LeagueToolSummary | null, user?: LeagueT
   }
 
   return summary.rosters.find((roster) => roster.owner_id && roster.owner_id === user?.user_id) ?? summary.rosters[0] ?? null;
-}
-
-export function positionCounts(roster: LeagueToolRoster | null, playerDirectory: Record<string, LeagueToolPlayer>) {
-  const counts: Record<string, number> = { QB: 0, RB: 0, WR: 0, TE: 0 };
-
-  for (const playerId of roster?.players ?? []) {
-    const position = playerPosition(playerDirectory[playerId]);
-    if (position in counts) {
-      counts[position] += 1;
-    }
-  }
-
-  return counts;
-}
-
-export function positionTargets(league?: LeagueToolLeague | null) {
-  const positions = league?.roster_positions ?? [];
-  const superflex = formatLeagueType(league) === "Superflex";
-  const starters = positions.reduce<Record<string, number>>((total, position) => {
-    if (position in total) {
-      total[position] += 1;
-    }
-    return total;
-  }, { QB: 0, RB: 0, WR: 0, TE: 0 });
-
-  return {
-    QB: superflex ? 3 : Math.max(2, starters.QB + 1),
-    RB: Math.max(5, starters.RB + 3),
-    WR: Math.max(7, starters.WR + 4),
-    TE: Math.max(2, starters.TE + 1)
-  };
 }
