@@ -41,6 +41,33 @@ export type SleeperLeague = {
   settings?: Record<string, number>;
 };
 
+export type SleeperLeagueUser = {
+  user_id: string;
+  display_name?: string;
+  avatar?: string | null;
+  metadata?: {
+    team_name?: string;
+  };
+};
+
+export type SleeperRoster = {
+  roster_id: number;
+  owner_id?: string;
+  players?: string[];
+  starters?: string[];
+  reserve?: string[];
+  taxi?: string[];
+  settings?: {
+    wins?: number;
+    losses?: number;
+    ties?: number;
+    fpts?: number;
+    fpts_decimal?: number;
+    ppts?: number;
+    ppts_decimal?: number;
+  };
+};
+
 const SLEEPER_BASE_URL = "https://api.sleeper.app/v1";
 
 async function sleeperFetch<T>(path: string): Promise<T> {
@@ -70,4 +97,20 @@ export function getSleeperDraft(draftId: string) {
 
 export function getSleeperDraftPicks(draftId: string) {
   return sleeperFetch<SleeperPick[]>(`/draft/${encodeURIComponent(draftId)}/picks`);
+}
+
+export function getSleeperLeague(leagueId: string) {
+  return sleeperFetch<SleeperLeague>(`/league/${encodeURIComponent(leagueId)}`);
+}
+
+export function getSleeperLeagueUsers(leagueId: string) {
+  return sleeperFetch<SleeperLeagueUser[]>(`/league/${encodeURIComponent(leagueId)}/users`);
+}
+
+export function getSleeperLeagueRosters(leagueId: string) {
+  return sleeperFetch<SleeperRoster[]>(`/league/${encodeURIComponent(leagueId)}/rosters`);
+}
+
+export function getSleeperLeagueDrafts(leagueId: string) {
+  return sleeperFetch<SleeperDraft[]>(`/league/${encodeURIComponent(leagueId)}/drafts`);
 }
