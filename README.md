@@ -52,7 +52,6 @@ ADMIN_EMAILS=owner@example.com
 ```text
 https://theblitzroom.com
 https://theblitzroom.com/auth/callback
-https://theblitzroom.com/reset-password
 ```
 
 The live account routes are:
