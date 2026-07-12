@@ -17,6 +17,7 @@ import {
   Trophy,
   Users
 } from "lucide-react";
+import { ProductCommandNav } from "@/components/ProductCommandNav";
 
 type SleeperUser = {
   user_id?: string;
@@ -98,6 +99,15 @@ type PowerRow = {
   depth: string;
   record: string;
   signal: string;
+};
+
+type ValueStandingRow = {
+  rank: number;
+  team: string;
+  manager: string;
+  value: number;
+  position: string;
+  rosterId: number;
 };
 
 const demoLeagues: SleeperLeague[] = [
@@ -289,6 +299,103 @@ function buildLeagueSignals(summary: LeagueSummary | null, rows: PowerRow[]) {
   ];
 }
 
+const dynastyPositions = ["All", "QB", "RB", "WR", "TE", "Picks"];
+const redraftPositions = ["All", "QB", "RB", "WR", "TE"];
+
+function positionWeight(position: string, rosterId: number, kind: "dynasty" | "redraft") {
+  const seed = (rosterId * 17 + position.charCodeAt(0) + position.length * 7) % 13;
+  const base = {
+    All: 1,
+    QB: 0.18,
+    RB: kind === "redraft" ? 0.29 : 0.2,
+    WR: kind === "redraft" ? 0.31 : 0.27,
+    TE: 0.11,
+    Picks: kind === "dynasty" ? 0.24 : 0
+  }[position] ?? 0.16;
+
+  return Math.max(0.06, base + (seed - 6) * 0.012);
+}
+
+function buildValueStandings(summary: LeagueSummary | null, kind: "dynasty" | "redraft", position: string): ValueStandingRow[] {
+  if (!summary) {
+    return [];
+  }
+
+  const selectedPosition = position === "All" ? "All" : position;
+
+  return summary.rosters
+    .map((roster) => {
+      const points = decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal);
+      const potential = decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal);
+      const depth = roster.players?.length ?? 0;
+      const wins = roster.settings?.wins ?? 0;
+      const baseValue = kind === "dynasty"
+        ? potential * 42 + Math.max(potential - points, 0) * 31 + depth * 540
+        : points * 47 + wins * 760 + Math.min(depth, 24) * 260;
+      const value = selectedPosition === "All"
+        ? baseValue
+        : baseValue * positionWeight(selectedPosition, roster.roster_id, kind);
+
+      return {
+        rank: 0,
+        team: managerName(summary.users, roster),
+        manager: `Roster ${roster.roster_id}`,
+        value,
+        position: selectedPosition,
+        rosterId: roster.roster_id
+      };
+    })
+    .sort((a, b) => b.value - a.value)
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+}
+
+function buildEconomyRows(summary: LeagueSummary | null) {
+  if (!summary) {
+    return [];
+  }
+
+  const rows = summary.rosters.map((roster) => {
+    const points = decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal);
+    const potential = decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal);
+    const depth = roster.players?.length ?? 0;
+    const pickLeverage = Math.max(potential - points, 0) + Math.max(depth - 20, 0) * 18;
+    return { roster, points, potential, depth, pickLeverage };
+  });
+  const avgPoints = rows.reduce((total, row) => total + row.points, 0) / Math.max(rows.length, 1);
+  const avgPickLeverage = rows.reduce((total, row) => total + row.pickLeverage, 0) / Math.max(rows.length, 1);
+
+  return rows
+    .map((row) => {
+      const current = row.points / Math.max(avgPoints, 1);
+      const future = row.pickLeverage / Math.max(avgPickLeverage, 1);
+      const quadrant = current >= 1 && future >= 1
+        ? "Dynasty apex"
+        : current >= 1
+          ? "Win-now pressure"
+          : future >= 1
+            ? "Rebuild with ammo"
+            : "Value trap";
+
+      return {
+        team: managerName(summary.users, row.roster),
+        current,
+        future,
+        quadrant,
+        x: Math.min(Math.max(18 + current * 34, 8), 90),
+        y: Math.min(Math.max(86 - future * 34, 10), 88)
+      };
+    })
+    .sort((a, b) => (b.current + b.future) - (a.current + a.future));
+}
+
+function formatValue(value: number) {
+  if (value >= 1000) {
+    return `${Math.round(value / 1000)}k`;
+  }
+
+  return String(Math.round(value));
+}
+
 function TrendBadge({ trend }: { trend: string }) {
   const positive = trend.startsWith("+");
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
@@ -305,6 +412,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const liveAccess = signedIn || paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
+  const [dynastyPosition, setDynastyPosition] = useState("All");
+  const [redraftPosition, setRedraftPosition] = useState("All");
   const [scanStatus, setScanStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
   const [summaryStatus, setSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
   const [error, setError] = useState("");
@@ -321,6 +430,9 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const powerRows = useMemo(() => buildPowerRows(activeSummary), [activeSummary]);
   const settings = useMemo(() => buildSettings(activeSummary), [activeSummary]);
   const leagueSignals = useMemo(() => buildLeagueSignals(activeSummary, powerRows), [activeSummary, powerRows]);
+  const dynastyValueRows = useMemo(() => buildValueStandings(activeSummary, "dynasty", dynastyPosition), [activeSummary, dynastyPosition]);
+  const redraftValueRows = useMemo(() => buildValueStandings(activeSummary, "redraft", redraftPosition), [activeSummary, redraftPosition]);
+  const economyRows = useMemo(() => buildEconomyRows(activeSummary), [activeSummary]);
   const leagueStats = [
     { label: "Teams", value: String(activeLeague?.total_rosters ?? "-"), detail: formatLeagueType(activeLeague) },
     { label: "Scoring", value: formatScoring(activeLeague), detail: "Sleeper settings" },
@@ -428,6 +540,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
 
   return (
     <div className="league-hub">
+      <ProductCommandNav />
       <section className="league-command-panel" aria-label="League command overview">
         <div className="league-command-copy">
           <span className="badge badge-premium">
@@ -611,6 +724,95 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             </div>
           </article>
         </aside>
+      </section>
+
+      <section className="league-value-board-grid" aria-label="League value boards">
+        <article className="league-value-board">
+          <div className="league-card-header compact">
+            <div>
+              <span className="eyebrow">Dynasty Value by Position</span>
+              <h2>Long-window roster leverage</h2>
+            </div>
+          </div>
+          <div className="value-filter-row" aria-label="Dynasty position filters">
+            {dynastyPositions.map((position) => (
+              <button className={dynastyPosition === position ? "active" : ""} key={position} onClick={() => setDynastyPosition(position)} type="button">
+                {position}
+              </button>
+            ))}
+          </div>
+          <div className="league-value-list">
+            {dynastyValueRows.map((row) => (
+              <div className="league-value-row" key={`dynasty-${row.rosterId}`}>
+                <span>#{row.rank}</span>
+                <button type="button">{row.team}</button>
+                <strong>{formatValue(row.value)}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="league-value-board">
+          <div className="league-card-header compact">
+            <div>
+              <span className="eyebrow">Redraft Value by Position</span>
+              <h2>Current scoring power</h2>
+            </div>
+          </div>
+          <div className="value-filter-row" aria-label="Redraft position filters">
+            {redraftPositions.map((position) => (
+              <button className={redraftPosition === position ? "active" : ""} key={position} onClick={() => setRedraftPosition(position)} type="button">
+                {position}
+              </button>
+            ))}
+          </div>
+          <div className="league-value-list">
+            {redraftValueRows.map((row) => (
+              <div className="league-value-row" key={`redraft-${row.rosterId}`}>
+                <span>#{row.rank}</span>
+                <button type="button">{row.team}</button>
+                <strong>{formatValue(row.value)}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="league-economy-panel" aria-label="League economy">
+        <div className="league-card-header">
+          <div>
+            <span className="eyebrow">League Economy</span>
+            <h2>Who has points, who has future leverage, and who is stuck</h2>
+          </div>
+          <span className="league-filter-pill">Normalized to room average</span>
+        </div>
+        <div className="economy-map" aria-label="Current value and future leverage chart">
+          <span className="economy-axis top">Future leverage</span>
+          <span className="economy-axis right">Current points</span>
+          <span className="economy-quadrant q1">Dynasty apex</span>
+          <span className="economy-quadrant q2">Rebuild with ammo</span>
+          <span className="economy-quadrant q3">Value trap</span>
+          <span className="economy-quadrant q4">Win-now pressure</span>
+          {economyRows.map((row) => (
+            <span
+              className="economy-dot"
+              key={row.team}
+              style={{ left: `${row.x}%`, top: `${row.y}%` }}
+              title={`${row.team}: ${row.quadrant}`}
+            >
+              {row.team.slice(0, 2).toUpperCase()}
+            </span>
+          ))}
+        </div>
+        <div className="economy-list">
+          {economyRows.slice(0, 4).map((row) => (
+            <article key={row.team}>
+              <strong>{row.team}</strong>
+              <span>{row.quadrant}</span>
+              <small>{row.current.toFixed(2)}x current - {row.future.toFixed(2)}x future</small>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="league-card-grid" aria-label="Team callouts">

@@ -5,7 +5,6 @@ import { FormEvent, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
-  ChevronDown,
   CircleAlert,
   ClipboardList,
   Gauge,
@@ -17,6 +16,7 @@ import {
   Trophy,
   Users
 } from "lucide-react";
+import { ProductCommandNav } from "@/components/ProductCommandNav";
 
 type SleeperUser = {
   user_id?: string;
@@ -45,15 +45,6 @@ type LeagueLookupResponse = {
 type CommandCenterLaunchProps = {
   signedIn: boolean;
 };
-
-const commandNav = [
-  { label: "Command Center", href: "/command-center" },
-  { label: "Team Hub", href: "/team-hub/my-team" },
-  { label: "League Hub", href: "/league-hub" },
-  { label: "Trade Room", href: "/trade-value" },
-  { label: "Player Research", href: "/power-rankings" },
-  { label: "Draft Room", href: "/draft-room" }
-];
 
 const tickerItems = [
   "Superflex rooms are still overpricing low-ceiling QB2s",
@@ -266,14 +257,7 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
 
   return (
     <div className="command-center-launch">
-      <nav className="command-subnav" aria-label="Command center sections">
-        {commandNav.map((item) => (
-          <Link className={item.href === "/command-center" ? "active" : ""} href={item.href} key={item.href}>
-            {item.label}
-            {item.label !== "Command Center" ? <ChevronDown size={13} /> : null}
-          </Link>
-        ))}
-      </nav>
+      <ProductCommandNav />
 
       <div className="command-ticker" aria-label="Fantasy intelligence ticker">
         {tickerItems.map((item, index) => (

@@ -14,6 +14,7 @@ import {
   Trophy,
   Users
 } from "lucide-react";
+import { ProductCommandNav } from "@/components/ProductCommandNav";
 import {
   buildPowerRows,
   buildRosterRows,
@@ -59,6 +60,10 @@ function rosterPotential(roster?: LeagueToolRoster | null) {
   }
 
   return (roster.settings?.ppts ?? 0) + (roster.settings?.ppts_decimal ?? 0) / 100;
+}
+
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat("en", { maximumFractionDigits: 0 }).format(Math.round(value));
 }
 
 function getStarterSlots(league?: LeagueToolLeague | null) {
@@ -108,6 +113,22 @@ function rosterRole(playerId: string, roster?: LeagueToolRoster | null) {
 
 function roleClass(role: string) {
   return `roster-role-pill role-${role.toLowerCase()}`;
+}
+
+function strengthValues(roster?: LeagueToolRoster | null) {
+  const starterCount = roster?.starters?.length ?? 0;
+  const playerCount = roster?.players?.length ?? 0;
+  const benchCount = Math.max(playerCount - starterCount, 0);
+  const points = rosterPoints(roster);
+  const potential = rosterPotential(roster);
+  const upside = Math.max(potential - points, 0);
+
+  return {
+    redraftStarter: points * 18.4 + starterCount * 475,
+    redraftBench: benchCount * 430 + Math.max(points, 1) * 0.9,
+    dynastyStarter: potential * 18.8 + starterCount * 620 + upside * 7.5,
+    dynastyBench: benchCount * 680 + upside * 12.5
+  };
 }
 
 function sortIndex(values: string[], value: string) {
@@ -259,6 +280,61 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
         return a.name.localeCompare(b.name);
       });
   }, [playerDirectory, selectedRoster]);
+  const strengthProfile = useMemo(() => {
+    const rosterMetrics = (summary?.rosters ?? []).map((roster) => ({
+      roster,
+      values: strengthValues(roster)
+    }));
+
+    const rows = [
+      ["Redraft Starter Value", "redraftStarter"],
+      ["Redraft Bench Value", "redraftBench"],
+      ["Dynasty Starter Value", "dynastyStarter"],
+      ["Dynasty Bench Value", "dynastyBench"]
+    ] as const;
+
+    return rows.map(([label, key]) => {
+      const sorted = [...rosterMetrics].sort((a, b) => b.values[key] - a.values[key]);
+      const selected = rosterMetrics.find((item) => item.roster.roster_id === selectedRoster?.roster_id);
+      const selectedValue = selected?.values[key] ?? 0;
+      const average = rosterMetrics.length
+        ? rosterMetrics.reduce((total, item) => total + item.values[key], 0) / rosterMetrics.length
+        : 0;
+      const best = sorted[0]?.values[key] ?? 0;
+      const rank = sorted.findIndex((item) => item.roster.roster_id === selectedRoster?.roster_id) + 1;
+
+      return {
+        label,
+        value: selectedValue,
+        average,
+        best,
+        rank: rank || 0
+      };
+    });
+  }, [selectedRoster?.roster_id, summary?.rosters]);
+  const actionCards = [
+    {
+      label: "Lineup lever",
+      title: bench < 10 ? "Add playable depth" : "Upgrade the final flex",
+      detail: bench < 10 ? "Depth pressure is the first thing that can break this roster." : "The starter base is stable enough to consolidate into ceiling.",
+      href: "/rosters",
+      cta: "Open roster lab"
+    },
+    {
+      label: "Market posture",
+      title: timeline === "Builder" ? "Protect picks and youth" : timeline === "Win-now" ? "Buy points carefully" : "Stay flexible",
+      detail: priority,
+      href: "/trade-value",
+      cta: "Open trade value"
+    },
+    {
+      label: "Room context",
+      title: draftId ? "Draft handoff ready" : "Scan league leverage",
+      detail: draftId ? "This league has a draft connection ready for live workflow." : "Use league rankings before spending future value.",
+      href: draftId ? `/draft-room?draftId=${encodeURIComponent(draftId)}` : "/league-hub",
+      cta: draftId ? "Open Draft Room" : "Open League Hub"
+    }
+  ];
 
   async function loadPlayerDirectory(rosters: LeagueToolRoster[]) {
     if (!liveAccess) {
@@ -393,6 +469,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
 
   return (
     <div className="team-hub-page">
+      <ProductCommandNav />
       <section className="team-hero-panel">
         <div className="team-hero-copy">
           <span className="badge badge-premium"><Users size={14} /> {liveAccess ? "Live Team Hub" : "Team Hub preview"}</span>
@@ -471,6 +548,48 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
             <p>Use this as the first filter before trade offers, waiver claims, or live draft decisions.</p>
           </article>
         </aside>
+      </section>
+
+      <section className="team-action-grid" aria-label="Team command actions">
+        {actionCards.map((card) => (
+          <article className="team-action-card" key={card.label}>
+            <span className="eyebrow">{card.label}</span>
+            <h3>{card.title}</h3>
+            <p>{card.detail}</p>
+            <Link className="league-inline-link" href={card.href}>{card.cta} <ArrowRight size={14} /></Link>
+          </article>
+        ))}
+      </section>
+
+      <section className="team-strength-panel">
+        <div className="league-card-header">
+          <div>
+            <span className="eyebrow">Roster Strength Profile</span>
+            <h2>Starter power, bench insulation, and dynasty lift</h2>
+          </div>
+          <span className="league-filter-pill">
+            <Trophy size={14} />
+            {activeLeague?.total_rosters ?? summary?.rosters.length ?? "-"} team room
+          </span>
+        </div>
+        <div className="team-strength-grid">
+          {strengthProfile.map((metric) => (
+            <article className="team-strength-card" key={metric.label}>
+              <div>
+                <span>{metric.label}</span>
+                <strong>#{metric.rank || "-"}</strong>
+              </div>
+              <div className="team-strength-values">
+                <span><small>You</small><b>{formatCompactNumber(metric.value)}</b></span>
+                <span><small>Avg</small><b>{formatCompactNumber(metric.average)}</b></span>
+                <span><small>Best</small><b>{formatCompactNumber(metric.best)}</b></span>
+              </div>
+              <div className="portfolio-meter" aria-label={`${metric.label} compared to best`}>
+                <span style={{ width: `${metric.best ? clamp((metric.value / metric.best) * 100, 5, 100) : 0}%` }} />
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="team-roster-board">

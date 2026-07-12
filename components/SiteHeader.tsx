@@ -7,13 +7,12 @@ import { ChevronDown, LogOut, Menu, UserCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { navItems } from "@/config/navigation";
+import { productSuiteGroups } from "@/config/productSuite";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { PremiumButton } from "./PremiumButton";
 
 const visibleNav = navItems.filter((item) => item.label !== "Billing");
-const productNav = visibleNav.filter((item) =>
-  ["Command Center", "League Hub", "Power Rankings", "Team Hub", "Trade Value"].includes(item.label)
-);
+const productNav = productSuiteGroups.flatMap((group) => group.items);
 const primaryNav = visibleNav.filter((item) => ["Home", "Draft Room", "Pricing"].includes(item.label));
 
 export function SiteHeader() {
@@ -99,20 +98,26 @@ export function SiteHeader() {
             Product
             <ChevronDown size={14} />
           </summary>
-          <div className="nav-menu-panel">
-            {productNav.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-              return (
-                <Link className={active ? "nav-menu-link active" : "nav-menu-link"} href={item.href} key={item.href}>
-                  <Icon size={16} />
-                  <span>
-                    <strong>{item.label}</strong>
-                    <small>{item.description}</small>
-                  </span>
-                </Link>
-              );
-            })}
+          <div className="nav-menu-panel product-mega-panel">
+            {productSuiteGroups.map((group) => (
+              <section className="nav-menu-group" key={group.label}>
+                <span className="nav-menu-group-title">{group.label}</span>
+                <p>{group.description}</p>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname === item.href;
+                  return (
+                    <Link className={active ? "nav-menu-link active" : "nav-menu-link"} href={item.href} key={`${group.label}-${item.href}`}>
+                      <Icon size={16} />
+                      <span>
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </section>
+            ))}
           </div>
         </details>
         {primaryNav.slice(1).map((item) => {

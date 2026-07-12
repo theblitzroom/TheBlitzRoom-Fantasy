@@ -5,12 +5,15 @@ const productLinks = [
   ["Command Center", "/command-center"],
   ["Team Hub", "/team-hub/my-team"],
   ["League Hub", "/league-hub"],
+  ["Power Rankings", "/power-rankings"],
+  ["Rosters", "/rosters"],
+  ["Trade Value", "/trade-value"],
   ["Draft Room", "/draft-room"],
-  ["Pricing", "/pricing"],
-  ["FAQ", "/faq"]
 ];
 
 const companyLinks = [
+  ["Pricing", "/pricing"],
+  ["FAQ", "/faq"],
   ["Contact", "/contact"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],

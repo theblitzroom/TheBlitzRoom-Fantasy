@@ -2,22 +2,43 @@ export const productAreas = [
   {
     title: "Draft Command Center",
     href: "/command-center",
-    eyebrow: "Draft room",
-    description: "A focused board for BPA, roster fit, scarcity, tier cliffs, and Sleeper pick flow in one dense view.",
-    metrics: ["1s live sync target", "Superflex-first", "No DST/K"]
+    eyebrow: "Launch pad",
+    description: "One command surface for league scans, live draft prep, roster reads, and the next best tool to open.",
+    metrics: ["Signed-in workspace", "Sleeper scan", "Tool routing"]
+  },
+  {
+    title: "Team Hub",
+    href: "/team-hub/my-team",
+    eyebrow: "My roster",
+    description: "See roster strength, asset tiers, age profile, dynasty value by position, and full player inventory.",
+    metrics: ["Roster table", "Asset tiers", "Age curve"]
   },
   {
     title: "League Hub",
     href: "/league-hub",
-    eyebrow: "League context",
-    description: "Save league size, scoring, lineup slots, draft order, and roster rules so recommendations match your room.",
-    metrics: ["Sleeper settings", "Roster slots", "Scoring profile"]
+    eyebrow: "League intelligence",
+    description: "Rank every team, read the league economy, compare dynasty/redraft value, and find leverage pockets.",
+    metrics: ["Team rankings", "Economy map", "Position value"]
   },
   {
-    title: "Dynasty Market",
+    title: "Power Rankings",
+    href: "/power-rankings",
+    eyebrow: "Room strength",
+    description: "Sort teams by production, potential points, depth, build direction, and weekly movement.",
+    metrics: ["Contenders", "Builders", "Fragility"]
+  },
+  {
+    title: "Roster Lab",
+    href: "/rosters",
+    eyebrow: "Build review",
+    description: "Compare roster construction, starter pressure, bench insulation, and team-by-team priorities.",
+    metrics: ["Depth", "Starters", "Build priority"]
+  },
+  {
+    title: "Trade Market",
     href: "/trade-value",
-    eyebrow: "Roster strategy",
-    description: "Blend board value with dynasty age curves, positional longevity, production windows, and roster timeline.",
-    metrics: ["Trade tiers", "Age curves", "Window fit"]
+    eyebrow: "Market lens",
+    description: "Turn player and pick value into smarter buy, sell, hold, and consolidation decisions.",
+    metrics: ["Trade tiers", "Window fit", "Pick leverage"]
   }
 ];
