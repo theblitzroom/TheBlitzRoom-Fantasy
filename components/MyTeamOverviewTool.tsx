@@ -14,10 +14,10 @@ import {
   Trophy,
   Users
 } from "lucide-react";
-import type { SubscriptionPlan } from "@/lib/subscription";
 import {
   buildPowerRows,
   buildRosterRows,
+  demoPlayerDirectory,
   demoLeagues,
   demoSummary,
   formatLeagueType,
@@ -26,6 +26,7 @@ import {
   managerName,
   type LeagueLookupResponse,
   type LeagueToolLeague,
+  type LeagueToolPlayer,
   type LeagueToolRoster,
   type LeagueToolSummary,
   type LeagueToolUser
@@ -34,7 +35,6 @@ import {
 type MyTeamOverviewToolProps = {
   paidAccess: boolean;
   signedIn: boolean;
-  plan: SubscriptionPlan;
 };
 
 function rosterRecord(roster?: LeagueToolRoster | null) {
@@ -69,18 +69,67 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOverviewToolProps) {
+const roleOrder = ["Starter", "Bench", "Taxi", "Reserve"];
+const positionOrder = ["QB", "RB", "WR", "TE", "FLEX"];
+
+function playerName(playerId: string, player?: LeagueToolPlayer) {
+  const joinedName = [player?.first_name, player?.last_name].filter(Boolean).join(" ");
+
+  if (player?.full_name) {
+    return player.full_name;
+  }
+
+  if (joinedName) {
+    return joinedName;
+  }
+
+  return playerId
+    .replace(/^demo-/, "")
+    .split("-")
+    .map((part) => part ? part[0].toUpperCase() + part.slice(1) : part)
+    .join(" ");
+}
+
+function rosterRole(playerId: string, roster?: LeagueToolRoster | null) {
+  if (roster?.starters?.includes(playerId)) {
+    return "Starter";
+  }
+
+  if (roster?.taxi?.includes(playerId)) {
+    return "Taxi";
+  }
+
+  if (roster?.reserve?.includes(playerId)) {
+    return "Reserve";
+  }
+
+  return "Bench";
+}
+
+function roleClass(role: string) {
+  return `roster-role-pill role-${role.toLowerCase()}`;
+}
+
+function sortIndex(values: string[], value: string) {
+  const index = values.indexOf(value);
+  return index === -1 ? values.length : index;
+}
+
+export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolProps) {
+  const liveAccess = signedIn || paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
-  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(paidAccess ? "idle" : "ready");
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
   const [error, setError] = useState("");
   const [loadedUser, setLoadedUser] = useState<LeagueToolUser | null>(
-    paidAccess ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
+    liveAccess ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
   );
-  const [leagues, setLeagues] = useState<LeagueToolLeague[]>(paidAccess ? [] : demoLeagues);
-  const [selectedLeagueId, setSelectedLeagueId] = useState(paidAccess ? "" : demoSummary.league.league_id);
-  const [summary, setSummary] = useState<LeagueToolSummary | null>(paidAccess ? null : demoSummary);
+  const [leagues, setLeagues] = useState<LeagueToolLeague[]>(liveAccess ? [] : demoLeagues);
+  const [selectedLeagueId, setSelectedLeagueId] = useState(liveAccess ? "" : demoSummary.league.league_id);
+  const [summary, setSummary] = useState<LeagueToolSummary | null>(liveAccess ? null : demoSummary);
   const [selectedRosterId, setSelectedRosterId] = useState<number>(1);
+  const [playerDirectory, setPlayerDirectory] = useState<Record<string, LeagueToolPlayer>>(liveAccess ? {} : demoPlayerDirectory);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
 
   const selectedLeague = leagues.find((league) => league.league_id === selectedLeagueId) ?? null;
   const activeLeague = summary?.league ?? selectedLeague;
@@ -175,13 +224,86 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
       { tier: "Optionality", count: optionality, note: "Modeled pick and future leverage from the roster profile." }
     ];
   }, [bench, selectedPower?.score, starterSlots.length, starters, timeline, upsideGap]);
+  const selectedRosterPlayers = useMemo(() => {
+    const playerIds = selectedRoster?.players ?? [];
+
+    return playerIds
+      .map((playerId) => {
+        const player = playerDirectory[playerId];
+        const role = rosterRole(playerId, selectedRoster);
+        const position = player?.position || player?.fantasy_positions?.[0] || "-";
+
+        return {
+          playerId,
+          name: playerName(playerId, player),
+          position,
+          team: player?.team || "-",
+          age: player?.age,
+          yearsExp: player?.years_exp,
+          role
+        };
+      })
+      .sort((a, b) => {
+        const roleDifference = roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role);
+
+        if (roleDifference !== 0) {
+          return roleDifference;
+        }
+
+        const positionDifference = sortIndex(positionOrder, a.position) - sortIndex(positionOrder, b.position);
+
+        if (positionDifference !== 0) {
+          return positionDifference;
+        }
+
+        return a.name.localeCompare(b.name);
+      });
+  }, [playerDirectory, selectedRoster]);
+
+  async function loadPlayerDirectory(rosters: LeagueToolRoster[]) {
+    if (!liveAccess) {
+      setPlayerDirectory(demoPlayerDirectory);
+      return;
+    }
+
+    const playerIds = [...new Set(rosters.flatMap((roster) => [
+      ...(roster.players ?? []),
+      ...(roster.starters ?? []),
+      ...(roster.reserve ?? []),
+      ...(roster.taxi ?? [])
+    ]))].filter(Boolean);
+
+    if (!playerIds.length) {
+      return;
+    }
+
+    setLoadingPlayers(true);
+
+    try {
+      const response = await fetch(`/api/sleeper/players?ids=${encodeURIComponent(playerIds.join(","))}`, {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error("Sleeper player lookup failed.");
+      }
+
+      const data = await response.json() as { players?: Record<string, LeagueToolPlayer> };
+      setPlayerDirectory((current) => ({ ...current, ...(data.players ?? {}) }));
+    } catch {
+      // Keep the roster usable with Sleeper IDs if player metadata is temporarily unavailable.
+    } finally {
+      setLoadingPlayers(false);
+    }
+  }
 
   async function loadLeagueSummary(leagueId: string, user?: LeagueToolUser | null) {
-    if (!paidAccess) {
+    if (!liveAccess) {
       setSelectedLeagueId(leagueId);
       const demo = getDemoSummary(leagueId);
       setSummary(demo);
       setSelectedRosterId(demo.rosters[0]?.roster_id ?? 1);
+      setPlayerDirectory(demoPlayerDirectory);
       return;
     }
 
@@ -199,6 +321,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
 
       const data = await response.json() as LeagueToolSummary;
       setSummary(data);
+      void loadPlayerDirectory(data.rosters);
       const ownedRoster = data.rosters.find((roster) => roster.owner_id && roster.owner_id === user?.user_id);
       setSelectedRosterId(ownedRoster?.roster_id ?? data.rosters[0]?.roster_id ?? 0);
       setStatus("ready");
@@ -211,9 +334,9 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
   async function scanLeagues(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!paidAccess) {
+    if (!liveAccess) {
       setStatus("error");
-      setError("Live Team Hub scans are available with an active plan. Use the demo to preview the workflow.");
+      setError("Sign in to run live Team Hub scans. Use the demo to preview the workflow.");
       return;
     }
 
@@ -228,6 +351,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
     setError("");
     setLeagues([]);
     setSummary(null);
+    setPlayerDirectory({});
 
     try {
       const response = await fetch(`/api/sleeper/user/${encodeURIComponent(trimmed)}/leagues?season=${encodeURIComponent(season)}`, {
@@ -262,6 +386,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
     setSelectedLeagueId(demoSummary.league.league_id);
     setSummary(demoSummary);
     setSelectedRosterId(demoSummary.rosters[0]?.roster_id ?? 1);
+    setPlayerDirectory(demoPlayerDirectory);
     setStatus("ready");
     setError("");
   }
@@ -270,17 +395,17 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
     <div className="team-hub-page">
       <section className="team-hero-panel">
         <div className="team-hero-copy">
-          <span className="badge badge-premium"><Users size={14} /> {paidAccess ? "Live Team Hub" : "Team Hub preview"}</span>
+          <span className="badge badge-premium"><Users size={14} /> {liveAccess ? "Live Team Hub" : "Team Hub preview"}</span>
           <h2>{selectedTeamName}</h2>
           <p>
             A detailed team command view for your roster&apos;s power rank, competitive window,
             depth profile, scoring gap, and next actionable move.
           </p>
-          {!paidAccess ? (
+          {!liveAccess ? (
             <div className="league-access-note">
               <CircleAlert size={18} />
-              <span>{signedIn ? `Your current plan is ${plan}. Upgrade to unlock live Team Hub scans.` : "Sign in and choose a plan to unlock live Team Hub scans."}</span>
-              <Link href={signedIn ? "/pricing" : "/login?next=/team-hub/my-team"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+              <span>Logged-out visitors see a demo preview. Sign in to unlock live Sleeper scans, your roster, portfolio analytics, and draft-room handoff.</span>
+              <Link href="/login?next=/team-hub/my-team">Sign in <ArrowRight size={14} /></Link>
             </div>
           ) : null}
         </div>
@@ -294,9 +419,9 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
 
       <section className="league-connect-panel">
         <form className="league-connect-form" onSubmit={scanLeagues}>
-          <label><span>Sleeper username</span><input value={username} onChange={(event) => setUsername(event.target.value)} disabled={!paidAccess} placeholder="Enter Sleeper username" /></label>
-          <label className="league-season-field"><span>Season</span><input value={season} onChange={(event) => setSeason(event.target.value)} disabled={!paidAccess} /></label>
-          <button className="premium-button premium-button-primary" disabled={!paidAccess || status === "loading"}><RefreshCcw size={16} />{status === "loading" ? "Loading" : "Scan teams"}</button>
+          <label><span>Sleeper username</span><input value={username} onChange={(event) => setUsername(event.target.value)} disabled={!liveAccess} placeholder="Enter Sleeper username" /></label>
+          <label className="league-season-field"><span>Season</span><input value={season} onChange={(event) => setSeason(event.target.value)} disabled={!liveAccess} /></label>
+          <button className="premium-button premium-button-primary" disabled={!liveAccess || status === "loading"}><RefreshCcw size={16} />{status === "loading" ? "Loading" : "Scan teams"}</button>
           <button className="premium-button premium-button-secondary" onClick={loadDemo} type="button">Demo team</button>
         </form>
         {error ? <div className="league-error"><CircleAlert size={18} />{error}</div> : null}
@@ -346,6 +471,59 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
             <p>Use this as the first filter before trade offers, waiver claims, or live draft decisions.</p>
           </article>
         </aside>
+      </section>
+
+      <section className="team-roster-board">
+        <div className="league-card-header">
+          <div>
+            <span className="eyebrow">My roster</span>
+            <h2>{selectedTeamName}</h2>
+          </div>
+          <span className="league-filter-pill">
+            <ClipboardList size={14} />
+            {loadingPlayers ? "Resolving players" : `${selectedRosterPlayers.length || "-"} players`}
+          </span>
+        </div>
+        <div className="my-roster-summary">
+          <span><small>Starters</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Starter").length || "-"}</strong></span>
+          <span><small>Bench</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Bench").length || "-"}</strong></span>
+          <span><small>Taxi</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Taxi").length || "-"}</strong></span>
+          <span><small>Reserve</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Reserve").length || "-"}</strong></span>
+        </div>
+        <div className="league-table-wrap my-roster-table-wrap">
+          <table className="league-table my-roster-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Pos</th>
+                <th>Team</th>
+                <th>Age</th>
+                <th>Exp</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedRosterPlayers.map((player) => (
+                <tr key={player.playerId}>
+                  <td>
+                    <strong>{player.name}</strong>
+                    <small>{player.playerId}</small>
+                  </td>
+                  <td><span className="position-chip">{player.position}</span></td>
+                  <td>{player.team}</td>
+                  <td>{player.age ?? "-"}</td>
+                  <td>{typeof player.yearsExp === "number" ? `${player.yearsExp} yr` : "-"}</td>
+                  <td><span className={roleClass(player.role)}>{player.role}</span></td>
+                </tr>
+              ))}
+              {!selectedRosterPlayers.length ? (
+                <tr>
+                  <td colSpan={6}>Scan a Sleeper username and choose a league to load your roster.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="team-detail-grid">

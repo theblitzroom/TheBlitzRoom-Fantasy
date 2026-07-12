@@ -2000,6 +2000,7 @@ td {
 .team-side-card,
 .team-detail-card,
 .team-analytics-card,
+.team-roster-board,
 .team-lineup-panel {
   border: 1px solid var(--border);
   background:
@@ -2063,6 +2064,7 @@ td {
 
 .team-main-card,
 .team-side-card,
+.team-roster-board,
 .team-lineup-panel {
   display: grid;
   gap: 18px;
@@ -2103,6 +2105,100 @@ td {
 .team-detail-grid {
   display: grid;
   gap: 18px;
+}
+
+.team-roster-board {
+  overflow: hidden;
+}
+
+.my-roster-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.my-roster-summary span {
+  display: grid;
+  gap: 6px;
+  padding: 13px 14px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.my-roster-summary small {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.my-roster-summary strong {
+  color: var(--gold-2);
+  font-size: 25px;
+  line-height: 1;
+}
+
+.my-roster-table-wrap {
+  max-height: 520px;
+  border-color: rgba(188, 166, 255, 0.14);
+}
+
+.my-roster-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(19, 13, 30, 0.98);
+  backdrop-filter: blur(10px);
+}
+
+.my-roster-table td:first-child {
+  min-width: 190px;
+}
+
+.position-chip,
+.roster-role-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.position-chip {
+  min-width: 44px;
+  padding: 0 10px;
+  border: 1px solid rgba(188, 166, 255, 0.16);
+  color: var(--text);
+  background: rgba(126, 87, 229, 0.12);
+}
+
+.roster-role-pill {
+  min-width: 74px;
+  padding: 0 11px;
+  border: 1px solid rgba(188, 166, 255, 0.14);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.role-starter {
+  border-color: rgba(226, 190, 99, 0.34);
+  color: var(--gold-2);
+  background: rgba(217, 179, 95, 0.1);
+}
+
+.role-taxi {
+  border-color: rgba(126, 87, 229, 0.34);
+  color: #cbbaff;
+  background: rgba(126, 87, 229, 0.12);
+}
+
+.role-reserve {
+  border-color: rgba(219, 106, 106, 0.28);
+  color: #ffb6b6;
+  background: rgba(219, 106, 106, 0.08);
 }
 
 .team-detail-grid {
@@ -2804,6 +2900,7 @@ td {
   }
 
   .team-detail-grid,
+  .my-roster-summary,
   .team-roster-picker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2898,6 +2995,7 @@ td {
 
   .team-metric-grid,
   .team-detail-grid,
+  .my-roster-summary,
   .team-analytics-grid,
   .team-slot-grid,
   .team-roster-picker {

@@ -1,0 +1,53 @@
+import { NextResponse } from "next/server";
+import { getSleeperNflPlayers, type SleeperPlayer } from "@/lib/sleeper/client";
+
+function normalizePlayer(playerId: string, player?: SleeperPlayer): SleeperPlayer | null {
+  if (!player) {
+    return null;
+  }
+
+  return {
+    player_id: player.player_id || playerId,
+    full_name: player.full_name,
+    first_name: player.first_name,
+    last_name: player.last_name,
+    position: player.position,
+    team: player.team ?? undefined,
+    age: player.age,
+    years_exp: player.years_exp,
+    fantasy_positions: player.fantasy_positions
+  };
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const ids = [...new Set((searchParams.get("ids") || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean))]
+    .slice(0, 120);
+
+  if (!ids.length) {
+    return NextResponse.json({ players: {} });
+  }
+
+  try {
+    const playerDirectory = await getSleeperNflPlayers();
+    const players = ids.reduce<Record<string, SleeperPlayer>>((lookup, playerId) => {
+      const player = normalizePlayer(playerId, playerDirectory[playerId]);
+
+      if (player) {
+        lookup[playerId] = player;
+      }
+
+      return lookup;
+    }, {});
+
+    return NextResponse.json({ players });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Sleeper player lookup failed" },
+      { status: 502 }
+    );
+  }
+}

@@ -68,6 +68,18 @@ export type SleeperRoster = {
   };
 };
 
+export type SleeperPlayer = {
+  player_id: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  position?: string;
+  team?: string | null;
+  age?: number;
+  years_exp?: number;
+  fantasy_positions?: string[];
+};
+
 const SLEEPER_BASE_URL = "https://api.sleeper.app/v1";
 
 async function sleeperFetch<T>(path: string): Promise<T> {
@@ -113,4 +125,17 @@ export function getSleeperLeagueRosters(leagueId: string) {
 
 export function getSleeperLeagueDrafts(leagueId: string) {
   return sleeperFetch<SleeperDraft[]>(`/league/${encodeURIComponent(leagueId)}/drafts`);
+}
+
+export async function getSleeperNflPlayers() {
+  const response = await fetch(`${SLEEPER_BASE_URL}/players/nfl`, {
+    next: { revalidate: 60 * 60 * 24 },
+    headers: { "accept": "application/json" }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Sleeper player request failed with ${response.status}`);
+  }
+
+  return response.json() as Promise<Record<string, SleeperPlayer>>;
 }

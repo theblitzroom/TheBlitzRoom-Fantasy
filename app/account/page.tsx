@@ -151,12 +151,12 @@ export default async function AccountPage() {
       href: "/league-hub",
       description: "Scan Sleeper leagues, rank teams, and read league leverage."
     },
+    {
+      title: "Team Hub",
+      href: "/team-hub/my-team",
+      description: "Open your roster view, dynasty value, age profile, and asset tiers."
+    },
     ...(paidAccess ? [
-      {
-        title: "Team Hub",
-        href: "/team-hub/my-team",
-        description: "Analyze your roster, dynasty value, age profile, and asset tiers."
-      },
       {
         title: "Power Rankings",
         href: "/power-rankings",
