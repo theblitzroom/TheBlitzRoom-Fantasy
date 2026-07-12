@@ -10,6 +10,7 @@ export function AuthPanel() {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -59,6 +60,32 @@ export function AuthPanel() {
     }
   }
 
+  async function sendPasswordReset() {
+    setResetLoading(true);
+    setMessage("");
+    setError("");
+
+    try {
+      if (!email.trim()) {
+        throw new Error("Enter your email address first, then request a password reset.");
+      }
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (resetError) {
+        throw resetError;
+      }
+
+      setMessage("Password reset email sent. Open the link in that email to choose a new password.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Password reset failed.");
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
   return (
     <div className="auth-card">
       <div className="auth-tabs" role="tablist" aria-label="Account access">
@@ -98,6 +125,11 @@ export function AuthPanel() {
         <button className="premium-button premium-button-primary" disabled={loading} type="submit">
           {loading ? "Working..." : mode === "signin" ? "Sign in" : "Create account"}
         </button>
+        {mode === "signin" ? (
+          <button className="auth-reset-link" disabled={resetLoading} onClick={sendPasswordReset} type="button">
+            {resetLoading ? "Sending reset email..." : "Forgot password?"}
+          </button>
+        ) : null}
         {message ? <p className="auth-message">{message}</p> : null}
         {error ? <p className="sync-error">{error}</p> : null}
       </form>

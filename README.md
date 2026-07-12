@@ -52,6 +52,7 @@ ADMIN_EMAILS=owner@example.com
 ```text
 https://theblitzroom.com
 https://theblitzroom.com/auth/callback
+https://theblitzroom.com/reset-password
 ```
 
 The live account routes are:
@@ -59,6 +60,7 @@ The live account routes are:
 - `/login` for sign in and account creation.
 - `/account` for signed-in subscription status, billing, and saved league foundations.
 - `/admin` for approved admin emails to preview paid tools without Stripe checkout.
+- `/reset-password` for Supabase password recovery links.
 - `/auth/callback` for Supabase email confirmation links.
 
 ## Stripe Setup

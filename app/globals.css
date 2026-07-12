@@ -842,10 +842,44 @@ td {
   box-shadow: 0 0 0 3px rgba(217, 179, 95, 0.12);
 }
 
+.auth-reset-link {
+  justify-self: start;
+  border: 0;
+  color: var(--gold-2);
+  cursor: pointer;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.auth-reset-link:hover {
+  color: var(--gold);
+}
+
+.auth-reset-link:disabled {
+  color: var(--faint);
+  cursor: wait;
+}
+
 .auth-message {
   margin: 0;
   color: var(--emerald);
   line-height: 1.5;
+}
+
+.reset-password-card {
+  max-width: 640px;
+}
+
+.reset-password-card h2 {
+  margin: 14px 0 10px;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1;
+}
+
+.reset-password-card p {
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .account-card h2,
