@@ -6,7 +6,29 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "signin" | "signup";
 
-export function AuthPanel() {
+type AuthPanelProps = {
+  defaultRedirectTo?: string;
+};
+
+function safeInternalRedirect(value?: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value, window.location.origin);
+
+    if (url.origin !== window.location.origin) {
+      return null;
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
+export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +39,27 @@ export function AuthPanel() {
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
+  function requestedRedirect() {
+    const next = new URLSearchParams(window.location.search).get("next");
+    return safeInternalRedirect(next) ?? safeInternalRedirect(defaultRedirectTo);
+  }
+
+  async function postAuthRedirect() {
+    const requested = requestedRedirect();
+
+    if (requested) {
+      return requested;
+    }
+
+    try {
+      const response = await fetch("/api/auth/landing", { cache: "no-store" });
+      const data = await response.json() as { redirectTo?: string };
+      return safeInternalRedirect(data.redirectTo) ?? "/account";
+    } catch {
+      return "/account";
+    }
+  }
+
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -25,11 +68,12 @@ export function AuthPanel() {
 
     try {
       if (mode === "signup") {
+        const redirectTarget = requestedRedirect() ?? "/account";
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTarget)}`
           }
         });
 
@@ -38,7 +82,7 @@ export function AuthPanel() {
         }
 
         if (data.session) {
-          window.location.assign("/account");
+          window.location.assign(await postAuthRedirect());
           return;
         }
 
@@ -52,7 +96,7 @@ export function AuthPanel() {
         throw signInError;
       }
 
-      window.location.assign("/account");
+      window.location.assign(await postAuthRedirect());
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Authentication failed.");
     } finally {

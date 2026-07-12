@@ -280,7 +280,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn, plan }: MyTeamOvervie
             <div className="league-access-note">
               <CircleAlert size={18} />
               <span>{signedIn ? `Your current plan is ${plan}. Upgrade to unlock live Team Hub scans.` : "Sign in and choose a plan to unlock live Team Hub scans."}</span>
-              <Link href={signedIn ? "/pricing" : "/account"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+              <Link href={signedIn ? "/pricing" : "/login?next=/team-hub/my-team"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
             </div>
           ) : null}
         </div>

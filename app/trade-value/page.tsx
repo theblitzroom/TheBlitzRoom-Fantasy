@@ -8,7 +8,7 @@ export default function TradeValuePage() {
       title="See the market cost of each pick before you spend it."
       description="A dynasty-focused trade view can help compare player value, pick value, roster timeline, and future optionality."
     >
-      <PreviewGate requiredPlan="dynasty_elite">
+      <PreviewGate requiredPlan="dynasty_elite" redirectTo="/trade-value">
         <div className="insight-grid">
           {["Market insulation", "Age curve", "Window fit"].map((title) => (
             <article className="insight-card" key={title}>

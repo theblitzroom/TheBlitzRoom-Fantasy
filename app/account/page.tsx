@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { ManageBillingButton } from "@/components/ManageBillingButton";
 import { PremiumButton } from "@/components/PremiumButton";
@@ -44,6 +46,17 @@ function formatDate(value: string | null) {
     day: "numeric",
     year: "numeric"
   }).format(new Date(value));
+}
+
+function hasActiveAccess(subscription: SubscriptionRecord | null, grant: AccessGrantRecord | null) {
+  const activeSubscription = subscription
+    ? ["active", "trialing"].includes(subscription.status) && (!subscription.current_period_end || new Date(subscription.current_period_end).getTime() > Date.now())
+    : false;
+  const activeGrant = grant
+    ? grant.status === "active" && new Date(grant.access_ends_at).getTime() > Date.now()
+    : false;
+
+  return activeSubscription || activeGrant;
 }
 
 export default async function AccountPage() {
@@ -125,6 +138,47 @@ export default async function AccountPage() {
   const renewalOrAccessDate = activeSubscription?.current_period_end ?? activeGrant?.access_ends_at ?? null;
   const billingStatus = activeSubscription?.status ?? activeGrant?.status ?? "preview";
   const adminAccess = isAdminEmail(user.email);
+  const paidAccess = adminAccess || hasActiveAccess(activeSubscription, activeGrant);
+  const eliteAccess = adminAccess || (paidAccess && activePlan === "dynasty_elite");
+  const launchTools = [
+    ...(adminAccess ? [{
+      title: "Admin Console",
+      href: "/admin",
+      description: "Internal command surface with full Elite preview access."
+    }] : []),
+    ...(paidAccess ? [
+      {
+        title: "League Hub",
+        href: "/league-hub",
+        description: "Scan Sleeper leagues, rank teams, and read league leverage."
+      },
+      {
+        title: "Team Hub",
+        href: "/team-hub/my-team",
+        description: "Analyze your roster, dynasty value, age profile, and asset tiers."
+      },
+      {
+        title: "Power Rankings",
+        href: "/power-rankings",
+        description: "Rank every team by current strength and future potential."
+      },
+      {
+        title: "Rosters",
+        href: "/rosters",
+        description: "Compare roster shape, depth, starters, and build priority."
+      }
+    ] : []),
+    ...(eliteAccess ? [{
+      title: "Trade Value",
+      href: "/trade-value",
+      description: "Review dynasty market, window fit, and asset-value tools."
+    }] : []),
+    {
+      title: paidAccess ? "Draft Room" : "Choose a Plan",
+      href: paidAccess ? "/draft-room" : "/pricing",
+      description: paidAccess ? "Open the live draft command room and Sleeper sync workspace." : "Unlock the live tools with Draft Pro or Fantasy Elite."
+    }
+  ];
 
   return (
     <SectionShell
@@ -171,6 +225,24 @@ export default async function AccountPage() {
           </div>
         </div>
       </div>
+
+      <section className="admin-tool-panel">
+        <div className="league-card-header">
+          <div>
+            <span className="eyebrow">Accessible features</span>
+            <h2>Launch what your account can use</h2>
+          </div>
+        </div>
+        <div className="admin-tool-grid">
+          {launchTools.map((tool) => (
+            <Link className="admin-tool-card" href={tool.href} key={tool.href}>
+              <span>{tool.title}</span>
+              <p>{tool.description}</p>
+              <strong>Open <ArrowRight size={14} /></strong>
+            </Link>
+          ))}
+        </div>
+      </section>
     </SectionShell>
   );
 }

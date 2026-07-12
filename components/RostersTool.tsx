@@ -138,7 +138,7 @@ export function RostersTool({ paidAccess, signedIn, plan }: RostersToolProps) {
             <div className="league-access-note">
               <CircleAlert size={18} />
               <span>{signedIn ? `Your current plan is ${plan}. Upgrade to unlock live roster tools.` : "Sign in and choose a plan to unlock live roster tools."}</span>
-              <Link href={signedIn ? "/pricing" : "/account"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+              <Link href={signedIn ? "/pricing" : "/login?next=/rosters"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
             </div>
           ) : null}
         </div>

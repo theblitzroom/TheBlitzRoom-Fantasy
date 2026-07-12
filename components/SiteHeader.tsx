@@ -73,7 +73,7 @@ export function SiteHeader() {
 
       <div className="header-actions">
         <span className="desktop-account-action">
-          <PremiumButton href="/account" variant="ghost">Sign in</PremiumButton>
+          <PremiumButton href="/login" variant="ghost">Sign in</PremiumButton>
         </span>
         <PremiumButton href="/pricing" variant="secondary">Plans</PremiumButton>
         <button className="icon-button mobile-menu-button" onClick={() => setOpen(true)} aria-label="Open menu">

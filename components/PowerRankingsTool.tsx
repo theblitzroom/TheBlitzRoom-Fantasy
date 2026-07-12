@@ -149,7 +149,7 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
             <div className="league-access-note">
               <CircleAlert size={18} />
               <span>{signedIn ? `Your current plan is ${plan}. Upgrade to unlock live power rankings.` : "Sign in and choose a plan to unlock live power rankings."}</span>
-              <Link href={signedIn ? "/pricing" : "/account"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+              <Link href={signedIn ? "/pricing" : "/login?next=/power-rankings"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
             </div>
           ) : null}
         </div>

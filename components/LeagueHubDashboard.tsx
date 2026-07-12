@@ -444,7 +444,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn, plan }: LeagueHubDash
             <div className="league-access-note">
               <CircleAlert size={18} />
               <span>{signedIn ? `Your current plan is ${plan}. Upgrade to unlock live League Hub scans.` : "Sign in and choose a plan to unlock live League Hub scans."}</span>
-              <Link href={signedIn ? "/pricing" : "/account"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+              <Link href={signedIn ? "/pricing" : "/login?next=/league-hub"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
             </div>
           ) : null}
         </div>

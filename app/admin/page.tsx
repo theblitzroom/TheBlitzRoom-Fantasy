@@ -80,7 +80,7 @@ export default async function AdminPage() {
         description="Only approved admin emails can use the internal preview lane."
       >
         <div className="account-grid">
-          <AuthPanel />
+          <AuthPanel defaultRedirectTo="/admin" />
           <div className="account-benefits">
             <span className="badge badge-premium"><LockKeyhole size={14} /> Restricted</span>
             <h2>Internal access only.</h2>
