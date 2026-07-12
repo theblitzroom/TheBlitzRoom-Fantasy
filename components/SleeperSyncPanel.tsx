@@ -38,11 +38,17 @@ export function SleeperSyncPanel() {
 
   useEffect(() => {
     const saved = readSavedState();
-    setDraftId(saved.draftId);
+    const queryDraftId = new URLSearchParams(window.location.search).get("draftId")?.trim();
+    setDraftId(queryDraftId || saved.draftId);
     setEnabled(saved.enabled);
   }, []);
 
   useEffect(() => {
+    const queryDraftId = new URLSearchParams(window.location.search).get("draftId")?.trim();
+    if (queryDraftId && queryDraftId !== draftId) {
+      return;
+    }
+
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ draftId, enabled }));
   }, [draftId, enabled]);
 

@@ -21,6 +21,26 @@ export type SleeperPick = {
   };
 };
 
+export type SleeperUser = {
+  user_id?: string;
+  username?: string;
+  display_name?: string;
+};
+
+export type SleeperLeague = {
+  league_id: string;
+  name: string;
+  season: string;
+  status: string;
+  sport: string;
+  total_rosters?: number;
+  draft_id?: string;
+  avatar?: string | null;
+  roster_positions?: string[];
+  scoring_settings?: Record<string, number>;
+  settings?: Record<string, number>;
+};
+
 const SLEEPER_BASE_URL = "https://api.sleeper.app/v1";
 
 async function sleeperFetch<T>(path: string): Promise<T> {
@@ -37,7 +57,11 @@ async function sleeperFetch<T>(path: string): Promise<T> {
 }
 
 export function getSleeperUser(username: string) {
-  return sleeperFetch(`/user/${encodeURIComponent(username)}`);
+  return sleeperFetch<SleeperUser>(`/user/${encodeURIComponent(username)}`);
+}
+
+export function getSleeperUserLeagues(userId: string, season: string) {
+  return sleeperFetch<SleeperLeague[]>(`/user/${encodeURIComponent(userId)}/leagues/nfl/${encodeURIComponent(season)}`);
 }
 
 export function getSleeperDraft(draftId: string) {
