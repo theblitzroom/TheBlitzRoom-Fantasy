@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -18,6 +18,12 @@ import {
   Users
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
+import {
+  getStoredLeagueConnection,
+  saveStoredLeagueConnection,
+  subscribeStoredLeagueConnection,
+  updateStoredLeagueSelection
+} from "@/lib/sleeper/leagueConnection";
 
 type SleeperUser = {
   user_id?: string;
@@ -444,6 +450,69 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const fragileTeam = [...powerRows].reverse().find((row) => row.depth === "Thin") ?? powerRows[powerRows.length - 1];
   const draftId = activeSummary?.drafts?.[0]?.draft_id || activeLeague?.draft_id;
 
+  const loadLeagueSummary = useCallback(async (leagueId: string) => {
+    if (!liveAccess) {
+      return;
+    }
+
+    setSelectedLeagueId(leagueId);
+    updateStoredLeagueSelection(leagueId);
+    setSummaryStatus("loading");
+    setError("");
+
+    try {
+      const response = await fetch(`/api/sleeper/league/${encodeURIComponent(leagueId)}/summary`, {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(data?.error || "League summary failed.");
+      }
+
+      const data = await response.json() as LeagueSummary;
+      setSummary(data);
+      setSummaryStatus("ready");
+    } catch (caught) {
+      setSummaryStatus("error");
+      setError(caught instanceof Error ? caught.message : "League summary failed.");
+    }
+  }, [liveAccess]);
+
+  useEffect(() => {
+    if (!liveAccess) {
+      return;
+    }
+
+    const stored = getStoredLeagueConnection();
+    if (!stored) {
+      return;
+    }
+
+    setUsername(stored.username);
+    setSeason(stored.season);
+    setLoadedUser(stored.user);
+    setLeagues(stored.leagues);
+    setSelectedLeagueId(stored.selectedLeagueId);
+    setScanStatus("ready");
+
+    if (stored.selectedLeagueId) {
+      void loadLeagueSummary(stored.selectedLeagueId);
+    }
+
+    return subscribeStoredLeagueConnection((connection) => {
+      if (!connection) {
+        return;
+      }
+
+      setUsername(connection.username);
+      setSeason(connection.season);
+      setLoadedUser(connection.user);
+      setLeagues(connection.leagues);
+      setSelectedLeagueId(connection.selectedLeagueId);
+    });
+  }, [liveAccess, loadLeagueSummary]);
+
   async function scanLeagues(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -483,6 +552,13 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
       setLeagues(data.leagues);
       setSelectedLeagueId(data.leagues[0]?.league_id ?? "");
       setScanStatus("ready");
+      saveStoredLeagueConnection({
+        username: trimmed,
+        season: data.season,
+        user: data.user,
+        leagues: data.leagues,
+        selectedLeagueId: data.leagues[0]?.league_id ?? ""
+      });
 
       if (data.leagues[0]) {
         await loadLeagueSummary(data.leagues[0].league_id);
@@ -490,34 +566,6 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
     } catch (caught) {
       setScanStatus("error");
       setError(caught instanceof Error ? caught.message : "Sleeper league scan failed.");
-    }
-  }
-
-  async function loadLeagueSummary(leagueId: string) {
-    if (!liveAccess) {
-      return;
-    }
-
-    setSelectedLeagueId(leagueId);
-    setSummaryStatus("loading");
-    setError("");
-
-    try {
-      const response = await fetch(`/api/sleeper/league/${encodeURIComponent(leagueId)}/summary`, {
-        cache: "no-store"
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(data?.error || "League summary failed.");
-      }
-
-      const data = await response.json() as LeagueSummary;
-      setSummary(data);
-      setSummaryStatus("ready");
-    } catch (caught) {
-      setSummaryStatus("error");
-      setError(caught instanceof Error ? caught.message : "League summary failed.");
     }
   }
 

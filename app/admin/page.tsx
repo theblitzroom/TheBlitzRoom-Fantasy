@@ -30,6 +30,16 @@ const adminTools = [
     description: "Detailed roster overview, dynasty position value, age profile, and asset tiers."
   },
   {
+    title: "Matchup Command",
+    href: "/matchup",
+    description: "Weekly matchup edge, opponent pressure, and Sleeper matchup board."
+  },
+  {
+    title: "Waiver Wire",
+    href: "/waivers",
+    description: "Live available-player scoring, roster needs, and drop-watch views."
+  },
+  {
     title: "Power Rankings",
     href: "/power-rankings",
     description: "Rank every roster by current strength, potential points, and contender signal."

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, CircleAlert, RefreshCcw, ShieldCheck } from "lucide-react";
 import type { SubscriptionPlan } from "@/lib/subscription";
@@ -16,6 +16,12 @@ import {
   type LeagueToolSummary,
   type LeagueToolUser
 } from "@/lib/leagueTools";
+import {
+  getStoredLeagueConnection,
+  saveStoredLeagueConnection,
+  subscribeStoredLeagueConnection,
+  updateStoredLeagueSelection
+} from "@/lib/sleeper/leagueConnection";
 
 type PowerRankingsToolProps = {
   paidAccess: boolean;
@@ -54,7 +60,7 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
   const contenderCount = rows.filter((row) => row.tier === "Contender").length;
   const builderCount = rows.filter((row) => row.tier === "Builder").length;
 
-  async function loadLeagueSummary(leagueId: string) {
+  const loadLeagueSummary = useCallback(async (leagueId: string) => {
     if (!paidAccess) {
       setSelectedLeagueId(leagueId);
       setSummary(getDemoSummary(leagueId));
@@ -62,6 +68,7 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
     }
 
     setSelectedLeagueId(leagueId);
+    updateStoredLeagueSelection(leagueId);
     setStatus("loading");
     setError("");
 
@@ -79,7 +86,41 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "League summary failed.");
     }
-  }
+  }, [paidAccess]);
+
+  useEffect(() => {
+    if (!paidAccess) {
+      return;
+    }
+
+    const stored = getStoredLeagueConnection();
+    if (!stored) {
+      return;
+    }
+
+    setUsername(stored.username);
+    setSeason(stored.season);
+    setLoadedUser(stored.user);
+    setLeagues(stored.leagues);
+    setSelectedLeagueId(stored.selectedLeagueId);
+    setStatus("ready");
+
+    if (stored.selectedLeagueId) {
+      void loadLeagueSummary(stored.selectedLeagueId);
+    }
+
+    return subscribeStoredLeagueConnection((connection) => {
+      if (!connection) {
+        return;
+      }
+
+      setUsername(connection.username);
+      setSeason(connection.season);
+      setLoadedUser(connection.user);
+      setLeagues(connection.leagues);
+      setSelectedLeagueId(connection.selectedLeagueId);
+    });
+  }, [paidAccess, loadLeagueSummary]);
 
   async function scanLeagues(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -115,6 +156,13 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
       setLoadedUser(data.user);
       setSeason(data.season);
       setLeagues(data.leagues);
+      saveStoredLeagueConnection({
+        username: trimmed,
+        season: data.season,
+        user: data.user,
+        leagues: data.leagues,
+        selectedLeagueId: data.leagues[0]?.league_id ?? ""
+      });
 
       if (data.leagues[0]) {
         await loadLeagueSummary(data.leagues[0].league_id);

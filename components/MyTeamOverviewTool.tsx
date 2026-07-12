@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -32,6 +32,12 @@ import {
   type LeagueToolSummary,
   type LeagueToolUser
 } from "@/lib/leagueTools";
+import {
+  getStoredLeagueConnection,
+  saveStoredLeagueConnection,
+  subscribeStoredLeagueConnection,
+  updateStoredLeagueSelection
+} from "@/lib/sleeper/leagueConnection";
 
 type MyTeamOverviewToolProps = {
   paidAccess: boolean;
@@ -336,7 +342,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
     }
   ];
 
-  async function loadPlayerDirectory(rosters: LeagueToolRoster[]) {
+  const loadPlayerDirectory = useCallback(async (rosters: LeagueToolRoster[]) => {
     if (!liveAccess) {
       setPlayerDirectory(demoPlayerDirectory);
       return;
@@ -371,9 +377,9 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
     } finally {
       setLoadingPlayers(false);
     }
-  }
+  }, [liveAccess]);
 
-  async function loadLeagueSummary(leagueId: string, user?: LeagueToolUser | null) {
+  const loadLeagueSummary = useCallback(async (leagueId: string, user?: LeagueToolUser | null) => {
     if (!liveAccess) {
       setSelectedLeagueId(leagueId);
       const demo = getDemoSummary(leagueId);
@@ -384,6 +390,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
     }
 
     setSelectedLeagueId(leagueId);
+    updateStoredLeagueSelection(leagueId);
     setStatus("loading");
     setError("");
 
@@ -405,7 +412,41 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "League summary failed.");
     }
-  }
+  }, [liveAccess, loadPlayerDirectory]);
+
+  useEffect(() => {
+    if (!liveAccess) {
+      return;
+    }
+
+    const stored = getStoredLeagueConnection();
+    if (!stored) {
+      return;
+    }
+
+    setUsername(stored.username);
+    setSeason(stored.season);
+    setLoadedUser(stored.user);
+    setLeagues(stored.leagues);
+    setSelectedLeagueId(stored.selectedLeagueId);
+    setStatus("ready");
+
+    if (stored.selectedLeagueId) {
+      void loadLeagueSummary(stored.selectedLeagueId, stored.user);
+    }
+
+    return subscribeStoredLeagueConnection((connection) => {
+      if (!connection) {
+        return;
+      }
+
+      setUsername(connection.username);
+      setSeason(connection.season);
+      setLoadedUser(connection.user);
+      setLeagues(connection.leagues);
+      setSelectedLeagueId(connection.selectedLeagueId);
+    });
+  }, [liveAccess, loadLeagueSummary]);
 
   async function scanLeagues(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -442,6 +483,13 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
       setLoadedUser(data.user);
       setSeason(data.season);
       setLeagues(data.leagues);
+      saveStoredLeagueConnection({
+        username: trimmed,
+        season: data.season,
+        user: data.user,
+        leagues: data.leagues,
+        selectedLeagueId: data.leagues[0]?.league_id ?? ""
+      });
 
       if (data.leagues[0]) {
         await loadLeagueSummary(data.leagues[0].league_id, data.user);

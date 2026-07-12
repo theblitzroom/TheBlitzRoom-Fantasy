@@ -5,6 +5,8 @@ const productLinks = [
   ["Command Center", "/command-center"],
   ["Team Hub", "/team-hub/my-team"],
   ["League Hub", "/league-hub"],
+  ["Matchup", "/matchup"],
+  ["Waivers", "/waivers"],
   ["Power Rankings", "/power-rankings"],
   ["Rosters", "/rosters"],
   ["Trade Value", "/trade-value"],

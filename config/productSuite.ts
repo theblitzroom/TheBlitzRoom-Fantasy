@@ -2,8 +2,10 @@ import {
   BarChart3,
   ClipboardList,
   Command,
+  Crosshair,
   Gauge,
   LineChart,
+  ListPlus,
   Swords,
   Trophy,
   Users
@@ -37,6 +39,18 @@ export const productSuiteGroups = [
         href: "/team-hub/my-team",
         description: "Roster overview, asset tiers, age curve, and position value.",
         icon: Users
+      },
+      {
+        label: "Matchup Command",
+        href: "/matchup",
+        description: "Weekly edge, opponent pressure, and matchup leverage.",
+        icon: Crosshair
+      },
+      {
+        label: "Waiver Wire",
+        href: "/waivers",
+        description: "Roster-fit adds, drop pressure, and available-player scoring.",
+        icon: ListPlus
       },
       {
         label: "Rosters",
@@ -86,9 +100,10 @@ export const productSuiteGroups = [
 
 export const productCommandNav = [
   { label: "Team", href: "/team-hub/my-team", description: "My roster" },
+  { label: "Matchup", href: "/matchup", description: "Weekly edge" },
+  { label: "Waivers", href: "/waivers", description: "Add/drop" },
   { label: "League", href: "/league-hub", description: "Room context" },
   { label: "Trades", href: "/trade-value", description: "Market value" },
-  { label: "Research", href: "/power-rankings", description: "Rankings" },
   { label: "Draft", href: "/draft-room", description: "Live sync" },
   { label: "Command", href: "/command-center", description: "Launch pad" }
 ];

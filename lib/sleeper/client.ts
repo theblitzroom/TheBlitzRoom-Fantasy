@@ -78,6 +78,19 @@ export type SleeperPlayer = {
   age?: number;
   years_exp?: number;
   fantasy_positions?: string[];
+  active?: boolean;
+  injury_status?: string | null;
+  search_rank?: number | string | null;
+  status?: string | null;
+};
+
+export type SleeperMatchup = {
+  roster_id: number;
+  matchup_id?: number;
+  points?: number;
+  custom_points?: number | null;
+  players?: string[];
+  starters?: string[];
 };
 
 const SLEEPER_BASE_URL = "https://api.sleeper.app/v1";
@@ -125,6 +138,10 @@ export function getSleeperLeagueRosters(leagueId: string) {
 
 export function getSleeperLeagueDrafts(leagueId: string) {
   return sleeperFetch<SleeperDraft[]>(`/league/${encodeURIComponent(leagueId)}/drafts`);
+}
+
+export function getSleeperLeagueMatchups(leagueId: string, week: string) {
+  return sleeperFetch<SleeperMatchup[]>(`/league/${encodeURIComponent(leagueId)}/matchups/${encodeURIComponent(week)}`);
 }
 
 export async function getSleeperNflPlayers() {

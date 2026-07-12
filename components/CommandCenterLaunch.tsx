@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
   CircleAlert,
   ClipboardList,
+  Crosshair,
   Gauge,
+  ListPlus,
   Radio,
   Search,
   ShieldCheck,
@@ -17,6 +19,11 @@ import {
   Users
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
+import {
+  getStoredLeagueConnection,
+  saveStoredLeagueConnection,
+  subscribeStoredLeagueConnection
+} from "@/lib/sleeper/leagueConnection";
 
 type SleeperUser = {
   user_id?: string;
@@ -71,6 +78,18 @@ const tools = [
     body: "Separate contenders, rebuilders, fragile middle teams, and roster timelines.",
     href: "/team-hub/my-team",
     icon: Users
+  },
+  {
+    title: "Matchup Command",
+    body: "Turn your connected league into a weekly edge board with opponent pressure and win context.",
+    href: "/matchup",
+    icon: Crosshair
+  },
+  {
+    title: "Waiver Wire",
+    body: "Score available players against your roster needs and identify clean add/drop paths.",
+    href: "/waivers",
+    icon: ListPlus
   },
   {
     title: "Trade Room",
@@ -189,6 +208,35 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
   const [selectedLeagueId, setSelectedLeagueId] = useState(signedIn ? "" : demoLeagues[0].league_id);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (!signedIn) {
+      return;
+    }
+
+    const stored = getStoredLeagueConnection();
+    if (stored) {
+      setUsername(stored.username);
+      setSeason(stored.season);
+      setUser(stored.user);
+      setLeagues(stored.leagues);
+      setSelectedLeagueId(stored.selectedLeagueId);
+      setStatus("found");
+    }
+
+    return subscribeStoredLeagueConnection((connection) => {
+      if (!connection) {
+        return;
+      }
+
+      setUsername(connection.username);
+      setSeason(connection.season);
+      setUser(connection.user);
+      setLeagues(connection.leagues);
+      setSelectedLeagueId(connection.selectedLeagueId);
+      setStatus("found");
+    });
+  }, [signedIn]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -227,6 +275,13 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
       setLeagues(data.leagues);
       setSelectedLeagueId(data.leagues[0]?.league_id ?? "");
       setStatus("found");
+      saveStoredLeagueConnection({
+        username: trimmed,
+        season: data.season,
+        user: data.user,
+        leagues: data.leagues,
+        selectedLeagueId: data.leagues[0]?.league_id ?? ""
+      });
     } catch (caught) {
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "Sleeper lookup failed.");
@@ -373,7 +428,16 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
                   <button
                     className={active ? "command-league-card active" : "command-league-card"}
                     key={league.league_id}
-                    onClick={() => setSelectedLeagueId(league.league_id)}
+                    onClick={() => {
+                      setSelectedLeagueId(league.league_id);
+                      saveStoredLeagueConnection({
+                        username: username.trim() || user?.username || user?.display_name || "",
+                        season,
+                        user,
+                        leagues,
+                        selectedLeagueId: league.league_id
+                      });
+                    }}
                     type="button"
                   >
                     <span>{league.status}</span>

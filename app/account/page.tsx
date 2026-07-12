@@ -156,6 +156,16 @@ export default async function AccountPage() {
       href: "/team-hub/my-team",
       description: "Open your roster view, dynasty value, age profile, and asset tiers."
     },
+    {
+      title: "Matchup Command",
+      href: "/matchup",
+      description: "Open weekly matchup edge, opponent pressure, and league matchup board."
+    },
+    {
+      title: "Waiver Wire",
+      href: "/waivers",
+      description: "Review roster-fit waiver adds and drop-watch candidates."
+    },
     ...(paidAccess ? [
       {
         title: "Power Rankings",

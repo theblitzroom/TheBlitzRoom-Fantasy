@@ -21,6 +21,20 @@ export const productAreas = [
     metrics: ["Team rankings", "Economy map", "Position value"]
   },
   {
+    title: "Matchup Command",
+    href: "/matchup",
+    eyebrow: "Weekly edge",
+    description: "See your weekly matchup, opponent pressure, projected edge, and league-wide matchup board from the saved Sleeper connection.",
+    metrics: ["Win edge", "Opponent read", "Week board"]
+  },
+  {
+    title: "Waiver Wire",
+    href: "/waivers",
+    eyebrow: "Add/drop",
+    description: "Score available players against your actual roster needs and surface drop candidates from your bench.",
+    metrics: ["Roster fit", "Free agents", "Drop watch"]
+  },
+  {
     title: "Power Rankings",
     href: "/power-rankings",
     eyebrow: "Room strength",
