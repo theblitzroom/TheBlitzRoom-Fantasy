@@ -8,6 +8,8 @@ const routes = [
   "/power-rankings",
   "/rosters",
   "/trade-value",
+  "/trade-calculator",
+  "/trade-finder",
   "/draft-room",
   "/pricing",
   "/faq",
@@ -22,6 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return routes.map((route) => ({
     url: `${appUrl}${route}`,
-    lastModified: new Date("2026-07-09")
+    lastModified: new Date("2026-07-12")
   }));
 }

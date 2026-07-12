@@ -10,6 +10,8 @@ const productLinks = [
   ["Power Rankings", "/power-rankings"],
   ["Rosters", "/rosters"],
   ["Trade Value", "/trade-value"],
+  ["Trade Calculator", "/trade-calculator"],
+  ["Trade Finder", "/trade-finder"],
   ["Draft Room", "/draft-room"],
 ];
 

@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Crosshair,
   Gauge,
+  GitCompareArrows,
   ListPlus,
   Radio,
   Search,
@@ -96,6 +97,18 @@ const tools = [
     body: "Compare player value, pick value, age curve, and window fit before you move assets.",
     href: "/trade-value",
     icon: Swords
+  },
+  {
+    title: "Trade Calculator",
+    body: "Build both sides of a deal with picks and players before you send the offer.",
+    href: "/trade-calculator",
+    icon: GitCompareArrows
+  },
+  {
+    title: "Trade Finder",
+    body: "Find managers whose roster needs line up with your surplus and trade goals.",
+    href: "/trade-finder",
+    icon: Search
   },
   {
     title: "Power Rankings",

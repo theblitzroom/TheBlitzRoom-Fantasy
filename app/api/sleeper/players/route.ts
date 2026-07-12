@@ -15,7 +15,11 @@ function normalizePlayer(playerId: string, player?: SleeperPlayer): SleeperPlaye
     team: player.team ?? undefined,
     age: player.age,
     years_exp: player.years_exp,
-    fantasy_positions: player.fantasy_positions
+    fantasy_positions: player.fantasy_positions,
+    active: player.active,
+    injury_status: player.injury_status,
+    search_rank: player.search_rank,
+    status: player.status
   };
 }
 

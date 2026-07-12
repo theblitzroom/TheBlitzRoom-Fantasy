@@ -182,6 +182,16 @@ export default async function AccountPage() {
       title: "Trade Value",
       href: "/trade-value",
       description: "Review dynasty market, window fit, and asset-value tools."
+    },
+    {
+      title: "Trade Calculator",
+      href: "/trade-calculator",
+      description: "Compare player and pick packages with fairness scoring."
+    },
+    {
+      title: "Trade Finder",
+      href: "/trade-finder",
+      description: "Find trade partners based on roster needs and surplus."
     }] : []),
     {
       title: paidAccess ? "Draft Room" : "Choose a Plan",

@@ -55,6 +55,16 @@ const adminTools = [
     description: "Elite-only preview lane for future dynasty trade and asset-value tooling."
   },
   {
+    title: "Trade Calculator",
+    href: "/trade-calculator",
+    description: "Player and pick package calculator with format-aware fairness scoring."
+  },
+  {
+    title: "Trade Finder",
+    href: "/trade-finder",
+    description: "League-aware trade target finder using roster needs and surplus."
+  },
+  {
     title: "Draft Room",
     href: "/draft-room",
     description: "Sleeper sync workspace and live draft command surface."

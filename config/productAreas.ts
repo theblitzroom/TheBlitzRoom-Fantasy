@@ -54,5 +54,19 @@ export const productAreas = [
     eyebrow: "Market lens",
     description: "Turn player and pick value into smarter buy, sell, hold, and consolidation decisions.",
     metrics: ["Trade tiers", "Window fit", "Pick leverage"]
+  },
+  {
+    title: "Trade Calculator",
+    href: "/trade-calculator",
+    eyebrow: "Deal math",
+    description: "Compare both sides of a trade with players, rookie picks, format context, and a fairness score.",
+    metrics: ["Side totals", "Picks", "Fairness"]
+  },
+  {
+    title: "Trade Finder",
+    href: "/trade-finder",
+    eyebrow: "Partner fit",
+    description: "Find trade targets by matching your roster needs with another team's surplus and motivation.",
+    metrics: ["Targets", "Needs", "Offers"]
   }
 ];

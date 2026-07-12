@@ -4,8 +4,10 @@ import {
   Command,
   Crosshair,
   Gauge,
+  GitCompareArrows,
   LineChart,
   ListPlus,
+  Search,
   Swords,
   Trophy,
   Users
@@ -89,6 +91,18 @@ export const productSuiteGroups = [
         icon: Swords
       },
       {
+        label: "Trade Calculator",
+        href: "/trade-calculator",
+        description: "Compare both sides with players, picks, and fairness scoring.",
+        icon: GitCompareArrows
+      },
+      {
+        label: "Trade Finder",
+        href: "/trade-finder",
+        description: "Find partner fits from roster need and surplus signals.",
+        icon: Search
+      },
+      {
         label: "Research Signals",
         href: "/power-rankings",
         description: "News, trends, tiers, and positional leverage signals.",
@@ -103,7 +117,9 @@ export const productCommandNav = [
   { label: "Matchup", href: "/matchup", description: "Weekly edge" },
   { label: "Waivers", href: "/waivers", description: "Add/drop" },
   { label: "League", href: "/league-hub", description: "Room context" },
-  { label: "Trades", href: "/trade-value", description: "Market value" },
+  { label: "Trades", href: "/trade-value", description: "Market hub" },
+  { label: "Calc", href: "/trade-calculator", description: "Deal math" },
+  { label: "Finder", href: "/trade-finder", description: "Targets" },
   { label: "Draft", href: "/draft-room", description: "Live sync" },
   { label: "Command", href: "/command-center", description: "Launch pad" }
 ];
