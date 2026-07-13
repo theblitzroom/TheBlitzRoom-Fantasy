@@ -263,15 +263,15 @@ function draftPickSeasons(league?: LeagueToolLeague | null, tradedPicks: LeagueT
 }
 
 function draftPickRounds(league?: LeagueToolLeague | null, tradedPicks: LeagueToolTradedPick[] = []) {
-  const configuredRounds = Number(league?.settings?.draft_rounds ?? 4);
+  const configuredRounds = Number(league?.settings?.draft_rounds ?? 3);
   const tradedPickRounds = tradedPicks.map((pick) => Number(pick.round)).filter(Number.isFinite);
   const maxTradedRound = tradedPickRounds.length ? Math.max(...tradedPickRounds) : 0;
-  return clamp(Math.max(configuredRounds, maxTradedRound, 4), 1, 10);
+  return clamp(Math.max(configuredRounds, maxTradedRound, 3), 1, 3);
 }
 
 function draftPickOrigin(summary: LeagueToolSummary, selectedRoster: LeagueToolRoster, originalRosterId: number) {
   if (originalRosterId === selectedRoster.roster_id) {
-    return "Own pick";
+    return "My Team";
   }
 
   const originalRoster = summary.rosters.find((item) => item.roster_id === originalRosterId);
