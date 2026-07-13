@@ -250,7 +250,7 @@ function pickChipClass(round: number, acquired: boolean) {
 
 function draftPickSeasons(league?: LeagueToolLeague | null, tradedPicks: LeagueToolTradedPick[] = []) {
   const baseSeason = Number(league?.season) || new Date().getFullYear();
-  const seasons = new Set<number>([baseSeason, baseSeason + 1]);
+  const seasons = new Set<number>([baseSeason, baseSeason + 1, baseSeason + 2]);
 
   for (const pick of tradedPicks) {
     const season = Number(pick.season);
@@ -259,11 +259,14 @@ function draftPickSeasons(league?: LeagueToolLeague | null, tradedPicks: LeagueT
     }
   }
 
-  return [...seasons].sort((a, b) => a - b).slice(0, 3);
+  return [...seasons].sort((a, b) => a - b);
 }
 
-function draftPickRounds(league?: LeagueToolLeague | null) {
-  return clamp(Number(league?.settings?.draft_rounds ?? 4), 3, 5);
+function draftPickRounds(league?: LeagueToolLeague | null, tradedPicks: LeagueToolTradedPick[] = []) {
+  const configuredRounds = Number(league?.settings?.draft_rounds ?? 4);
+  const tradedPickRounds = tradedPicks.map((pick) => Number(pick.round)).filter(Number.isFinite);
+  const maxTradedRound = tradedPickRounds.length ? Math.max(...tradedPickRounds) : 0;
+  return clamp(Math.max(configuredRounds, maxTradedRound, 4), 1, 10);
 }
 
 function draftPickOrigin(summary: LeagueToolSummary, selectedRoster: LeagueToolRoster, originalRosterId: number) {
@@ -282,7 +285,7 @@ function selectedRosterDraftPicks(summary: LeagueToolSummary | null, roster: Lea
 
   const tradedPicks = summary.tradedPicks ?? [];
   const seasons = draftPickSeasons(league, tradedPicks);
-  const roundCount = draftPickRounds(league);
+  const roundCount = draftPickRounds(league, tradedPicks);
   const pickOwners = new Map<string, { originalRosterId: number; ownerId: number; round: number; season: number }>();
 
   for (const season of seasons) {
@@ -845,13 +848,12 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
                   <span><small>Next</small><strong>{draftPicks[0]?.label ?? "-"}</strong></span>
                 </div>
                 <div className="team-picks-list">
-                  {draftPicks.slice(0, 7).map((pick) => (
+                  {draftPicks.map((pick) => (
                     <span className={pickChipClass(pick.round, pick.acquired)} key={pick.id}>
                       <strong>{pick.label}</strong>
                       <small>{pick.origin}</small>
                     </span>
                   ))}
-                  {draftPicks.length > 7 ? <em>+{draftPicks.length - 7} more</em> : null}
                   {!draftPicks.length ? <p className="team-position-empty">No future picks detected.</p> : null}
                 </div>
               </article>
