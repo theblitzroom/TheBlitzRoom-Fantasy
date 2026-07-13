@@ -14,7 +14,6 @@ import {
   Radio,
   Search,
   ShieldCheck,
-  Sparkles,
   Swords,
   Trophy,
   Users,
@@ -394,11 +393,10 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
       href: "/trade-value"
     }
   ];
-  const workflowCards = [
-    ["Before the draft", "League Hub -> Draft Room", "Confirm format, then let live sync and recommendations handle the room."],
-    ["During the season", "Matchup -> Waivers", "Check weekly pressure, then make add/drop decisions with roster fit."],
-    ["Trade window", "Team Hub -> Trade Finder", "Identify surplus, find managers with matching needs, then calculate the deal."]
-  ];
+  const toolGroups = ["Draft", "Team", "League", "Weekly", "Market"].map((group) => ({
+    group,
+    tools: launchTools.filter((tool) => tool.group === group)
+  })).filter((group) => group.tools.length);
 
   return (
     <div className="command-center-launch">
@@ -527,7 +525,7 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
 
           {leagues.length ? (
             <div className="command-league-grid compact">
-              {leagues.slice(0, 8).map((league) => {
+              {leagues.slice(0, 6).map((league) => {
                 const active = selectedLeague?.league_id === league.league_id;
 
                 return (
@@ -553,31 +551,12 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
         </section>
       ) : null}
 
-      <section className="command-workflow-panel">
-        <div className="command-card-header">
-          <div>
-            <span className="eyebrow">How to use this tab</span>
-            <h2>Command Center is the traffic controller.</h2>
-          </div>
-          <span className="league-filter-pill"><Sparkles size={13} /> {selectedLeague ? selectedFormat : "Workflow"}</span>
-        </div>
-        <div className="command-workflow-grid">
-          {workflowCards.map(([label, title, body]) => (
-            <article className="command-workflow-card" key={label}>
-              <span>{label}</span>
-              <strong>{title}</strong>
-              <p>{body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="command-workspace">
-        <article className="command-board-card">
+      <section className="command-focus-grid">
+        <article className="command-board-card compact">
           <div className="command-card-header">
             <div>
               <span className="eyebrow">Room read</span>
-              <h2>{selectedLeague ? "What the selected league changes." : "What changes after you connect a league."}</h2>
+              <h2>{selectedLeague ? "What matters right now." : "Connect a league for live context."}</h2>
             </div>
             <span className="league-filter-pill">{selectedLeague ? `${selectedScoring} - ${selectedLineup}` : "Awaiting scan"}</span>
           </div>
@@ -598,37 +577,34 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
           </div>
         </article>
 
-        <aside className="command-side-stack">
-          <article className="command-side-card">
-            <span className="eyebrow">Connected room</span>
-            <h3>{selectedLeague?.name ?? "No league yet"}</h3>
-            <p>{selectedLeague ? `${cleanStatus(selectedLeague.status)} - ${selectedFormat} - ${selectedScoring}.` : "Use the connection panel to select a real Sleeper league."}</p>
-          </article>
-          <article className="command-side-card">
-            <span className="eyebrow">Shortcut</span>
-            <h3>{selectedLeague?.draft_id ? "Draft is ready" : "Build context first"}</h3>
-            <p>{selectedLeague?.draft_id ? "Open the Draft Room with the selected league's draft ID attached." : "League Hub and Team Hub are the cleanest starting points before a draft ID exists."}</p>
-            <Link href={gatedHref(selectedLeague?.draft_id ? draftRoomHref : "/league-hub")}>
-              {selectedLeague?.draft_id ? "Open Draft Room" : "Open League Hub"} <ArrowRight size={14} />
-            </Link>
-          </article>
-        </aside>
-      </section>
+        <article className="command-quick-tools-card">
+          <div className="command-card-header compact">
+            <div>
+              <span className="eyebrow">Tool drawer</span>
+              <h2>Open only what you need.</h2>
+            </div>
+          </div>
+          <div className="command-quick-tool-groups">
+            {toolGroups.map((group) => (
+              <div className="command-quick-tool-group" key={group.group}>
+                <span>{group.group}</span>
+                <div>
+                  {group.tools.map((tool) => {
+                    const Icon = tool.icon;
 
-      <section className="command-tools-grid" aria-label="Command center tools">
-        {launchTools.map((tool) => {
-          const Icon = tool.icon;
-
-          return (
-            <Link className="command-tool-card" href={gatedHref(tool.href)} key={tool.title}>
-              <span className="command-tool-kicker">{tool.group}</span>
-              <span className="command-tool-icon"><Icon size={19} /></span>
-              <h2>{tool.title}</h2>
-              <p>{tool.body}</p>
-              <strong>Open <ArrowRight size={14} /></strong>
-            </Link>
-          );
-        })}
+                    return (
+                      <Link className="command-quick-tool-link" href={gatedHref(tool.href)} key={tool.title}>
+                        <Icon size={16} />
+                        <strong>{tool.title}</strong>
+                        <ArrowRight size={14} />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
     </div>
   );
