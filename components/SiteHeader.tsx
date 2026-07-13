@@ -20,10 +20,14 @@ const mobileUtilityNav = visibleNav.filter((item) => ["Pricing", "FAQ"].includes
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [openMobileGroup, setOpenMobileGroup] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const productActive = productNav.some((item) => pathname === item.href);
+  const defaultMobileGroup = useMemo(() => {
+    return productSuiteGroups.find((group) => group.label !== "Market" && group.items.some((item) => pathname === item.href))?.label ?? "";
+  }, [pathname]);
   const supabase = useMemo(() => {
     try {
       return createSupabaseBrowserClient();
@@ -59,6 +63,12 @@ export function SiteHeader() {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  useEffect(() => {
+    if (open) {
+      setOpenMobileGroup(defaultMobileGroup);
+    }
+  }, [defaultMobileGroup, open]);
 
   async function signOut() {
     if (!supabase) {
@@ -208,16 +218,22 @@ export function SiteHeader() {
               <span className="mobile-section-title">Tools</span>
               {productSuiteGroups.map((group) => {
                 const groupActive = group.items.some((item) => pathname === item.href);
+                const groupOpen = openMobileGroup === group.label;
                 return (
-                  <details className="mobile-nav-group" key={group.label} open={groupActive}>
-                    <summary>
+                  <section className={`${groupOpen ? "mobile-nav-group open" : "mobile-nav-group"}${groupActive ? " active" : ""}`} key={group.label}>
+                    <button
+                      className="mobile-nav-group-trigger"
+                      type="button"
+                      aria-expanded={groupOpen}
+                      onClick={() => setOpenMobileGroup((current) => current === group.label ? "" : group.label)}
+                    >
                       <span>
                         <strong>{group.label}</strong>
                         <small>{group.description}</small>
                       </span>
                       <ChevronDown size={16} />
-                    </summary>
-                    <div className="mobile-nav-group-links">
+                    </button>
+                    <div className="mobile-nav-group-links" aria-hidden={!groupOpen}>
                       {group.items.map((item) => {
                         const Icon = item.icon;
                         const active = pathname === item.href;
@@ -229,7 +245,7 @@ export function SiteHeader() {
                         );
                       })}
                     </div>
-                  </details>
+                  </section>
                 );
               })}
             </div>

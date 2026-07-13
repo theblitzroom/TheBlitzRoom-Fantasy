@@ -4157,58 +4157,81 @@ td {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.025);
   overflow: hidden;
+  transition: border-color 180ms ease, background 180ms ease;
 }
 
-.mobile-nav-group summary {
+.mobile-nav-group.active {
+  border-color: rgba(226, 190, 99, 0.22);
+}
+
+.mobile-nav-group.open {
+  border-color: rgba(226, 190, 99, 0.3);
+  background: rgba(217, 179, 95, 0.035);
+}
+
+.mobile-nav-group-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
   padding: 13px;
+  border: 0;
+  color: inherit;
   cursor: pointer;
-  list-style: none;
+  text-align: left;
+  background: transparent;
 }
 
-.mobile-nav-group summary::-webkit-details-marker {
-  display: none;
-}
-
-.mobile-nav-group summary span {
+.mobile-nav-group-trigger span {
   display: grid;
   min-width: 0;
   gap: 2px;
 }
 
-.mobile-nav-group summary strong,
-.mobile-nav-group summary small {
+.mobile-nav-group-trigger strong,
+.mobile-nav-group-trigger small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.mobile-nav-group summary strong {
+.mobile-nav-group-trigger strong {
   color: var(--text);
   font-size: 14px;
 }
 
-.mobile-nav-group summary small {
+.mobile-nav-group-trigger small {
   color: var(--faint);
   font-size: 11px;
 }
 
-.mobile-nav-group summary svg {
+.mobile-nav-group-trigger svg {
+  flex: 0 0 auto;
   color: var(--muted);
   transition: transform 160ms ease;
 }
 
-.mobile-nav-group[open] summary svg {
+.mobile-nav-group.open .mobile-nav-group-trigger svg {
   transform: rotate(180deg);
 }
 
 .mobile-nav-group-links {
   display: grid;
   gap: 6px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  pointer-events: none;
+  transition: max-height 220ms ease, opacity 160ms ease, padding 180ms ease;
+}
+
+.mobile-nav-group.open .mobile-nav-group-links {
+  max-height: 280px;
+  opacity: 1;
   padding: 0 8px 8px;
+  pointer-events: auto;
 }
 
 .mobile-nav-link {
