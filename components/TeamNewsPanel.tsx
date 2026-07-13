@@ -211,7 +211,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
 
       <div className="team-news-strip-actions">
         <button className={showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(true)} type="button">
-          My{rosterItems.length ? ` ${rosterItems.length}` : ""}
+          Team{rosterItems.length ? ` ${rosterItems.length}` : ""}
         </button>
         <button className={!showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(false)} type="button">
           All
