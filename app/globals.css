@@ -2872,12 +2872,12 @@ td {
 }
 
 .team-player-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 9px;
+  gap: 10px;
   min-width: 0;
-  min-height: 55px;
+  min-height: 62px;
   padding: 9px;
   border: 1px solid rgba(188, 166, 255, 0.1);
   border-radius: 12px;
@@ -2898,26 +2898,82 @@ td {
     rgba(255, 255, 255, 0.035);
 }
 
-.team-player-card > div {
+.team-player-photo {
+  position: relative;
   display: grid;
-  gap: 3px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(226, 190, 99, 0.16);
+  border-radius: 11px;
+  color: var(--gold-2);
+  background:
+    radial-gradient(circle at 50% 12%, rgba(217, 179, 95, 0.16), transparent 70%),
+    linear-gradient(135deg, rgba(126, 87, 229, 0.18), rgba(10, 7, 15, 0.8));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.team-player-photo img {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.team-player-photo em {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+}
+
+.team-player-copy {
+  display: grid;
+  gap: 5px;
   min-width: 0;
 }
 
-.team-player-card strong,
-.team-player-card small {
+.team-player-copy strong,
+.team-player-copy small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.team-player-card strong {
+.team-player-copy strong {
   color: var(--text);
   font-size: 13px;
   line-height: 1.15;
 }
 
-.team-player-card small {
+.team-player-copy span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.team-player-copy b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  padding: 0 7px;
+  border: 1px solid rgba(226, 190, 99, 0.18);
+  border-radius: 999px;
+  color: var(--gold-2);
+  background: rgba(217, 179, 95, 0.08);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.team-player-copy small {
   color: var(--faint);
   font-size: 11px;
   font-weight: 750;

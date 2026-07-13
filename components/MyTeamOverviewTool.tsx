@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -110,6 +111,16 @@ function playerName(playerId: string, player?: LeagueToolPlayer) {
     .split("-")
     .map((part) => part ? part[0].toUpperCase() + part.slice(1) : part)
     .join(" ");
+}
+
+function playerInitials(name: string) {
+  const parts = name.split(/\s+/).filter(Boolean);
+  const initials = parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : name.slice(0, 2);
+  return initials.toUpperCase();
+}
+
+function playerHeadshotUrl(playerId: string) {
+  return /^\d+$/.test(playerId) ? `https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg` : "";
 }
 
 function rosterRole(playerId: string, roster?: LeagueToolRoster | null) {
@@ -316,14 +327,17 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
         const player = playerDirectory[playerId];
         const role = rosterRole(playerId, selectedRoster);
         const position = rosterPositionGroup(player);
+        const name = playerName(playerId, player);
 
         return {
           playerId,
-          name: playerName(playerId, player),
+          name,
           position,
-          team: player?.team || "-",
+          team: player?.team || "FA",
           age: player?.age,
           yearsExp: player?.years_exp,
+          initials: playerInitials(name),
+          photoUrl: playerHeadshotUrl(playerId),
           role
         };
       })
@@ -612,13 +626,28 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
                 <div className="team-position-player-list">
                   {group.players.map((player) => (
                     <div className={player.role === "Starter" ? "team-player-card starter" : "team-player-card"} key={player.playerId}>
-                      <div>
+                      <span className="team-player-photo" aria-hidden="true">
+                        {player.photoUrl ? (
+                          <Image
+                            alt=""
+                            height={38}
+                            loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                            }}
+                            src={player.photoUrl}
+                            width={38}
+                          />
+                        ) : null}
+                        <em>{player.initials}</em>
+                      </span>
+                      <div className="team-player-copy">
                         <strong>{player.name}</strong>
-                        <small>
-                          {player.team}
-                          {player.age ? ` - Age ${player.age}` : ""}
-                          {typeof player.yearsExp === "number" ? ` - ${player.yearsExp} yr` : ""}
-                        </small>
+                        <span>
+                          <b>{player.team}</b>
+                          {player.age ? <small>Age {player.age}</small> : null}
+                          {typeof player.yearsExp === "number" ? <small>{player.yearsExp} yr</small> : null}
+                        </span>
                       </div>
                       <span className={roleClass(player.role)}>{player.role}</span>
                     </div>
