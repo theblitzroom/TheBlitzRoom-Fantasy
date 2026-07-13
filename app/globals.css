@@ -4827,6 +4827,7 @@ td {
   .team-news-strip {
     grid-template-columns: 1fr auto;
     min-height: auto;
+    order: -1;
   }
 
   .team-news-strip-label {
