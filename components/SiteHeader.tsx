@@ -14,6 +14,8 @@ import { PremiumButton } from "./PremiumButton";
 const visibleNav = navItems.filter((item) => item.label !== "Billing");
 const productNav = productSuiteGroups.flatMap((group) => group.items);
 const primaryNav = visibleNav.filter((item) => ["Home", "Draft Room", "Pricing"].includes(item.label));
+const mobilePrimaryNav = visibleNav.filter((item) => ["Home", "Command Center", "Draft Room", "Team Hub"].includes(item.label));
+const mobileUtilityNav = visibleNav.filter((item) => ["Pricing", "FAQ"].includes(item.label));
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -160,9 +162,15 @@ export function SiteHeader() {
       {open ? (
         <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="mobile-drawer-panel">
-            <button className="icon-button close-button" onClick={() => setOpen(false)} aria-label="Close menu">
-              <X size={20} />
-            </button>
+            <div className="mobile-drawer-top">
+              <div>
+                <span className="eyebrow">Menu</span>
+                <strong>TheBlitzRoom</strong>
+              </div>
+              <button className="icon-button close-button" onClick={() => setOpen(false)} aria-label="Close menu">
+                <X size={20} />
+              </button>
+            </div>
             {user ? (
               <div className="mobile-account-card">
                 <UserCircle size={18} />
@@ -183,19 +191,61 @@ export function SiteHeader() {
                 </span>
               </Link>
             ) : null}
-            {visibleNav.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-              return (
-                <Link className={active ? "mobile-nav-card active" : "mobile-nav-card"} href={item.href} key={item.href} onClick={() => setOpen(false)}>
-                  <Icon size={18} />
-                  <span>
-                    <strong>{item.label}</strong>
-                    <small>{item.description}</small>
-                  </span>
+            <nav className="mobile-primary-grid" aria-label="Primary mobile navigation">
+              {mobilePrimaryNav.map((item) => {
+                const Icon = item.icon;
+                const active = pathname === item.href;
+                return (
+                  <Link className={active ? "mobile-primary-link active" : "mobile-primary-link"} href={item.href} key={item.href} onClick={() => setOpen(false)}>
+                    <Icon size={17} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mobile-menu-section">
+              <span className="mobile-section-title">Tools</span>
+              {productSuiteGroups.map((group) => {
+                const groupActive = group.items.some((item) => pathname === item.href);
+                return (
+                  <details className="mobile-nav-group" key={group.label} open={groupActive}>
+                    <summary>
+                      <span>
+                        <strong>{group.label}</strong>
+                        <small>{group.description}</small>
+                      </span>
+                      <ChevronDown size={16} />
+                    </summary>
+                    <div className="mobile-nav-group-links">
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        const active = pathname === item.href;
+                        return (
+                          <Link className={active ? "mobile-nav-link active" : "mobile-nav-link"} href={item.href} key={`${group.label}-${item.href}`} onClick={() => setOpen(false)}>
+                            <Icon size={16} />
+                            <span>{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+
+            <nav className="mobile-utility-row" aria-label="Account and support">
+              {mobileUtilityNav.map((item) => (
+                <Link className={pathname === item.href ? "mobile-utility-link active" : "mobile-utility-link"} href={item.href} key={item.href} onClick={() => setOpen(false)}>
+                  {item.label}
                 </Link>
-              );
-            })}
+              ))}
+              {user ? (
+                <Link className={pathname === "/account" ? "mobile-utility-link active" : "mobile-utility-link"} href="/account" onClick={() => setOpen(false)}>
+                  Account
+                </Link>
+              ) : null}
+            </nav>
           </div>
         </div>
       ) : null}
