@@ -160,6 +160,14 @@ function playerHeadshotUrl(playerId: string) {
   return /^\d+$/.test(playerId) ? `https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg` : "";
 }
 
+function formatPlayerAge(age?: number) {
+  if (!age) {
+    return "";
+  }
+
+  return Number.isInteger(age) ? String(age) : age.toFixed(1);
+}
+
 function nflTeamLogoUrl(team?: string | null) {
   const logoCode = team ? nflTeamLogoCodes[team.toUpperCase()] : "";
   return logoCode ? `https://a.espncdn.com/i/teamlogos/nfl/500/${logoCode}.png` : "";
@@ -376,8 +384,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
           name,
           position,
           team: player?.team || "FA",
-          age: player?.age,
-          yearsExp: player?.years_exp,
+          age: formatPlayerAge(player?.age),
           initials: playerInitials(name),
           photoUrl: playerHeadshotUrl(playerId),
           teamLogoUrl: nflTeamLogoUrl(player?.team),
@@ -661,7 +668,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
           </div>
           <div className="team-roster-position-board" aria-label="Roster grouped by position">
             {selectedRosterPlayers.length ? rosterGroups.map((group) => (
-              <article className="team-position-roster-card" key={group.position}>
+              <article className={`team-position-roster-card team-position-roster-card-${group.position.toLowerCase()}`} key={group.position}>
                 <div className="team-position-roster-header">
                   <span className="position-chip">{group.position}</span>
                   <strong>{group.players.length}</strong>
@@ -699,8 +706,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
                             ) : null}
                             <span>{player.team}</span>
                           </b>
-                          {player.age ? <small>Age {player.age}</small> : null}
-                          {typeof player.yearsExp === "number" ? <small>{player.yearsExp} yr</small> : null}
+                          {player.age ? <small>{player.age} yrs</small> : null}
                           <small className={roleClass(player.role)}>{player.role}</small>
                         </span>
                       </div>

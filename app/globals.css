@@ -2525,7 +2525,7 @@ td {
 
 .team-roster-first-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 330px;
   gap: 14px;
   align-items: start;
 }
@@ -2835,21 +2835,29 @@ td {
 
 .team-roster-position-board {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
   align-items: start;
 }
 
 .team-position-roster-card {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
-  padding: 11px;
+  padding: 9px;
   border: 1px solid rgba(188, 166, 255, 0.13);
   border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
     rgba(255, 255, 255, 0.025);
+}
+
+.team-position-roster-card-other {
+  grid-column: 1 / -1;
+}
+
+.team-position-roster-card-other .team-position-player-list {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .team-position-roster-header {
@@ -2867,18 +2875,18 @@ td {
 
 .team-position-player-list {
   display: grid;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
 }
 
 .team-player-card {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 38px minmax(0, 1fr);
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   min-width: 0;
-  min-height: 74px;
-  padding: 10px;
+  min-height: 66px;
+  padding: 8px;
   border: 1px solid rgba(188, 166, 255, 0.1);
   border-radius: 12px;
   background: rgba(8, 6, 13, 0.34);
@@ -2901,8 +2909,8 @@ td {
 .team-player-photo {
   position: relative;
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   place-items: center;
   overflow: hidden;
   border: 1px solid rgba(226, 190, 99, 0.16);
@@ -2935,7 +2943,7 @@ td {
 
 .team-player-copy {
   display: grid;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -2949,8 +2957,8 @@ td {
   display: -webkit-box;
   overflow: hidden;
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.2;
+  font-size: 13px;
+  line-height: 1.18;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -2958,7 +2966,7 @@ td {
 .team-player-copy span {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
   flex-wrap: wrap;
   row-gap: 5px;
@@ -2991,7 +2999,7 @@ td {
 
 .team-player-copy small {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 750;
 }
 
@@ -5421,6 +5429,10 @@ td {
     grid-template-columns: 1fr;
   }
 
+  .team-roster-position-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .team-detail-grid,
   .team-action-grid,
   .team-strength-grid,
@@ -5601,6 +5613,7 @@ td {
   .team-action-grid,
   .team-strength-grid,
   .my-roster-summary,
+  .team-roster-position-board,
   .team-analytics-grid,
   .team-slot-grid,
   .team-roster-picker {
