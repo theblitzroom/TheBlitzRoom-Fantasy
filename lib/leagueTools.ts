@@ -72,11 +72,20 @@ export type LeagueToolPlayer = {
   status?: string | null;
 };
 
+export type LeagueToolTradedPick = {
+  season: string;
+  round: number;
+  roster_id: number;
+  owner_id: number;
+  previous_owner_id?: number;
+};
+
 export type LeagueToolSummary = {
   league: LeagueToolLeague;
   users: LeagueToolManager[];
   rosters: LeagueToolRoster[];
   drafts: LeagueToolDraft[];
+  tradedPicks?: LeagueToolTradedPick[];
 };
 
 export type LeagueLookupResponse = {
@@ -343,7 +352,12 @@ export const demoSummary: LeagueToolSummary = {
     { roster_id: 3, owner_id: "3", players: demoRosterThreePlayers, starters: demoRosterThreePlayers.slice(0, 10), taxi: demoRosterThreePlayers.slice(16, 20), settings: { wins: 5, losses: 8, fpts: 1510, ppts: 1698 } },
     { roster_id: 4, owner_id: "4", players: demoRosterFourPlayers, starters: demoRosterFourPlayers.slice(0, 10), reserve: demoRosterFourPlayers.slice(14, 16), settings: { wins: 4, losses: 9, fpts: 1402, ppts: 1465 } }
   ],
-  drafts: [{ draft_id: "demo_draft_12_team_superflex", status: "pre_draft", type: "startup", season: "2026" }]
+  drafts: [{ draft_id: "demo_draft_12_team_superflex", status: "pre_draft", type: "startup", season: "2026" }],
+  tradedPicks: [
+    { season: "2026", round: 1, roster_id: 3, owner_id: 1, previous_owner_id: 3 },
+    { season: "2027", round: 2, roster_id: 2, owner_id: 1, previous_owner_id: 2 },
+    { season: "2026", round: 3, roster_id: 1, owner_id: 4, previous_owner_id: 1 }
+  ]
 };
 
 export function getDemoSummary(leagueId: string): LeagueToolSummary {

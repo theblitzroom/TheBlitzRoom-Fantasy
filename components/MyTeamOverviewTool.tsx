@@ -32,6 +32,7 @@ import {
   type LeagueToolPlayer,
   type LeagueToolRoster,
   type LeagueToolSummary,
+  type LeagueToolTradedPick,
   type LeagueToolUser
 } from "@/lib/leagueTools";
 import {
@@ -51,6 +52,15 @@ import {
 type MyTeamOverviewToolProps = {
   paidAccess: boolean;
   signedIn: boolean;
+};
+
+type RosterDraftPick = {
+  id: string;
+  label: string;
+  origin: string;
+  round: number;
+  season: number;
+  acquired: boolean;
 };
 
 function rosterRecord(roster?: LeagueToolRoster | null) {
@@ -212,6 +222,101 @@ function strengthValues(roster?: LeagueToolRoster | null) {
 function sortIndex(values: string[], value: string) {
   const index = values.indexOf(value);
   return index === -1 ? values.length : index;
+}
+
+function ordinalRound(round: number) {
+  if (round === 1) {
+    return "1st";
+  }
+
+  if (round === 2) {
+    return "2nd";
+  }
+
+  if (round === 3) {
+    return "3rd";
+  }
+
+  return `${round}th`;
+}
+
+function draftPickLabel(season: number, round: number) {
+  return `${String(season).slice(-2)} ${ordinalRound(round)}`;
+}
+
+function pickChipClass(round: number, acquired: boolean) {
+  return `team-pick-chip pick-round-${round <= 1 ? "first" : round === 2 ? "second" : "depth"}${acquired ? " acquired" : ""}`;
+}
+
+function draftPickSeasons(league?: LeagueToolLeague | null, tradedPicks: LeagueToolTradedPick[] = []) {
+  const baseSeason = Number(league?.season) || new Date().getFullYear();
+  const seasons = new Set<number>([baseSeason, baseSeason + 1]);
+
+  for (const pick of tradedPicks) {
+    const season = Number(pick.season);
+    if (Number.isFinite(season)) {
+      seasons.add(season);
+    }
+  }
+
+  return [...seasons].sort((a, b) => a - b).slice(0, 3);
+}
+
+function draftPickRounds(league?: LeagueToolLeague | null) {
+  return clamp(Number(league?.settings?.draft_rounds ?? 4), 3, 5);
+}
+
+function selectedRosterDraftPicks(summary: LeagueToolSummary | null, roster: LeagueToolRoster | null, league?: LeagueToolLeague | null) {
+  if (!summary || !roster) {
+    return [];
+  }
+
+  const tradedPicks = summary.tradedPicks ?? [];
+  const seasons = draftPickSeasons(league, tradedPicks);
+  const roundCount = draftPickRounds(league);
+  const pickOwners = new Map<string, { originalRosterId: number; ownerId: number; round: number; season: number }>();
+
+  for (const season of seasons) {
+    for (let round = 1; round <= roundCount; round += 1) {
+      for (const leagueRoster of summary.rosters) {
+        const key = `${season}-${round}-${leagueRoster.roster_id}`;
+        pickOwners.set(key, {
+          originalRosterId: leagueRoster.roster_id,
+          ownerId: leagueRoster.roster_id,
+          round,
+          season
+        });
+      }
+    }
+  }
+
+  for (const pick of tradedPicks) {
+    const season = Number(pick.season);
+
+    if (!Number.isFinite(season) || pick.round > roundCount) {
+      continue;
+    }
+
+    const key = `${season}-${pick.round}-${pick.roster_id}`;
+    pickOwners.set(key, {
+      originalRosterId: pick.roster_id,
+      ownerId: pick.owner_id,
+      round: pick.round,
+      season
+    });
+  }
+
+  return [...pickOwners.values()]
+    .filter((pick) => pick.ownerId === roster.roster_id)
+    .sort((a, b) => a.season - b.season || a.round - b.round || a.originalRosterId - b.originalRosterId)
+    .map<RosterDraftPick>((pick) => ({
+      id: `${pick.season}-${pick.round}-${pick.originalRosterId}`,
+      label: draftPickLabel(pick.season, pick.round),
+      origin: pick.originalRosterId === roster.roster_id ? "Own" : `From R${pick.originalRosterId}`,
+      round: pick.round,
+      season: pick.season,
+      acquired: pick.originalRosterId !== roster.roster_id
+    }));
 }
 
 function chunkItems<T>(items: T[], size: number) {
@@ -413,6 +518,8 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
       players: selectedRosterPlayers.filter((player) => player.position === position)
     })).filter((group) => group.position !== "Other" || group.players.length)
   ), [selectedRosterPlayers]);
+  const draftPicks = useMemo(() => selectedRosterDraftPicks(summary, selectedRoster, activeLeague), [activeLeague, selectedRoster, summary]);
+  const firstRoundPickCount = draftPicks.filter((pick) => pick.round === 1).length;
   const strengthProfile = useMemo(() => {
     const rosterMetrics = (summary?.rosters ?? []).map((roster) => ({
       roster,
@@ -666,56 +773,80 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
             <span><small>Taxi</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Taxi").length || "-"}</strong></span>
             <span><small>Reserve</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Reserve").length || "-"}</strong></span>
           </div>
-          <div className="team-roster-position-board" aria-label="Roster grouped by position">
-            {selectedRosterPlayers.length ? rosterGroups.map((group) => (
-              <article className={`team-position-roster-card team-position-roster-card-${group.position.toLowerCase()}`} key={group.position}>
-                <div className="team-position-roster-header">
-                  <span className="position-chip">{group.position}</span>
-                  <strong>{group.players.length}</strong>
-                </div>
-                <div className="team-position-player-list">
-                  {group.players.map((player) => (
-                    <div className={player.role === "Starter" ? "team-player-card starter" : "team-player-card"} key={player.playerId}>
-                      <span className="team-player-photo" aria-hidden="true">
-                        {player.photoUrl ? (
-                          <Image
-                            alt=""
-                            height={38}
-                            loading="lazy"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                            src={player.photoUrl}
-                            width={38}
-                          />
-                        ) : null}
-                        <em>{player.initials}</em>
-                      </span>
-                      <div className="team-player-copy">
-                        <strong>{player.name}</strong>
-                        <span>
-                          <b className="team-player-team">
-                            {player.teamLogoUrl ? (
-                              <Image
-                                alt=""
-                                height={16}
-                                loading="lazy"
-                                src={player.teamLogoUrl}
-                                width={16}
-                              />
-                            ) : null}
-                            <span>{player.team}</span>
-                          </b>
-                          {player.age ? <small>{player.age} yrs</small> : null}
-                          <small className={roleClass(player.role)}>{player.role}</small>
+          <div className="team-roster-assets-layout">
+            <div className="team-roster-position-board" aria-label="Roster grouped by position">
+              {selectedRosterPlayers.length ? rosterGroups.map((group) => (
+                <article className={`team-position-roster-card team-position-roster-card-${group.position.toLowerCase()}`} key={group.position}>
+                  <div className="team-position-roster-header">
+                    <span className="position-chip">{group.position}</span>
+                    <strong>{group.players.length}</strong>
+                  </div>
+                  <div className="team-position-player-list">
+                    {group.players.map((player) => (
+                      <div className={player.role === "Starter" ? "team-player-card starter" : "team-player-card"} key={player.playerId}>
+                        <span className="team-player-photo" aria-hidden="true">
+                          {player.photoUrl ? (
+                            <Image
+                              alt=""
+                              height={38}
+                              loading="lazy"
+                              onError={(event) => {
+                                event.currentTarget.style.display = "none";
+                              }}
+                              src={player.photoUrl}
+                              width={38}
+                            />
+                          ) : null}
+                          <em>{player.initials}</em>
                         </span>
+                        <div className="team-player-copy">
+                          <strong>{player.name}</strong>
+                          <span>
+                            <b className="team-player-team">
+                              {player.teamLogoUrl ? (
+                                <Image
+                                  alt=""
+                                  height={16}
+                                  loading="lazy"
+                                  src={player.teamLogoUrl}
+                                  width={16}
+                                />
+                              ) : null}
+                              <span>{player.team}</span>
+                            </b>
+                            {player.age ? <small>{player.age} yrs</small> : null}
+                            <small className={roleClass(player.role)}>{player.role}</small>
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    ))}
+                    {!group.players.length ? <p className="team-position-empty">No players loaded</p> : null}
+                  </div>
+                </article>
+              )) : null}
+            </div>
+            {selectedRoster ? (
+              <article className="team-picks-mini-card">
+                <div className="team-position-roster-header">
+                  <span className="position-chip position-chip-picks">Picks</span>
+                  <strong>{draftPicks.length || "-"}</strong>
+                </div>
+                <div className="team-picks-snapshot">
+                  <span><small>1sts</small><strong>{firstRoundPickCount || "-"}</strong></span>
+                  <span><small>Next</small><strong>{draftPicks[0]?.label ?? "-"}</strong></span>
+                </div>
+                <div className="team-picks-list">
+                  {draftPicks.slice(0, 7).map((pick) => (
+                    <span className={pickChipClass(pick.round, pick.acquired)} key={pick.id}>
+                      <strong>{pick.label}</strong>
+                      <small>{pick.origin}</small>
+                    </span>
                   ))}
-                  {!group.players.length ? <p className="team-position-empty">No players loaded</p> : null}
+                  {draftPicks.length > 7 ? <em>+{draftPicks.length - 7} more</em> : null}
+                  {!draftPicks.length ? <p className="team-position-empty">No future picks detected.</p> : null}
                 </div>
               </article>
-            )) : null}
+            ) : null}
           </div>
           {!selectedRosterPlayers.length ? (
             <div className="team-roster-empty-state">

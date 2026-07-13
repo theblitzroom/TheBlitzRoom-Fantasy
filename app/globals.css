@@ -2833,6 +2833,13 @@ td {
   border-color: rgba(188, 166, 255, 0.14);
 }
 
+.team-roster-assets-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 146px;
+  gap: 8px;
+  align-items: start;
+}
+
 .team-roster-position-board {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2849,6 +2856,18 @@ td {
   border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    rgba(255, 255, 255, 0.025);
+}
+
+.team-picks-mini-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(226, 190, 99, 0.16);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(217, 179, 95, 0.07), transparent),
     rgba(255, 255, 255, 0.025);
 }
 
@@ -2871,6 +2890,89 @@ td {
   color: var(--gold-2);
   font-size: 20px;
   line-height: 1;
+}
+
+.position-chip-picks {
+  min-width: auto;
+  color: var(--gold-2);
+  border-color: rgba(226, 190, 99, 0.22);
+  background: rgba(217, 179, 95, 0.08);
+}
+
+.team-picks-snapshot {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.team-picks-snapshot span {
+  display: grid;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid rgba(188, 166, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(8, 6, 13, 0.3);
+}
+
+.team-picks-snapshot small {
+  color: var(--faint);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.team-picks-snapshot strong {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.team-picks-list {
+  display: grid;
+  gap: 5px;
+}
+
+.team-pick-chip {
+  display: grid;
+  gap: 2px;
+  min-height: 38px;
+  padding: 6px 7px;
+  border: 1px solid rgba(188, 166, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(8, 6, 13, 0.3);
+}
+
+.team-pick-chip strong,
+.team-pick-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-pick-chip strong {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+.team-pick-chip small,
+.team-picks-list em {
+  color: var(--faint);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.team-pick-chip.acquired {
+  border-color: rgba(226, 190, 99, 0.22);
+  background:
+    linear-gradient(90deg, rgba(217, 179, 95, 0.09), transparent),
+    rgba(255, 255, 255, 0.035);
+}
+
+.pick-round-first strong {
+  color: var(--gold-2);
 }
 
 .team-position-player-list {
@@ -5433,6 +5535,10 @@ td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .team-roster-assets-layout {
+    grid-template-columns: minmax(0, 1fr) 136px;
+  }
+
   .team-detail-grid,
   .team-action-grid,
   .team-strength-grid,
@@ -5613,6 +5719,7 @@ td {
   .team-action-grid,
   .team-strength-grid,
   .my-roster-summary,
+  .team-roster-assets-layout,
   .team-roster-position-board,
   .team-analytics-grid,
   .team-slot-grid,

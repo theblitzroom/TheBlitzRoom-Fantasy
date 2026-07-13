@@ -93,6 +93,14 @@ export type SleeperMatchup = {
   starters?: string[];
 };
 
+export type SleeperTradedPick = {
+  season: string;
+  round: number;
+  roster_id: number;
+  owner_id: number;
+  previous_owner_id?: number;
+};
+
 const SLEEPER_BASE_URL = "https://api.sleeper.app/v1";
 
 async function sleeperFetch<T>(path: string): Promise<T> {
@@ -138,6 +146,10 @@ export function getSleeperLeagueRosters(leagueId: string) {
 
 export function getSleeperLeagueDrafts(leagueId: string) {
   return sleeperFetch<SleeperDraft[]>(`/league/${encodeURIComponent(leagueId)}/drafts`);
+}
+
+export function getSleeperLeagueTradedPicks(leagueId: string) {
+  return sleeperFetch<SleeperTradedPick[]>(`/league/${encodeURIComponent(leagueId)}/traded_picks`);
 }
 
 export function getSleeperLeagueMatchups(leagueId: string, week: string) {

@@ -4,6 +4,7 @@ import {
   getSleeperLeague,
   getSleeperLeagueDrafts,
   getSleeperLeagueRosters,
+  getSleeperLeagueTradedPicks,
   getSleeperLeagueUsers
 } from "@/lib/sleeper/client";
 
@@ -16,14 +17,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ lea
 
   try {
     const { leagueId } = await params;
-    const [league, users, rosters, drafts] = await Promise.all([
+    const [league, users, rosters, drafts, tradedPicksResult] = await Promise.all([
       getSleeperLeague(leagueId),
       getSleeperLeagueUsers(leagueId),
       getSleeperLeagueRosters(leagueId),
-      getSleeperLeagueDrafts(leagueId)
+      getSleeperLeagueDrafts(leagueId),
+      getSleeperLeagueTradedPicks(leagueId).catch(() => [])
     ]);
 
-    return NextResponse.json({ league, users, rosters, drafts });
+    return NextResponse.json({ league, users, rosters, drafts, tradedPicks: tradedPicksResult });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Sleeper league summary failed" },
