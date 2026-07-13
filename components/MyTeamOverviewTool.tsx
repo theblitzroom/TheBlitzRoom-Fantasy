@@ -150,6 +150,10 @@ function sortIndex(values: string[], value: string) {
   return index === -1 ? values.length : index;
 }
 
+function rosterPositionGroup(position: string) {
+  return positionOrder.includes(position) ? position : "FLEX";
+}
+
 export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolProps) {
   const liveAccess = signedIn || paidAccess;
   const [username, setUsername] = useState("");
@@ -311,6 +315,12 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
         return a.name.localeCompare(b.name);
       });
   }, [playerDirectory, selectedRoster]);
+  const rosterGroups = useMemo(() => (
+    positionOrder.map((position) => ({
+      position,
+      players: selectedRosterPlayers.filter((player) => rosterPositionGroup(player.position) === position)
+    }))
+  ), [selectedRosterPlayers]);
   const strengthProfile = useMemo(() => {
     const rosterMetrics = (summary?.rosters ?? []).map((roster) => ({
       roster,
@@ -562,40 +572,37 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
             <span><small>Taxi</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Taxi").length || "-"}</strong></span>
             <span><small>Reserve</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Reserve").length || "-"}</strong></span>
           </div>
-          <div className="league-table-wrap my-roster-table-wrap">
-            <table className="league-table my-roster-table">
-              <thead>
-                <tr>
-                  <th>Player</th>
-                  <th>Pos</th>
-                  <th>Team</th>
-                  <th>Age</th>
-                  <th>Exp</th>
-                  <th>Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedRosterPlayers.map((player) => (
-                  <tr key={player.playerId}>
-                    <td>
-                      <strong>{player.name}</strong>
-                      <small>{player.playerId}</small>
-                    </td>
-                    <td><span className="position-chip">{player.position}</span></td>
-                    <td>{player.team}</td>
-                    <td>{player.age ?? "-"}</td>
-                    <td>{typeof player.yearsExp === "number" ? `${player.yearsExp} yr` : "-"}</td>
-                    <td><span className={roleClass(player.role)}>{player.role}</span></td>
-                  </tr>
-                ))}
-                {!selectedRosterPlayers.length ? (
-                  <tr>
-                    <td colSpan={6}>Scan a Sleeper username and choose a league to load your roster.</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
+          <div className="team-roster-position-board" aria-label="Roster grouped by position">
+            {selectedRosterPlayers.length ? rosterGroups.map((group) => (
+              <article className="team-position-roster-card" key={group.position}>
+                <div className="team-position-roster-header">
+                  <span className="position-chip">{group.position}</span>
+                  <strong>{group.players.length}</strong>
+                </div>
+                <div className="team-position-player-list">
+                  {group.players.map((player) => (
+                    <div className={player.role === "Starter" ? "team-player-card starter" : "team-player-card"} key={player.playerId}>
+                      <div>
+                        <strong>{player.name}</strong>
+                        <small>
+                          {player.team}
+                          {player.age ? ` - Age ${player.age}` : ""}
+                          {typeof player.yearsExp === "number" ? ` - ${player.yearsExp} yr` : ""}
+                        </small>
+                      </div>
+                      <span className={roleClass(player.role)}>{player.role}</span>
+                    </div>
+                  ))}
+                  {!group.players.length ? <p className="team-position-empty">No players loaded</p> : null}
+                </div>
+              </article>
+            )) : null}
           </div>
+          {!selectedRosterPlayers.length ? (
+            <div className="team-roster-empty-state">
+              Scan a Sleeper username and choose a league to load your roster.
+            </div>
+          ) : null}
         </section>
 
         <aside className="team-command-rail">

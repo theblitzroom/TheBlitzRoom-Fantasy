@@ -2833,6 +2833,123 @@ td {
   border-color: rgba(188, 166, 255, 0.14);
 }
 
+.team-roster-position-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.team-position-roster-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(188, 166, 255, 0.13);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    rgba(255, 255, 255, 0.025);
+}
+
+.team-position-roster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team-position-roster-header strong {
+  color: var(--gold-2);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.team-position-player-list {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.team-player-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  min-width: 0;
+  min-height: 55px;
+  padding: 9px;
+  border: 1px solid rgba(188, 166, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(8, 6, 13, 0.34);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.team-player-card:hover {
+  border-color: rgba(226, 190, 99, 0.22);
+  background: rgba(255, 255, 255, 0.045);
+  transform: translateY(-1px);
+}
+
+.team-player-card.starter {
+  border-color: rgba(226, 190, 99, 0.26);
+  background:
+    linear-gradient(90deg, rgba(217, 179, 95, 0.1), transparent 60%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.team-player-card > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.team-player-card strong,
+.team-player-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-player-card strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.15;
+}
+
+.team-player-card small {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.team-player-card .roster-role-pill {
+  flex: 0 0 auto;
+  min-width: 60px;
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.team-position-empty,
+.team-roster-empty-state {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.team-position-empty {
+  padding: 10px 2px 2px;
+}
+
+.team-roster-empty-state {
+  padding: 14px;
+  border: 1px dashed rgba(188, 166, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
 .team-connect-panel {
   gap: 12px;
   padding: 0;
