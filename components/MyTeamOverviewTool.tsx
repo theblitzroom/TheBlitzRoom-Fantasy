@@ -271,7 +271,7 @@ function draftPickRounds(league?: LeagueToolLeague | null, tradedPicks: LeagueTo
 
 function draftPickOrigin(summary: LeagueToolSummary, selectedRoster: LeagueToolRoster, originalRosterId: number) {
   if (originalRosterId === selectedRoster.roster_id) {
-    return "My Team";
+    return "Own pick";
   }
 
   const originalRoster = summary.rosters.find((item) => item.roster_id === originalRosterId);
