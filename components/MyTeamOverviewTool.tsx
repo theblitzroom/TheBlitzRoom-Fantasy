@@ -543,86 +543,106 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
   return (
     <div className="team-hub-page">
       <ProductCommandNav />
-      <TeamNewsPanel players={selectedRosterPlayers} />
-      <section className="team-hero-panel">
-        <div className="team-hero-copy">
-          <span className="badge badge-premium"><Users size={14} /> {liveAccess ? "Live Team Hub" : "Team Hub preview"}</span>
-          <h2>{selectedTeamName}</h2>
-          <p>
-            A detailed team command view for your roster&apos;s power rank, competitive window,
-            depth profile, scoring gap, and next actionable move.
-          </p>
-          {!liveAccess ? (
-            <div className="league-access-note">
-              <CircleAlert size={18} />
-              <span>Logged-out visitors see a demo preview. Sign in to unlock live Sleeper scans, your roster, portfolio analytics, and draft-room handoff.</span>
-              <Link href="/login?next=/team-hub/my-team">Sign in <ArrowRight size={14} /></Link>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="team-score-card">
-          <span className="eyebrow">Team health</span>
-          <strong>{healthScore}</strong>
-          <p>{timeline} build - {priority}</p>
-        </div>
-      </section>
-
-      <section className="league-connect-panel">
-        <form className="league-connect-form" onSubmit={scanLeagues}>
-          <label><span>Sleeper username</span><input value={username} onChange={(event) => setUsername(event.target.value)} disabled={!liveAccess} placeholder="Enter Sleeper username" /></label>
-          <label className="league-season-field"><span>Season</span><input value={season} onChange={(event) => setSeason(event.target.value)} disabled={!liveAccess} /></label>
-          <button className="premium-button premium-button-primary" disabled={!liveAccess || status === "loading"}><RefreshCcw size={16} />{status === "loading" ? "Loading" : "Scan teams"}</button>
-          <button className="premium-button premium-button-secondary" onClick={loadDemo} type="button">Demo team</button>
-        </form>
-        {error ? <div className="league-error"><CircleAlert size={18} />{error}</div> : null}
-        {status === "ready" ? <div className="league-scan-meta"><strong>{loadedUser?.display_name || loadedUser?.username || "Sleeper user"} loaded</strong><span>{leagues.length} leagues found for {season}</span></div> : null}
-        {leagues.length ? (
-          <div className="league-picker-grid">
-            {leagues.slice(0, 10).map((league) => (
-              <button className={selectedLeagueId === league.league_id ? "league-picker-card active" : "league-picker-card"} key={league.league_id} onClick={() => void loadLeagueSummary(league.league_id, loadedUser)} type="button">
-                <span>{league.status?.replaceAll("_", " ")}</span>
-                <strong>{league.name}</strong>
-                <small>{league.total_rosters ?? "-"} teams - {formatLeagueType(league)} - {formatScoring(league)}</small>
-                <em>{league.draft_id ? "Draft connected" : "No draft found"}</em>
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="team-overview-grid">
-        <article className="team-main-card">
+      <section className="team-roster-first-grid">
+        <section className="team-roster-board team-roster-board-primary">
           <div className="league-card-header">
             <div>
-              <span className="eyebrow">My team overview</span>
-              <h2>{activeLeague?.name ?? "Choose a league"}</h2>
+              <span className="badge badge-premium"><Users size={14} /> {liveAccess ? "Live Team Hub" : "Team Hub preview"}</span>
+              <h2>{selectedTeamName}</h2>
+              <p className="team-roster-subtitle">{activeLeague?.name ?? "Choose a league"} - {timeline} build - {priority}</p>
             </div>
-            <span className="league-filter-pill"><Trophy size={14} />Rank {rankIndex || "-"}</span>
+            <span className="league-filter-pill">
+              <ClipboardList size={14} />
+              {loadingPlayers ? "Resolving players" : `${selectedRosterPlayers.length || "-"} players`}
+            </span>
           </div>
-          <div className="team-metric-grid">
-            <span><small>Record</small><strong>{rosterRecord(selectedRoster)}</strong></span>
-            <span><small>Power score</small><strong>{selectedPower?.score ?? "-"}</strong></span>
-            <span><small>Points</small><strong>{Math.round(points) || "-"}</strong></span>
-            <span><small>Potential gap</small><strong>{upsideGap > 0 ? `+${upsideGap}` : upsideGap || "-"}</strong></span>
-            <span><small>Starters</small><strong>{starters || "-"}</strong></span>
-            <span><small>Bench</small><strong>{bench || "-"}</strong></span>
+          <div className="my-roster-summary">
+            <span><small>Starters</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Starter").length || "-"}</strong></span>
+            <span><small>Bench</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Bench").length || "-"}</strong></span>
+            <span><small>Taxi</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Taxi").length || "-"}</strong></span>
+            <span><small>Reserve</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Reserve").length || "-"}</strong></span>
           </div>
-        </article>
+          <div className="league-table-wrap my-roster-table-wrap">
+            <table className="league-table my-roster-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Pos</th>
+                  <th>Team</th>
+                  <th>Age</th>
+                  <th>Exp</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedRosterPlayers.map((player) => (
+                  <tr key={player.playerId}>
+                    <td>
+                      <strong>{player.name}</strong>
+                      <small>{player.playerId}</small>
+                    </td>
+                    <td><span className="position-chip">{player.position}</span></td>
+                    <td>{player.team}</td>
+                    <td>{player.age ?? "-"}</td>
+                    <td>{typeof player.yearsExp === "number" ? `${player.yearsExp} yr` : "-"}</td>
+                    <td><span className={roleClass(player.role)}>{player.role}</span></td>
+                  </tr>
+                ))}
+                {!selectedRosterPlayers.length ? (
+                  <tr>
+                    <td colSpan={6}>Scan a Sleeper username and choose a league to load your roster.</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-        <aside className="team-side-stack">
-          <article className="team-side-card">
-            <span className="eyebrow">Competitive window</span>
-            <h3>{timeline}</h3>
-            <p>{timeline === "Win-now" ? "Your current points profile supports buying production." : timeline === "Builder" ? "Your potential gap suggests future value matters more than short-term points." : "Your roster can still pivot based on market and draft position."}</p>
+        <aside className="team-command-rail">
+          <article className="team-score-card compact">
+            <span className="eyebrow">Team health</span>
+            <strong>{healthScore}</strong>
+            <p>{timeline} - {priority}</p>
           </article>
-          <article className="team-side-card">
-            <span className="eyebrow">Next move</span>
-            <h3>{priority}</h3>
-            <p>Use this as the first filter before trade offers, waiver claims, or live draft decisions.</p>
-          </article>
+
+          <div className="team-key-metrics" aria-label="Team key metrics">
+            <span><small>Record</small><strong>{rosterRecord(selectedRoster)}</strong></span>
+            <span><small>Rank</small><strong>{rankIndex || "-"}</strong></span>
+            <span><small>Points</small><strong>{Math.round(points) || "-"}</strong></span>
+            <span><small>Gap</small><strong>{upsideGap > 0 ? `+${upsideGap}` : upsideGap || "-"}</strong></span>
+          </div>
+
+          <section className="league-connect-panel team-connect-panel">
+            <form className="league-connect-form team-connect-form" onSubmit={scanLeagues}>
+              <label><span>Sleeper username</span><input value={username} onChange={(event) => setUsername(event.target.value)} disabled={!liveAccess} placeholder="Enter Sleeper username" /></label>
+              <label className="league-season-field"><span>Season</span><input value={season} onChange={(event) => setSeason(event.target.value)} disabled={!liveAccess} /></label>
+              <button className="premium-button premium-button-primary" disabled={!liveAccess || status === "loading"}><RefreshCcw size={16} />{status === "loading" ? "Loading" : "Scan"}</button>
+              <button className="premium-button premium-button-secondary" onClick={loadDemo} type="button">Demo</button>
+            </form>
+            {!liveAccess ? (
+              <div className="league-access-note compact">
+                <CircleAlert size={18} />
+                <span>Sign in to unlock live Sleeper scans and saved roster context.</span>
+                <Link href="/login?next=/team-hub/my-team">Sign in <ArrowRight size={14} /></Link>
+              </div>
+            ) : null}
+            {error ? <div className="league-error"><CircleAlert size={18} />{error}</div> : null}
+            {status === "ready" ? <div className="league-scan-meta compact"><strong>{loadedUser?.display_name || loadedUser?.username || "Sleeper user"} loaded</strong><span>{leagues.length} leagues found</span></div> : null}
+            {leagues.length ? (
+              <div className="team-league-compact-list">
+                {leagues.slice(0, 4).map((league) => (
+                  <button className={selectedLeagueId === league.league_id ? "team-league-chip active" : "team-league-chip"} key={league.league_id} onClick={() => void loadLeagueSummary(league.league_id, loadedUser)} type="button">
+                    <strong>{league.name}</strong>
+                    <small>{league.total_rosters ?? "-"} teams - {formatLeagueType(league)}</small>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </section>
         </aside>
       </section>
+
+      <TeamNewsPanel players={selectedRosterPlayers} />
 
       <section className="team-action-grid" aria-label="Team command actions">
         {actionCards.map((card) => (
@@ -663,59 +683,6 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
               </div>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="team-roster-board">
-        <div className="league-card-header">
-          <div>
-            <span className="eyebrow">My roster</span>
-            <h2>{selectedTeamName}</h2>
-          </div>
-          <span className="league-filter-pill">
-            <ClipboardList size={14} />
-            {loadingPlayers ? "Resolving players" : `${selectedRosterPlayers.length || "-"} players`}
-          </span>
-        </div>
-        <div className="my-roster-summary">
-          <span><small>Starters</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Starter").length || "-"}</strong></span>
-          <span><small>Bench</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Bench").length || "-"}</strong></span>
-          <span><small>Taxi</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Taxi").length || "-"}</strong></span>
-          <span><small>Reserve</small><strong>{selectedRosterPlayers.filter((player) => player.role === "Reserve").length || "-"}</strong></span>
-        </div>
-        <div className="league-table-wrap my-roster-table-wrap">
-          <table className="league-table my-roster-table">
-            <thead>
-              <tr>
-                <th>Player</th>
-                <th>Pos</th>
-                <th>Team</th>
-                <th>Age</th>
-                <th>Exp</th>
-                <th>Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedRosterPlayers.map((player) => (
-                <tr key={player.playerId}>
-                  <td>
-                    <strong>{player.name}</strong>
-                    <small>{player.playerId}</small>
-                  </td>
-                  <td><span className="position-chip">{player.position}</span></td>
-                  <td>{player.team}</td>
-                  <td>{player.age ?? "-"}</td>
-                  <td>{typeof player.yearsExp === "number" ? `${player.yearsExp} yr` : "-"}</td>
-                  <td><span className={roleClass(player.role)}>{player.role}</span></td>
-                </tr>
-              ))}
-              {!selectedRosterPlayers.length ? (
-                <tr>
-                  <td colSpan={6}>Scan a Sleeper username and choose a league to load your roster.</td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
         </div>
       </section>
 

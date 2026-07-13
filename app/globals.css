@@ -2520,10 +2520,18 @@ td {
 
 .team-hub-page {
   display: grid;
-  gap: 18px;
+  gap: 14px;
+}
+
+.team-roster-first-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 14px;
+  align-items: start;
 }
 
 .team-hero-panel,
+.team-command-rail,
 .team-main-card,
 .team-side-card,
 .team-action-card,
@@ -2537,6 +2545,13 @@ td {
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 36%),
     linear-gradient(180deg, rgba(35, 26, 49, 0.88), rgba(16, 11, 24, 0.9));
   box-shadow: var(--shadow-soft);
+}
+
+.team-command-rail {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 24px;
 }
 
 .team-hero-panel {
@@ -2574,16 +2589,55 @@ td {
     rgba(255, 255, 255, 0.04);
 }
 
+.team-score-card.compact {
+  min-height: 132px;
+  padding: 16px;
+}
+
 .team-score-card strong {
   color: var(--gold-2);
   font-size: 68px;
   line-height: 0.9;
 }
 
+.team-score-card.compact strong {
+  font-size: 48px;
+}
+
 .team-score-card p {
   margin: 0;
   color: var(--muted);
   line-height: 1.45;
+}
+
+.team-key-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.team-key-metrics span {
+  display: grid;
+  gap: 5px;
+  min-height: 72px;
+  padding: 11px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.team-key-metrics small {
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.team-key-metrics strong {
+  color: var(--gold-2);
+  font-size: 21px;
+  line-height: 1;
 }
 
 .team-overview-grid {
@@ -2601,6 +2655,27 @@ td {
   gap: 18px;
   padding: 22px;
   border-radius: 24px;
+}
+
+.team-roster-board-primary {
+  min-height: 0;
+  padding: 18px;
+}
+
+.team-roster-board-primary .league-card-header {
+  align-items: flex-start;
+}
+
+.team-roster-board-primary .league-card-header h2 {
+  margin-top: 10px;
+  font-size: clamp(28px, 3.4vw, 42px);
+  line-height: 1;
+}
+
+.team-roster-subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 .team-metric-grid {
@@ -2728,13 +2803,13 @@ td {
 .my-roster-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .my-roster-summary span {
   display: grid;
   gap: 6px;
-  padding: 13px 14px;
+  padding: 10px 12px;
   border: 1px solid rgba(188, 166, 255, 0.12);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.035);
@@ -2749,13 +2824,72 @@ td {
 
 .my-roster-summary strong {
   color: var(--gold-2);
-  font-size: 25px;
+  font-size: 22px;
   line-height: 1;
 }
 
 .my-roster-table-wrap {
-  max-height: 520px;
+  max-height: min(46vh, 460px);
   border-color: rgba(188, 166, 255, 0.14);
+}
+
+.team-connect-panel {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.team-connect-form {
+  grid-template-columns: minmax(0, 1fr) 86px;
+}
+
+.team-connect-form .premium-button {
+  min-height: 42px;
+}
+
+.league-access-note.compact,
+.league-scan-meta.compact {
+  width: 100%;
+  margin-top: 0;
+  padding: 11px;
+}
+
+.team-league-compact-list {
+  display: grid;
+  gap: 8px;
+}
+
+.team-league-chip {
+  display: grid;
+  gap: 4px;
+  padding: 10px 11px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.035);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.team-league-chip:hover,
+.team-league-chip.active {
+  border-color: rgba(226, 190, 99, 0.28);
+  background: rgba(217, 179, 95, 0.075);
+}
+
+.team-league-chip strong,
+.team-league-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-league-chip small {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .my-roster-table th {
@@ -5092,6 +5226,7 @@ td {
   }
 
   .team-hero-panel,
+  .team-roster-first-grid,
   .team-overview-grid,
   .team-analytics-grid {
     grid-template-columns: 1fr;
@@ -5101,6 +5236,7 @@ td {
   .team-action-grid,
   .team-strength-grid,
   .my-roster-summary,
+  .team-connect-form,
   .team-roster-picker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -5285,10 +5421,6 @@ td {
   .team-news-strip {
     grid-template-columns: 1fr auto;
     min-height: auto;
-  }
-
-  .team-hub-page > .team-news-strip {
-    order: -1;
   }
 
   .team-news-strip-label {
