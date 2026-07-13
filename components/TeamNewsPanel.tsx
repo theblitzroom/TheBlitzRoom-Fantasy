@@ -83,7 +83,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
       const response = await fetch("/api/news/rotowire-nfl", { cache: "no-store" });
 
       if (!response.ok) {
-        throw new Error("RotoWire news feed is temporarily unavailable.");
+        throw new Error("Player news feed is temporarily unavailable.");
       }
 
       const data = await response.json() as NewsResponse;
@@ -112,15 +112,14 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   }, [news?.items, rosterNameLookup]);
   const rosterItems = enrichedItems.filter((item) => item.rosterMatch);
   const visibleItems = showRosterOnly && rosterItems.length ? rosterItems : enrichedItems;
-  const latestItems = visibleItems.slice(0, 10);
+  const latestItems = visibleItems.slice(0, 18);
 
   return (
-    <section className="team-news-strip" aria-label="Player news from RotoWire">
+    <section className="team-news-strip" aria-label="Player news">
       <div className="team-news-strip-label">
         <Newspaper size={16} />
         <div>
           <strong>Player news</strong>
-          <span>RotoWire</span>
         </div>
       </div>
 
@@ -128,8 +127,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
         {latestItems.map((item) => (
           <article className={item.rosterMatch ? "team-news-strip-item roster-match" : "team-news-strip-item"} key={item.id} role="listitem">
             <div className="team-news-photo" aria-hidden="true">
-              <em>{initials(item.player || item.title)}</em>
-              {item.imageUrl ? <span style={{ backgroundImage: `url(${item.imageUrl})` }} /> : null}
+              {item.imageUrl ? <span style={{ backgroundImage: `url(${item.imageUrl})` }} /> : <em>{initials(item.player || item.title)}</em>}
             </div>
             <div className="team-news-strip-copy">
               <div className="team-news-strip-meta">
@@ -158,7 +156,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
             <div className="team-news-photo"><em>NFL</em></div>
             <div className="team-news-strip-copy">
               <strong>Loading player news</strong>
-              <p>Checking the latest RotoWire player updates.</p>
+              <p>Checking the latest NFL player updates.</p>
             </div>
           </div>
         ) : null}
