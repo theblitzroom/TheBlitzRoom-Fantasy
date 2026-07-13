@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Newspaper, RefreshCcw } from "lucide-react";
 
 type TeamNewsPlayer = {
@@ -66,6 +66,8 @@ function initials(value: string) {
 }
 
 export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const pausedRef = useRef(false);
   const [news, setNews] = useState<NewsResponse | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [error, setError] = useState("");
@@ -114,6 +116,36 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   const visibleItems = showRosterOnly && rosterItems.length ? rosterItems : enrichedItems;
   const latestItems = visibleItems.slice(0, 18);
 
+  useEffect(() => {
+    const element = scrollRef.current;
+
+    if (!element || latestItems.length < 2) {
+      return;
+    }
+
+    let frameId = 0;
+    let lastTime = performance.now();
+    let scrollPosition = element.scrollLeft;
+    const pixelsPerSecond = 18;
+
+    const tick = (time: number) => {
+      const maxScroll = element.scrollWidth - element.clientWidth;
+
+      if (!pausedRef.current && maxScroll > 0) {
+        const delta = ((time - lastTime) / 1000) * pixelsPerSecond;
+        scrollPosition = scrollPosition >= maxScroll - 1 ? 0 : scrollPosition + delta;
+        element.scrollLeft = scrollPosition;
+      }
+
+      lastTime = time;
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [latestItems.length, showRosterOnly]);
+
   return (
     <section className="team-news-strip" aria-label="Player news">
       <div className="team-news-strip-label">
@@ -123,7 +155,23 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
         </div>
       </div>
 
-      <div className="team-news-strip-scroll" role="list">
+      <div
+        className="team-news-strip-scroll"
+        onBlur={() => {
+          pausedRef.current = false;
+        }}
+        onFocus={() => {
+          pausedRef.current = true;
+        }}
+        onPointerEnter={() => {
+          pausedRef.current = true;
+        }}
+        onPointerLeave={() => {
+          pausedRef.current = false;
+        }}
+        ref={scrollRef}
+        role="list"
+      >
         {latestItems.map((item) => (
           <article className={item.rosterMatch ? "team-news-strip-item roster-match" : "team-news-strip-item"} key={item.id} role="listitem">
             <div className="team-news-photo" aria-hidden="true">
@@ -136,7 +184,6 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
                 {item.position ? <small>{item.position}{item.team ? ` / ${item.team}` : ""}</small> : null}
               </div>
               <a href={item.sourceUrl} target="_blank" rel="noreferrer">{item.title}</a>
-              <p>{item.summary}</p>
             </div>
           </article>
         ))}
@@ -164,7 +211,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
 
       <div className="team-news-strip-actions">
         <button className={showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(true)} type="button">
-          Roster{rosterItems.length ? ` ${rosterItems.length}` : ""}
+          My{rosterItems.length ? ` ${rosterItems.length}` : ""}
         </button>
         <button className={!showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(false)} type="button">
           All
