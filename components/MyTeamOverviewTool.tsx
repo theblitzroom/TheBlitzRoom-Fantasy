@@ -266,6 +266,15 @@ function draftPickRounds(league?: LeagueToolLeague | null) {
   return clamp(Number(league?.settings?.draft_rounds ?? 4), 3, 5);
 }
 
+function draftPickOrigin(summary: LeagueToolSummary, selectedRoster: LeagueToolRoster, originalRosterId: number) {
+  if (originalRosterId === selectedRoster.roster_id) {
+    return "Own pick";
+  }
+
+  const originalRoster = summary.rosters.find((item) => item.roster_id === originalRosterId);
+  return originalRoster ? `From ${managerName(summary.users, originalRoster)}` : `From roster ${originalRosterId}`;
+}
+
 function selectedRosterDraftPicks(summary: LeagueToolSummary | null, roster: LeagueToolRoster | null, league?: LeagueToolLeague | null) {
   if (!summary || !roster) {
     return [];
@@ -312,7 +321,7 @@ function selectedRosterDraftPicks(summary: LeagueToolSummary | null, roster: Lea
     .map<RosterDraftPick>((pick) => ({
       id: `${pick.season}-${pick.round}-${pick.originalRosterId}`,
       label: draftPickLabel(pick.season, pick.round),
-      origin: pick.originalRosterId === roster.roster_id ? "Own" : `From R${pick.originalRosterId}`,
+      origin: draftPickOrigin(summary, roster, pick.originalRosterId),
       round: pick.round,
       season: pick.season,
       acquired: pick.originalRosterId !== roster.roster_id
