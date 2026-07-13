@@ -269,18 +269,17 @@ export async function GET() {
           title: item.title
         };
       })
+      .filter((item) => item.playerId)
       .sort((left, right) => {
-        const leftPlayerScore = left.playerId ? 2 : left.player ? 1 : 0;
-        const rightPlayerScore = right.playerId ? 2 : right.player ? 1 : 0;
         const leftTime = left.publishedAt ? new Date(left.publishedAt).getTime() : 0;
         const rightTime = right.publishedAt ? new Date(right.publishedAt).getTime() : 0;
 
-        return rightPlayerScore - leftPlayerScore || rightTime - leftTime;
+        return rightTime - leftTime;
       })
       .slice(0, 36);
 
     if (!items.length) {
-      throw new Error("Player news feeds returned no stories.");
+      throw new Error("Player news feeds returned no fantasy player stories.");
     }
 
     return NextResponse.json({
