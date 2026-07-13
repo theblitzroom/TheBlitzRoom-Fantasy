@@ -17,9 +17,16 @@ const NEWS_FEEDS = [
   }
 ] as const;
 
+const NBC_PLAYER_NEWS_URL = "https://www.nbcsports.com/fantasy/football/player-news";
 const FANTASY_NEWS_POSITIONS = new Set(["QB", "RB", "WR", "TE"]);
 const NEWS_WINDOW_DAYS = 3;
 const NEWS_WINDOW_MS = NEWS_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+const POSITION_LABELS: Record<string, string> = {
+  Quarterback: "QB",
+  "Running Back": "RB",
+  "Tight End": "TE",
+  "Wide Receiver": "WR"
+};
 
 type RssItem = {
   description?: unknown;
@@ -33,16 +40,20 @@ type RssChannel = {
   item?: RssItem | RssItem[];
 };
 
-type NewsFeed = typeof NEWS_FEEDS[number];
+type NewsFeed = (typeof NEWS_FEEDS)[number];
+type NewsSourceId = NewsFeed["id"] | "nbc";
 
 type ParsedNewsItem = {
   description: string;
   id: string;
   publishedAt: string | null;
   source: string;
-  sourceId: NewsFeed["id"];
+  sourceId: NewsSourceId;
   sourceUrl: string;
   title: string;
+  playerName?: string;
+  position?: string;
+  team?: string;
 };
 
 type PlayerLookup = {
@@ -81,6 +92,44 @@ function cleanText(value?: unknown) {
     .replace(/\s+/g, " ")
     .replace(/Visit RotoWire\.com for more analysis on this update\./i, "")
     .trim();
+}
+
+function stripTags(value: string) {
+  return value.replace(/<[^>]*>/g, " ");
+}
+
+function decodeHtmlEntities(value: string) {
+  return value
+    .replace(/\u2019/g, "'")
+    .replace(/\u2018/g, "'")
+    .replace(/\u201c/g, "\"")
+    .replace(/\u201d/g, "\"")
+    .replace(/\u2013/g, "-")
+    .replace(/\u2014/g, "-")
+    .replace(/\u00e2\u0080\u0099/g, "'")
+    .replace(/\u00e2\u0080\u0098/g, "'")
+    .replace(/\u00e2\u0080\u009c/g, "\"")
+    .replace(/\u00e2\u0080\u009d/g, "\"")
+    .replace(/\u00e2\u0080\u0093/g, "-")
+    .replace(/\u00e2\u0080\u0094/g, "-")
+    .replace(/\u00e2\u20ac\u2122/g, "'")
+    .replace(/\u00e2\u20ac\u02dc/g, "'")
+    .replace(/\u00e2\u20ac\u0153/g, "\"")
+    .replace(/\u00e2\u20ac\u009d/g, "\"")
+    .replace(/\u00e2\u20ac\u201c/g, "-")
+    .replace(/\u00e2\u20ac\u201d/g, "-")
+    .replace(/\u00c2/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, "\"")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function cleanHtmlText(value: string) {
+  return decodeHtmlEntities(stripTags(value)).replace(/\s+/g, " ").trim();
 }
 
 function parseNewsDate(value?: unknown) {
@@ -140,7 +189,7 @@ function classifyNews(title: string, description: string) {
   return "Update";
 }
 
-function playerFromTitle(title: string, sourceId: NewsFeed["id"]) {
+function playerFromTitle(title: string, sourceId: NewsSourceId) {
   if (sourceId !== "rotowire" || !title.includes(":")) {
     return "";
   }
@@ -224,28 +273,86 @@ async function fetchNewsFeed(feed: NewsFeed): Promise<ParsedNewsItem[]> {
   const parsed = parser.parse(xml) as { rss?: { channel?: RssChannel } };
   const channel = parsed.rss?.channel;
 
-  return asArray(channel?.item).slice(0, 24).map((item) => {
-    const title = cleanText(item.title);
-    const description = cleanText(item.description);
-    const sourceUrl = normalizeLink(item.link, feed.fallbackLink);
+  return asArray(channel?.item)
+    .slice(0, 24)
+    .map((item) => {
+      const title = cleanText(item.title);
+      const description = cleanText(item.description);
+      const sourceUrl = normalizeLink(item.link, feed.fallbackLink);
 
-    return {
-      description,
-      id: `${feed.id}-${cleanText(item.guid) || sourceUrl || title}`,
-      publishedAt: parseNewsDate(item.pubDate),
-      source: feed.name,
-      sourceId: feed.id,
-      sourceUrl,
-      title
-    };
-  }).filter((item) => item.title);
+      return {
+        description,
+        id: `${feed.id}-${cleanText(item.guid) || sourceUrl || title}`,
+        publishedAt: parseNewsDate(item.pubDate),
+        source: feed.name,
+        sourceId: feed.id,
+        sourceUrl,
+        title
+      };
+    })
+    .filter((item) => item.title);
+}
+
+function matchHtml(value: string, pattern: RegExp) {
+  return pattern.exec(value)?.[1] ?? "";
+}
+
+function parseNbcPlayerNewsHtml(html: string): ParsedNewsItem[] {
+  const blocks = html.match(/<li class="PlayerNewsModuleList-item">[\s\S]*?(?=<li class="PlayerNewsModuleList-item">|<\/ul>)/g) ?? [];
+
+  return blocks
+    .map((block) => {
+      const firstName = cleanHtmlText(matchHtml(block, /<span class="PlayerNewsPost-firstName">([\s\S]*?)<\/span>/));
+      const lastName = cleanHtmlText(matchHtml(block, /<span class="PlayerNewsPost-lastName">([\s\S]*?)<\/span>/));
+      const playerName = [firstName, lastName].filter(Boolean).join(" ");
+      const positionLabel = cleanHtmlText(matchHtml(block, /<span class="PlayerNewsPost-position">([\s\S]*?)<\/span>/));
+      const position = POSITION_LABELS[positionLabel] ?? "";
+      const team = cleanHtmlText(matchHtml(block, /<span class="PlayerNewsPost-team-abbr">([\s\S]*?)<\/span>/));
+      const title = cleanHtmlText(matchHtml(block, /<h3 class="PlayerNewsPost-headline">([\s\S]*?)<\/h3>/));
+      const description = cleanHtmlText(matchHtml(block, /<div class="PlayerNewsPost-analysis">([\s\S]*?)<div class="PlayerNewsPost-author">/));
+      const publishedAt = parseNewsDate(matchHtml(block, /data-date="([^"]+)"/));
+      const shareUrl = decodeHtmlEntities(matchHtml(block, /data-share-url="([^"]+)"/));
+
+      return {
+        description,
+        id: `nbc-${shareUrl || playerName}-${publishedAt || title}`,
+        playerName,
+        position,
+        publishedAt,
+        source: "NBC Sports",
+        sourceId: "nbc" as const,
+        sourceUrl: shareUrl || NBC_PLAYER_NEWS_URL,
+        team,
+        title
+      };
+    })
+    .filter((item) => item.playerName && item.position && item.title);
+}
+
+async function fetchNbcPlayerNews(): Promise<ParsedNewsItem[]> {
+  const response = await fetch(NBC_PLAYER_NEWS_URL, {
+    headers: {
+      Accept: "text/html",
+      "User-Agent": "TheBlitzRoomFantasy/1.0"
+    },
+    next: { revalidate: 300 }
+  });
+
+  if (!response.ok) {
+    throw new Error(`NBC Sports player news returned ${response.status}`);
+  }
+
+  return parseNbcPlayerNewsHtml(await response.text());
 }
 
 export async function GET() {
   try {
     const playerLookup = await getPlayerPhotoLookup();
-    const feedResults = await Promise.allSettled(NEWS_FEEDS.map((feed) => fetchNewsFeed(feed)));
-    const rawItems = feedResults.flatMap((result) => result.status === "fulfilled" ? result.value : []);
+    const feedResults = await Promise.allSettled([
+      ...NEWS_FEEDS.map((feed) => fetchNewsFeed(feed)),
+      fetchNbcPlayerNews()
+    ]);
+    const rawItems = feedResults.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
     const seenTitles = new Set<string>();
     const items = rawItems
       .sort((left, right) => {
@@ -264,7 +371,7 @@ export async function GET() {
         return true;
       })
       .map((item) => {
-        const preferredPlayerName = playerFromTitle(item.title, item.sourceId);
+        const preferredPlayerName = item.playerName || playerFromTitle(item.title, item.sourceId);
         const sleeperPlayer = findSleeperPlayer(`${item.title} ${item.description}`, playerLookup, preferredPlayerName);
         const player = sleeperPlayer ? sleeperDisplayName(sleeperPlayer) : preferredPlayerName;
 
@@ -276,12 +383,12 @@ export async function GET() {
             : null,
           player,
           playerId: sleeperPlayer?.player_id ?? null,
-          position: sleeperPlayer?.position ?? null,
+          position: sleeperPlayer?.position ?? item.position ?? null,
           publishedAt: item.publishedAt,
           source: item.source,
           sourceUrl: item.sourceUrl,
           summary: compactSummary(item.description),
-          team: sleeperPlayer?.team ?? null,
+          team: sleeperPlayer?.team ?? item.team ?? null,
           title: item.title
         };
       })
@@ -300,7 +407,7 @@ export async function GET() {
 
     return NextResponse.json({
       dateWindowDays: NEWS_WINDOW_DAYS,
-      feedUrls: NEWS_FEEDS.map((feed) => feed.url),
+      feedUrls: [...NEWS_FEEDS.map((feed) => feed.url), NBC_PLAYER_NEWS_URL],
       fetchedAt: new Date().toISOString(),
       items,
       source: "Player news",
