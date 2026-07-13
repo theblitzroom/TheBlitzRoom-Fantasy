@@ -94,6 +94,43 @@ const positionOrder = ["QB", "RB", "WR", "TE", "Other"];
 const primaryRosterPositions = ["QB", "RB", "WR", "TE"];
 const primaryRosterPositionSet = new Set(primaryRosterPositions);
 const playerLookupBatchSize = 80;
+const nflTeamLogoCodes: Record<string, string> = {
+  ARI: "ari",
+  ATL: "atl",
+  BAL: "bal",
+  BUF: "buf",
+  CAR: "car",
+  CHI: "chi",
+  CIN: "cin",
+  CLE: "cle",
+  DAL: "dal",
+  DEN: "den",
+  DET: "det",
+  GB: "gb",
+  HOU: "hou",
+  IND: "ind",
+  JAC: "jax",
+  JAX: "jax",
+  KC: "kc",
+  LA: "lar",
+  LAC: "lac",
+  LAR: "lar",
+  LV: "lv",
+  MIA: "mia",
+  MIN: "min",
+  NE: "ne",
+  NO: "no",
+  NYG: "nyg",
+  NYJ: "nyj",
+  PHI: "phi",
+  PIT: "pit",
+  SEA: "sea",
+  SF: "sf",
+  TB: "tb",
+  TEN: "ten",
+  WAS: "wsh",
+  WSH: "wsh"
+};
 
 function playerName(playerId: string, player?: LeagueToolPlayer) {
   const joinedName = [player?.first_name, player?.last_name].filter(Boolean).join(" ");
@@ -121,6 +158,11 @@ function playerInitials(name: string) {
 
 function playerHeadshotUrl(playerId: string) {
   return /^\d+$/.test(playerId) ? `https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg` : "";
+}
+
+function nflTeamLogoUrl(team?: string | null) {
+  const logoCode = team ? nflTeamLogoCodes[team.toUpperCase()] : "";
+  return logoCode ? `https://a.espncdn.com/i/teamlogos/nfl/500/${logoCode}.png` : "";
 }
 
 function rosterRole(playerId: string, roster?: LeagueToolRoster | null) {
@@ -338,6 +380,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
           yearsExp: player?.years_exp,
           initials: playerInitials(name),
           photoUrl: playerHeadshotUrl(playerId),
+          teamLogoUrl: nflTeamLogoUrl(player?.team),
           role
         };
       })
@@ -644,12 +687,23 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
                       <div className="team-player-copy">
                         <strong>{player.name}</strong>
                         <span>
-                          <b>{player.team}</b>
+                          <b className="team-player-team">
+                            {player.teamLogoUrl ? (
+                              <Image
+                                alt=""
+                                height={16}
+                                loading="lazy"
+                                src={player.teamLogoUrl}
+                                width={16}
+                              />
+                            ) : null}
+                            <span>{player.team}</span>
+                          </b>
                           {player.age ? <small>Age {player.age}</small> : null}
                           {typeof player.yearsExp === "number" ? <small>{player.yearsExp} yr</small> : null}
+                          <small className={roleClass(player.role)}>{player.role}</small>
                         </span>
                       </div>
-                      <span className={roleClass(player.role)}>{player.role}</span>
                     </div>
                   ))}
                   {!group.players.length ? <p className="team-position-empty">No players loaded</p> : null}

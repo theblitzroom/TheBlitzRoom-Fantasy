@@ -11,6 +11,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "sleepercdn.com",
         pathname: "/content/nfl/players/thumb/**"
+      },
+      {
+        protocol: "https",
+        hostname: "a.espncdn.com",
+        pathname: "/i/teamlogos/nfl/500/**"
       }
     ]
   },
