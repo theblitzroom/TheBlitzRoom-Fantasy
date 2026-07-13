@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -17,7 +17,8 @@ import {
   Sparkles,
   Swords,
   Trophy,
-  Users
+  Users,
+  Zap
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
 import {
@@ -25,7 +26,11 @@ import {
   saveStoredLeagueConnection,
   subscribeStoredLeagueConnection
 } from "@/lib/sleeper/leagueConnection";
-import { formatLeagueScoringLabel, formatLeagueTypeLabel } from "@/lib/fantasyModel";
+import {
+  deriveLeagueProfile,
+  formatLeagueScoringLabel,
+  formatLeagueTypeLabel
+} from "@/lib/fantasyModel";
 
 type SleeperUser = {
   user_id?: string;
@@ -56,80 +61,83 @@ type CommandCenterLaunchProps = {
 };
 
 const tickerItems = [
-  "Superflex rooms are still overpricing low-ceiling QB2s",
-  "Tier cliffs matter most when four picks separate you from the turn",
-  "Rookie picks gain leverage when contenders need immediate points",
-  "TE premium changes the middle rounds more than the first round"
+  "Check format before you trust any ranking",
+  "Use Draft Room when picks are moving",
+  "Use Team Hub when roster construction matters",
+  "Use Market tools before sending a trade"
 ];
 
-const tools = [
+const launchTools = [
   {
-    title: "League Scan",
-    body: "Read league size, format, lineup pressure, and roster shape before recommendations fire.",
+    group: "League",
+    title: "League Hub",
+    body: "Settings, format pressure, team tiers, and league economy.",
     href: "/league-hub",
     icon: Trophy
   },
   {
+    group: "Draft",
     title: "Draft Room",
-    body: "Track live Sleeper picks, BPA, roster need, scarcity, and tier cliffs during the draft.",
+    body: "Live Sleeper sync, draft board, pick recommendations, and BPA.",
     href: "/draft-room",
     icon: Gauge
   },
   {
+    group: "Team",
     title: "Team Hub",
-    body: "Separate contenders, rebuilders, fragile middle teams, and roster timelines.",
+    body: "Roster overview, asset tiers, age profile, and position value.",
     href: "/team-hub/my-team",
     icon: Users
   },
   {
-    title: "Matchup Command",
-    body: "Turn your connected league into a weekly edge board with opponent pressure and win context.",
+    group: "Weekly",
+    title: "Matchup",
+    body: "Opponent pressure, lineup edge, and weekly decision context.",
     href: "/matchup",
     icon: Crosshair
   },
   {
-    title: "Waiver Wire",
-    body: "Score available players against your roster needs and identify clean add/drop paths.",
+    group: "Weekly",
+    title: "Waivers",
+    body: "Add/drop recommendations based on roster fit and available players.",
     href: "/waivers",
     icon: ListPlus
   },
   {
-    title: "Trade Room",
-    body: "Compare player value, pick value, age curve, and window fit before you move assets.",
+    group: "Market",
+    title: "Trade Value",
+    body: "Dynasty market value, age curve, and roster-window fit.",
     href: "/trade-value",
     icon: Swords
   },
   {
+    group: "Market",
     title: "Trade Calculator",
-    body: "Build both sides of a deal with picks and players before you send the offer.",
+    body: "Build both sides of a deal with players, picks, and fairness scoring.",
     href: "/trade-calculator",
     icon: GitCompareArrows
   },
   {
+    group: "Market",
     title: "Trade Finder",
-    body: "Find managers whose roster needs line up with your surplus and trade goals.",
+    body: "Find trade partners whose needs match your surplus.",
     href: "/trade-finder",
     icon: Search
   },
   {
+    group: "League",
     title: "Power Rankings",
-    body: "Rank teams by production, depth, QB stability, youth, and future pick leverage.",
+    body: "Rank every team by production, depth, youth, and leverage.",
     href: "/power-rankings",
     icon: BarChart3
   },
   {
-    title: "Player Research",
-    body: "Turn rankings into decisions with role, market, format, and roster-context notes.",
-    href: "/draft-room",
+    group: "Team",
+    title: "Rosters",
+    body: "Compare roster depth, starters, bench pressure, and build paths.",
+    href: "/rosters",
     icon: ClipboardList
   }
-];
-
-const boardRows = [
-  ["01", "Malik Nabers", "WR", "Value hold", "Elite young WR market insulation"],
-  ["02", "Drake Maye", "QB", "Superflex edge", "QB scarcity beats similar WR value"],
-  ["03", "Trey McBride", "TE", "Format boost", "TE premium creates a tier advantage"],
-  ["04", "Rome Odunze", "WR", "Window fit", "Long-term asset with rising target path"]
 ];
 
 const demoLeagues: SleeperLeague[] = [
@@ -160,7 +168,7 @@ const demoLeagues: SleeperLeague[] = [
     status: "pre_draft",
     total_rosters: 14,
     roster_positions: ["QB", "RB", "RB", "WR", "WR", "WR", "TE", "FLEX", "SUPER_FLEX", "BN"],
-    scoring_settings: { rec: 1 }
+    scoring_settings: { rec: 1, bonus_rec_te: 0.5 }
   }
 ];
 
@@ -174,23 +182,69 @@ function formatScoring(league?: SleeperLeague | null) {
 
 function formatLineup(league?: SleeperLeague | null) {
   const positions = league?.roster_positions ?? [];
-  const starters = positions.filter((position) => position !== "BN" && position !== "IR" && position !== "TAXI");
+  const starters = positions.filter((position) => !["BN", "IR", "TAXI"].includes(position));
   return starters.length ? `${starters.length} starters` : "Lineup pending";
 }
 
-function getLeagueSignal(league?: SleeperLeague | null) {
+function cleanStatus(status?: string) {
+  return status ? status.replaceAll("_", " ") : "Not connected";
+}
+
+function getPrimaryCommand(league?: SleeperLeague | null) {
   if (!league) {
-    return "Scan a Sleeper user to load public league context.";
+    return {
+      title: "Connect Sleeper first, then let the room tell you where to go.",
+      body: "The Command Center is now the triage screen. Load a username, choose a league, and jump into the tool that matches the immediate decision.",
+      label: "No active league",
+      href: "/league-hub"
+    };
   }
 
-  const format = formatLeagueType(league);
-  const teams = league.total_rosters ?? 0;
-
-  if (format === "Superflex") {
-    return `${teams || "This"} team superflex room should push QB value into close calls.`;
+  if (league.status === "pre_draft") {
+    return {
+      title: league.draft_id ? "Draft room is the next stop." : "Prep the league before draft night.",
+      body: league.draft_id
+        ? "This league has a draft attached. Open the Draft Room to carry the format context into live pick decisions."
+        : "No draft ID is attached yet. Start with League Hub, then bring the room into Draft Room when the board opens.",
+      label: "Draft prep",
+      href: league.draft_id ? `/draft-room?draftId=${encodeURIComponent(league.draft_id)}` : "/league-hub"
+    };
   }
 
-  return `${teams || "This"} team 1QB room gives elite WR/RB/TE values more room to breathe.`;
+  if (league.status === "in_season") {
+    return {
+      title: "Work the weekly edge before the market moves.",
+      body: "Start with matchup pressure and waivers, then use trade tools if your roster has a clear surplus or deadline need.",
+      label: "In-season workflow",
+      href: "/matchup"
+    };
+  }
+
+  return {
+    title: "Audit roster direction before making the next move.",
+    body: "Use Team Hub to decide whether this roster should chase points, consolidate assets, or keep building future leverage.",
+    label: "Roster audit",
+    href: "/team-hub/my-team"
+  };
+}
+
+function getFormatSignal(league?: SleeperLeague | null) {
+  if (!league) {
+    return "No live league selected yet. Demo data is shown until a Sleeper scan is connected.";
+  }
+
+  const profile = deriveLeagueProfile(league);
+  const teams = league.total_rosters ? `${league.total_rosters}-team` : "This";
+
+  if (profile.isSuperflex) {
+    return `${teams} superflex setup: protect QB scarcity in close calls and avoid letting QB2 value slip too far.`;
+  }
+
+  if (profile.tePremium) {
+    return `${teams} TE premium setup: tight end value deserves a real bump when tiers flatten.`;
+  }
+
+  return `${teams} 1QB setup: elite skill-position value can win close calls over replaceable quarterback points.`;
 }
 
 export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
@@ -238,7 +292,7 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
 
     if (!signedIn) {
       setStatus("error");
-      setError("Sign in to run live Sleeper scans. The demo preview below shows the workflow.");
+      setError("Sign in to run live Sleeper scans. The demo below shows how the dashboard behaves.");
       return;
     }
 
@@ -266,17 +320,18 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
       }
 
       const data = await response.json() as LeagueLookupResponse;
+      const firstLeagueId = data.leagues[0]?.league_id ?? "";
       setUser(data.user);
       setSeason(data.season);
       setLeagues(data.leagues);
-      setSelectedLeagueId(data.leagues[0]?.league_id ?? "");
+      setSelectedLeagueId(firstLeagueId);
       setStatus("found");
       saveStoredLeagueConnection({
         username: trimmed,
         season: data.season,
         user: data.user,
         leagues: data.leagues,
-        selectedLeagueId: data.leagues[0]?.league_id ?? ""
+        selectedLeagueId: firstLeagueId
       });
     } catch (caught) {
       setStatus("error");
@@ -294,16 +349,61 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
     setError("");
   }
 
-  const displayName = user?.display_name || user?.username || username.trim();
-  const selectedLeague = leagues.find((league) => league.league_id === selectedLeagueId) ?? leagues[0] ?? null;
+  function selectLeague(leagueId: string) {
+    setSelectedLeagueId(leagueId);
+
+    if (!signedIn) {
+      return;
+    }
+
+    saveStoredLeagueConnection({
+      username: username.trim() || user?.username || user?.display_name || "",
+      season,
+      user,
+      leagues,
+      selectedLeagueId: leagueId
+    });
+  }
+
+  const selectedLeague = useMemo(
+    () => leagues.find((league) => league.league_id === selectedLeagueId) ?? leagues[0] ?? null,
+    [leagues, selectedLeagueId]
+  );
+  const primaryCommand = getPrimaryCommand(selectedLeague);
+  const displayName = user?.display_name || user?.username || username.trim() || "Demo Manager";
   const selectedFormat = formatLeagueType(selectedLeague);
   const selectedScoring = formatScoring(selectedLeague);
   const selectedLineup = formatLineup(selectedLeague);
   const draftRoomHref = selectedLeague?.draft_id ? `/draft-room?draftId=${encodeURIComponent(selectedLeague.draft_id)}` : "/draft-room";
-  const roomSignals = [
-    ["League", selectedLeague?.name ?? "No league selected", selectedLeague ? `${selectedLeague.total_rosters ?? "-"} teams - ${selectedLeague.status}` : "Scan to load leagues"],
-    ["Format", selectedFormat, `${selectedScoring} - ${selectedLineup}`],
-    ["Draft handoff", selectedLeague?.draft_id ? "Draft ID ready" : "No draft ID", selectedLeague?.draft_id ? "Open Draft Room with this league draft" : "Paste a draft ID in Draft Room"]
+  const gatedHref = (href: string) => signedIn ? href : `/login?next=${encodeURIComponent(href)}`;
+  const statusLabel = status === "loading" ? "Scanning" : status === "found" ? "Connected" : status === "error" ? "Needs attention" : "Ready";
+  const commandActions = [
+    {
+      icon: selectedLeague?.draft_id ? Radio : Trophy,
+      label: selectedLeague?.draft_id ? "Live board" : "Room context",
+      title: selectedLeague?.draft_id ? "Open connected Draft Room" : "Open League Hub first",
+      detail: selectedLeague?.draft_id ? "Draft ID is already attached to this league." : "Read league settings before drafting.",
+      href: selectedLeague?.draft_id ? draftRoomHref : "/league-hub"
+    },
+    {
+      icon: Users,
+      label: "Roster lens",
+      title: "Review Team Hub",
+      detail: "Check roster age, tiers, position value, and build direction.",
+      href: "/team-hub/my-team"
+    },
+    {
+      icon: Swords,
+      label: "Market lens",
+      title: "Find leverage",
+      detail: "Use trade value and finder tools when your roster has surplus.",
+      href: "/trade-value"
+    }
+  ];
+  const workflowCards = [
+    ["Before the draft", "League Hub -> Draft Room", "Confirm format, then let live sync and recommendations handle the room."],
+    ["During the season", "Matchup -> Waivers", "Check weekly pressure, then make add/drop decisions with roster fit."],
+    ["Trade window", "Team Hub -> Trade Finder", "Identify surplus, find managers with matching needs, then calculate the deal."]
   ];
 
   return (
@@ -319,22 +419,64 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
         ))}
       </div>
 
-      <section className="command-hero-panel">
-        <div className="command-hero-copy">
-          <span className="badge badge-premium">
-            <Sparkles size={14} />
-            TheBlitzRoom Command
-          </span>
-          <h1>
-            Your fantasy draft room, league room, and trade room in
-            <span> one command view.</span>
-          </h1>
-          <p>
-            Start with a Sleeper username, scan the public league context, then move into the tools that help
-            with live picks, roster construction, power rankings, and trade leverage.
-          </p>
+      <section className="command-context-bar" aria-label="Active command context">
+        <div className="command-context-item primary">
+          <span>Workspace</span>
+          <strong>{selectedLeague?.name ?? "No league selected"}</strong>
+          <small>{displayName}</small>
+        </div>
+        <div className="command-context-item">
+          <span>Status</span>
+          <strong>{statusLabel}</strong>
+          <small>{selectedLeague ? cleanStatus(selectedLeague.status) : "Scan a Sleeper user"}</small>
+        </div>
+        <div className="command-context-item">
+          <span>Format</span>
+          <strong>{selectedLeague ? selectedFormat : "Pending"}</strong>
+          <small>{selectedLeague ? `${selectedScoring} - ${selectedLineup}` : "League settings needed"}</small>
+        </div>
+        <div className="command-context-item">
+          <span>Draft</span>
+          <strong>{selectedLeague?.draft_id ? "Ready" : "Manual"}</strong>
+          <small>{selectedLeague?.draft_id ? "Draft handoff available" : "Add draft ID in Draft Room"}</small>
+        </div>
+      </section>
 
-          <form className="command-scan-form" onSubmit={handleSubmit}>
+      <section className="command-ops-grid">
+        <article className="command-priority-card">
+          <div className="command-priority-header">
+            <span className="badge badge-premium">
+              <Zap size={14} />
+              {primaryCommand.label}
+            </span>
+            <span className="league-filter-pill">{selectedLeague ? `${selectedLeague.total_rosters ?? "-"} teams` : "Demo mode"}</span>
+          </div>
+          <div className="command-priority-copy">
+            <h1>{primaryCommand.title}</h1>
+            <p>{primaryCommand.body}</p>
+          </div>
+          <div className="command-action-grid">
+            {commandActions.map((action) => {
+              const Icon = action.icon;
+
+              return (
+                <Link className="command-action-card" href={gatedHref(action.href)} key={action.title}>
+                  <span><Icon size={17} />{action.label}</span>
+                  <strong>{action.title}</strong>
+                  <small>{action.detail}</small>
+                </Link>
+              );
+            })}
+          </div>
+        </article>
+
+        <aside className="command-control-card">
+          <div className="command-control-header">
+            <span className="eyebrow">League connection</span>
+            <h2>Load once, use everywhere.</h2>
+            <p>Command Center saves your Sleeper context locally so the other tools can pick up the same league.</p>
+          </div>
+          <form className="command-scan-form compact" onSubmit={handleSubmit}>
             <label>
               <span>Sleeper username</span>
               <input
@@ -345,101 +487,74 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
                 disabled={!signedIn}
               />
             </label>
+            <label className="command-season-field">
+              <span>Season</span>
+              <input
+                value={season}
+                onChange={(event) => setSeason(event.target.value)}
+                disabled={!signedIn}
+                inputMode="numeric"
+              />
+            </label>
             <button className="premium-button premium-button-primary" disabled={!signedIn || status === "loading"}>
               <Search size={16} />
-              {status === "loading" ? "Scanning" : signedIn ? "Start league scan" : "Sign in to scan"}
+              {status === "loading" ? "Scanning" : "Scan"}
             </button>
             <button className="premium-button premium-button-secondary" onClick={loadDemoLeagues} type="button">
-              Demo league
+              Demo
             </button>
           </form>
 
           {!signedIn ? (
-            <div className="league-access-note">
+            <div className="command-status-note warning">
               <CircleAlert size={18} />
-              <span>Logged-out visitors get this demo preview. Sign in to unlock live Sleeper scans, saved league context, and working tool handoffs.</span>
+              <span>Demo mode is visible. Sign in to save leagues and unlock live tool handoffs.</span>
               <Link href="/login?next=/command-center">Sign in <ArrowRight size={14} /></Link>
             </div>
           ) : null}
 
           {status === "found" ? (
-            <div className="command-lookup-result">
+            <div className="command-status-note success">
               <ShieldCheck size={18} />
-              <div>
-                <strong>{displayName} found on Sleeper</strong>
-                <span>{leagues.length ? `${leagues.length} public ${season} NFL leagues loaded.` : `No public ${season} NFL leagues found for this user.`}</span>
-              </div>
-              <Link href={selectedLeague ? "/league-hub" : "/draft-room"}>{selectedLeague ? "Open hub" : "Draft room"} <ArrowRight size={14} /></Link>
+              <span>{leagues.length ? `${leagues.length} public ${season} NFL leagues loaded.` : `No public ${season} NFL leagues found.`}</span>
             </div>
           ) : null}
 
           {status === "error" ? (
-            <div className="command-lookup-error">
+            <div className="command-status-note error">
               <CircleAlert size={18} />
-              {error}
+              <span>{error}</span>
             </div>
           ) : null}
-        </div>
-
-        <div className="command-hero-preview" aria-label="Command center preview">
-          <div className="command-preview-header">
-            <span>
-              <Radio size={14} />
-              Live room preview
-            </span>
-            <strong>{selectedLeague ? selectedLeague.name : "Pick 2.08"}</strong>
-          </div>
-          <div className="command-preview-player">
-            <span className="eyebrow">Current read</span>
-            <h2>{selectedLeague ? "League context is now driving the board." : "Take the value unless the tier breaks first."}</h2>
-            <p>{getLeagueSignal(selectedLeague)}</p>
-          </div>
-          <div className="command-mini-grid">
-            {roomSignals.map(([label, value, detail]) => (
-              <div key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-                <small>{detail}</small>
-              </div>
-            ))}
-          </div>
-        </div>
+        </aside>
       </section>
 
       {status === "found" ? (
         <section className="command-live-panel" aria-label="Sleeper league scan results">
           <div className="command-card-header">
             <div>
-              <span className="eyebrow">Sleeper scan results</span>
-              <h2>{leagues.length ? "Choose a league to update the command view." : "No current-season leagues found."}</h2>
+              <span className="eyebrow">Active leagues</span>
+              <h2>{leagues.length ? "Pick the room you are working on." : "No current-season leagues found."}</h2>
             </div>
             <span className="league-filter-pill">{season} NFL</span>
           </div>
 
           {leagues.length ? (
-            <div className="command-league-grid">
+            <div className="command-league-grid compact">
               {leagues.slice(0, 8).map((league) => {
                 const active = selectedLeague?.league_id === league.league_id;
+
                 return (
                   <button
                     className={active ? "command-league-card active" : "command-league-card"}
                     key={league.league_id}
-                    onClick={() => {
-                      setSelectedLeagueId(league.league_id);
-                      saveStoredLeagueConnection({
-                        username: username.trim() || user?.username || user?.display_name || "",
-                        season,
-                        user,
-                        leagues,
-                        selectedLeagueId: league.league_id
-                      });
-                    }}
+                    onClick={() => selectLeague(league.league_id)}
                     type="button"
                   >
-                    <span>{league.status}</span>
+                    <span>{cleanStatus(league.status)}</span>
                     <strong>{league.name}</strong>
                     <small>{league.total_rosters ?? "-"} teams - {formatLeagueType(league)} - {formatScoring(league)}</small>
-                    {league.draft_id ? <em>Draft ID connected</em> : <em>No draft ID</em>}
+                    <em>{league.draft_id ? "Draft connected" : "No draft attached"}</em>
                   </button>
                 );
               })}
@@ -452,68 +567,82 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
         </section>
       ) : null}
 
-      <section className="command-tools-grid" aria-label="Command center tools">
-        {tools.map((tool) => {
-          const Icon = tool.icon;
-          return (
-            <Link className="command-tool-card" href={signedIn ? tool.href : `/login?next=${encodeURIComponent(tool.href)}`} key={tool.title}>
-              <span className="command-tool-icon"><Icon size={19} /></span>
-              <h2>{tool.title}</h2>
-              <p>{tool.body}</p>
-              <strong>{signedIn ? "Open tool" : "Sign in to open"} <ArrowRight size={14} /></strong>
-            </Link>
-          );
-        })}
+      <section className="command-workflow-panel">
+        <div className="command-card-header">
+          <div>
+            <span className="eyebrow">How to use this tab</span>
+            <h2>Command Center is the traffic controller.</h2>
+          </div>
+          <span className="league-filter-pill"><Sparkles size={13} /> {selectedLeague ? selectedFormat : "Workflow"}</span>
+        </div>
+        <div className="command-workflow-grid">
+          {workflowCards.map(([label, title, body]) => (
+            <article className="command-workflow-card" key={label}>
+              <span>{label}</span>
+              <strong>{title}</strong>
+              <p>{body}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="command-workspace">
         <article className="command-board-card">
           <div className="command-card-header">
             <div>
-              <span className="eyebrow">Decision board</span>
-              <h2>Best available with context</h2>
+              <span className="eyebrow">Room read</span>
+              <h2>{selectedLeague ? "What the selected league changes." : "What changes after you connect a league."}</h2>
             </div>
-            <span className="league-filter-pill">{selectedLeague ? `${selectedFormat} - ${selectedScoring}` : "Superflex dynasty"}</span>
+            <span className="league-filter-pill">{selectedLeague ? `${selectedScoring} - ${selectedLineup}` : "Awaiting scan"}</span>
           </div>
-          <div className="command-board-table-wrap">
-            <table className="command-board-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Player</th>
-                  <th>Pos</th>
-                  <th>Signal</th>
-                  <th>Why it matters</th>
-                </tr>
-              </thead>
-              <tbody>
-                {boardRows.map(([rank, player, position, signal, reason]) => (
-                  <tr key={player}>
-                    <td><span className="rank-chip">{rank}</span></td>
-                    <td><strong>{player}</strong></td>
-                    <td>{position}</td>
-                    <td><span className="league-tier">{signal}</span></td>
-                    <td>{reason}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="command-board-list">
+            <div className="command-board-row featured">
+              <span>Format pressure</span>
+              <strong>{getFormatSignal(selectedLeague)}</strong>
+            </div>
+            <div className="command-board-row">
+              <span>Best next page</span>
+              <strong>{primaryCommand.title}</strong>
+              <Link href={gatedHref(primaryCommand.href)}>Open <ArrowRight size={14} /></Link>
+            </div>
+            <div className="command-board-row">
+              <span>Data handoff</span>
+              <strong>{selectedLeague ? "League context is available across the app." : "Sleeper scan will populate the rest of the product."}</strong>
+            </div>
           </div>
         </article>
 
         <aside className="command-side-stack">
           <article className="command-side-card">
-            <span className="eyebrow">Room leverage</span>
-            <h3>{selectedLeague ? selectedFormat === "Superflex" ? "QB demand is active" : "Skill-player value opens up" : "QB demand is active"}</h3>
-            <p>{selectedLeague ? getLeagueSignal(selectedLeague) : "When the room still needs starters, superflex quarterbacks should be pushed up unless the WR value is clearly better."}</p>
+            <span className="eyebrow">Connected room</span>
+            <h3>{selectedLeague?.name ?? "No league yet"}</h3>
+            <p>{selectedLeague ? `${cleanStatus(selectedLeague.status)} - ${selectedFormat} - ${selectedScoring}.` : "Use the connection panel to select a real Sleeper league."}</p>
           </article>
           <article className="command-side-card">
-            <span className="eyebrow">Next move</span>
-            <h3>Open the draft room</h3>
-            <p>{selectedLeague?.draft_id ? "This selected league has a Sleeper draft ID. Open Draft Room and the ID will be prefilled." : "Use the live sync page when you have a Sleeper draft ID and want picks reflected as they happen."}</p>
-            <Link href={draftRoomHref}>Go to Draft Room <ArrowRight size={14} /></Link>
+            <span className="eyebrow">Shortcut</span>
+            <h3>{selectedLeague?.draft_id ? "Draft is ready" : "Build context first"}</h3>
+            <p>{selectedLeague?.draft_id ? "Open the Draft Room with the selected league's draft ID attached." : "League Hub and Team Hub are the cleanest starting points before a draft ID exists."}</p>
+            <Link href={gatedHref(selectedLeague?.draft_id ? draftRoomHref : "/league-hub")}>
+              {selectedLeague?.draft_id ? "Open Draft Room" : "Open League Hub"} <ArrowRight size={14} />
+            </Link>
           </article>
         </aside>
+      </section>
+
+      <section className="command-tools-grid" aria-label="Command center tools">
+        {launchTools.map((tool) => {
+          const Icon = tool.icon;
+
+          return (
+            <Link className="command-tool-card" href={gatedHref(tool.href)} key={tool.title}>
+              <span className="command-tool-kicker">{tool.group}</span>
+              <span className="command-tool-icon"><Icon size={19} /></span>
+              <h2>{tool.title}</h2>
+              <p>{tool.body}</p>
+              <strong>Open <ArrowRight size={14} /></strong>
+            </Link>
+          );
+        })}
       </section>
     </div>
   );

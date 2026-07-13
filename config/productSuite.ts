@@ -21,7 +21,7 @@ export const productSuiteGroups = [
       {
         label: "Command Center",
         href: "/command-center",
-        description: "League scan, tool launcher, and live workflow hub.",
+        description: "Active league ops, next moves, and tool routing.",
         icon: Command
       },
       {
@@ -121,5 +121,5 @@ export const productCommandNav = [
   { label: "Calc", href: "/trade-calculator", description: "Deal math" },
   { label: "Finder", href: "/trade-finder", description: "Targets" },
   { label: "Draft", href: "/draft-room", description: "Live sync" },
-  { label: "Command", href: "/command-center", description: "Launch pad" }
+  { label: "Ops", href: "/command-center", description: "Next move" }
 ];

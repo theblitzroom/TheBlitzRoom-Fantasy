@@ -25,7 +25,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { label: "Home", href: "/", description: "Product overview", icon: Home },
-  { label: "Command Center", href: "/command-center", description: "Live draft intelligence", icon: Command },
+  { label: "Command Center", href: "/command-center", description: "Ops dashboard and next moves", icon: Command },
   { label: "League Hub", href: "/league-hub", description: "League settings and context", icon: Trophy },
   { label: "Power Rankings", href: "/power-rankings", description: "Team strength signals", icon: BarChart3 },
   { label: "Team Hub", href: "/team-hub/my-team", description: "My team overview", icon: Users },
