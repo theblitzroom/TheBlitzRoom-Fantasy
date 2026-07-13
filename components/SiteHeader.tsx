@@ -73,6 +73,26 @@ export function SiteHeader() {
 
   const userEmail = user?.email ?? "";
   const shortEmail = userEmail.length > 28 ? `${userEmail.slice(0, 25)}...` : userEmail;
+  const mobileAccountControl = user ? (
+    <div className="mobile-account-card">
+      <UserCircle size={18} />
+      <span>
+        <small>Signed in</small>
+        <strong>{shortEmail}</strong>
+      </span>
+      <button disabled={signingOut} onClick={signOut} type="button">
+        {signingOut ? "..." : "Sign out"}
+      </button>
+    </div>
+  ) : authReady ? (
+    <Link className="mobile-account-card" href="/login" onClick={() => setOpen(false)}>
+      <UserCircle size={18} />
+      <span>
+        <small>Account</small>
+        <strong>Sign in</strong>
+      </span>
+    </Link>
+  ) : null;
 
   return (
     <header className="site-header">
@@ -171,26 +191,6 @@ export function SiteHeader() {
                 <X size={20} />
               </button>
             </div>
-            {user ? (
-              <div className="mobile-account-card">
-                <UserCircle size={18} />
-                <span>
-                  <small>Signed in</small>
-                  <strong>{shortEmail}</strong>
-                </span>
-                <button disabled={signingOut} onClick={signOut} type="button">
-                  {signingOut ? "..." : "Sign out"}
-                </button>
-              </div>
-            ) : authReady ? (
-              <Link className="mobile-account-card" href="/login" onClick={() => setOpen(false)}>
-                <UserCircle size={18} />
-                <span>
-                  <small>Account</small>
-                  <strong>Sign in</strong>
-                </span>
-              </Link>
-            ) : null}
             <nav className="mobile-primary-grid" aria-label="Primary mobile navigation">
               {mobilePrimaryNav.map((item) => {
                 const Icon = item.icon;
@@ -234,18 +234,21 @@ export function SiteHeader() {
               })}
             </div>
 
-            <nav className="mobile-utility-row" aria-label="Account and support">
-              {mobileUtilityNav.map((item) => (
-                <Link className={pathname === item.href ? "mobile-utility-link active" : "mobile-utility-link"} href={item.href} key={item.href} onClick={() => setOpen(false)}>
-                  {item.label}
-                </Link>
-              ))}
-              {user ? (
-                <Link className={pathname === "/account" ? "mobile-utility-link active" : "mobile-utility-link"} href="/account" onClick={() => setOpen(false)}>
-                  Account
-                </Link>
-              ) : null}
-            </nav>
+            <div className="mobile-drawer-footer">
+              <nav className="mobile-utility-row" aria-label="Support links">
+                {mobileUtilityNav.map((item) => (
+                  <Link className={pathname === item.href ? "mobile-utility-link active" : "mobile-utility-link"} href={item.href} key={item.href} onClick={() => setOpen(false)}>
+                    {item.label}
+                  </Link>
+                ))}
+                {user ? (
+                  <Link className={pathname === "/account" ? "mobile-utility-link active" : "mobile-utility-link"} href="/account" onClick={() => setOpen(false)}>
+                    Account
+                  </Link>
+                ) : null}
+              </nav>
+              {mobileAccountControl}
+            </div>
           </div>
         </div>
       ) : null}

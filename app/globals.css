@@ -4232,6 +4232,13 @@ td {
   padding-top: 2px;
 }
 
+.mobile-drawer-footer {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
 .mobile-utility-link {
   display: inline-flex;
   align-items: center;
