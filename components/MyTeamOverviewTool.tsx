@@ -15,6 +15,7 @@ import {
   Users
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
+import { TeamNewsPanel } from "@/components/TeamNewsPanel";
 import {
   buildPowerRows,
   buildRosterRows,
@@ -716,6 +717,8 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
           </table>
         </div>
       </section>
+
+      <TeamNewsPanel players={selectedRosterPlayers} />
 
       <section className="team-detail-grid">
         <article className="team-detail-card">

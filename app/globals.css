@@ -2086,6 +2086,7 @@ td {
 .team-detail-card,
 .team-analytics-card,
 .team-roster-board,
+.team-news-panel,
 .team-lineup-panel {
   border: 1px solid var(--border);
   background:
@@ -2151,6 +2152,7 @@ td {
 .team-side-card,
 .team-roster-board,
 .team-strength-panel,
+.team-news-panel,
 .team-lineup-panel {
   display: grid;
   gap: 18px;
@@ -2368,6 +2370,244 @@ td {
   border-color: rgba(219, 106, 106, 0.28);
   color: #ffb6b6;
   background: rgba(219, 106, 106, 0.08);
+}
+
+.team-news-panel {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(217, 179, 95, 0.12), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 36%),
+    linear-gradient(180deg, rgba(35, 26, 49, 0.88), rgba(16, 11, 24, 0.92));
+}
+
+.team-news-status,
+.team-news-source,
+.team-news-actions,
+.team-news-item-top,
+.team-news-item-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-news-status {
+  width: fit-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(188, 166, 255, 0.14);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.team-news-status.status-ready {
+  color: var(--emerald);
+  border-color: rgba(73, 199, 143, 0.26);
+  background: rgba(73, 199, 143, 0.06);
+}
+
+.team-news-status.status-loading {
+  color: var(--gold-2);
+  border-color: rgba(226, 190, 99, 0.28);
+  background: rgba(217, 179, 95, 0.08);
+}
+
+.team-news-status.status-error {
+  color: var(--red);
+  border-color: rgba(219, 106, 106, 0.28);
+  background: rgba(219, 106, 106, 0.08);
+}
+
+.team-news-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid rgba(188, 166, 255, 0.1);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.team-news-source {
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.team-news-source a,
+.team-news-item-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--gold-2);
+  font-weight: 850;
+}
+
+.team-news-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.team-news-toggle,
+.team-news-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.team-news-toggle {
+  padding: 0 12px;
+}
+
+.team-news-refresh {
+  width: 36px;
+}
+
+.team-news-toggle.active,
+.team-news-refresh:hover:not(:disabled) {
+  color: var(--gold-2);
+  border-color: rgba(226, 190, 99, 0.32);
+  background: rgba(217, 179, 95, 0.08);
+}
+
+.team-news-refresh:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.team-news-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  line-height: 1.45;
+}
+
+.team-news-empty strong,
+.team-news-empty span {
+  display: block;
+}
+
+.team-news-empty strong {
+  color: var(--text);
+}
+
+.team-news-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.team-news-item {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 230px;
+  padding: 14px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.team-news-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(226, 190, 99, 0.24);
+  background: rgba(255, 255, 255, 0.042);
+}
+
+.team-news-item.roster-match {
+  border-color: rgba(226, 190, 99, 0.3);
+  background:
+    linear-gradient(180deg, rgba(217, 179, 95, 0.08), transparent 60%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.team-news-item-top,
+.team-news-item-footer {
+  justify-content: space-between;
+}
+
+.team-news-category,
+.team-news-roster-pill,
+.team-news-item-footer > span {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 25px;
+  padding: 0 8px;
+  border: 1px solid rgba(188, 166, 255, 0.12);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.team-news-category.category-injury {
+  color: #f0c07c;
+  border-color: rgba(215, 155, 77, 0.3);
+  background: rgba(215, 155, 77, 0.09);
+}
+
+.team-news-category.category-transaction {
+  color: #d7c8ff;
+  border-color: rgba(155, 123, 234, 0.28);
+  background: rgba(155, 123, 234, 0.1);
+}
+
+.team-news-category.category-role {
+  color: #a7f1cc;
+  border-color: rgba(73, 199, 143, 0.26);
+  background: rgba(73, 199, 143, 0.08);
+}
+
+.team-news-roster-pill {
+  color: var(--gold-2);
+  border-color: rgba(226, 190, 99, 0.28);
+  background: rgba(217, 179, 95, 0.08);
+}
+
+.team-news-item time {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.team-news-item h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.18;
+}
+
+.team-news-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.team-news-item-footer {
+  align-self: end;
+  padding-top: 4px;
+  border-top: 1px solid rgba(188, 166, 255, 0.08);
+}
+
+.team-news-item-footer a {
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .team-detail-grid {
@@ -4443,6 +4683,7 @@ td {
   .team-detail-grid,
   .team-action-grid,
   .team-strength-grid,
+  .team-news-list,
   .my-roster-summary,
   .team-roster-picker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4589,11 +4830,33 @@ td {
   .team-detail-grid,
   .team-action-grid,
   .team-strength-grid,
+  .team-news-list,
   .my-roster-summary,
   .team-analytics-grid,
   .team-slot-grid,
   .team-roster-picker {
     grid-template-columns: 1fr;
+  }
+
+  .team-news-toolbar,
+  .team-news-source,
+  .team-news-actions,
+  .team-news-item-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .team-news-actions {
+    width: 100%;
+  }
+
+  .team-news-toggle,
+  .team-news-refresh {
+    width: 100%;
+  }
+
+  .team-news-item {
+    min-height: auto;
   }
 
   .product-command-nav,
