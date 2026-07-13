@@ -2383,8 +2383,8 @@ td {
 .team-news-status,
 .team-news-source,
 .team-news-actions,
-.team-news-item-top,
-.team-news-item-footer {
+.team-news-item-meta,
+.team-news-item-action {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2435,7 +2435,7 @@ td {
 }
 
 .team-news-source a,
-.team-news-item-footer a {
+.team-news-item-action a {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -2506,43 +2506,63 @@ td {
 
 .team-news-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(188, 166, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(7, 5, 11, 0.28);
 }
 
 .team-news-item {
   display: grid;
-  align-content: start;
-  gap: 10px;
-  min-height: 230px;
-  padding: 14px;
-  border: 1px solid rgba(188, 166, 255, 0.12);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
+  grid-template-columns: 150px minmax(0, 1fr) 190px;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(188, 166, 255, 0.09);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.025);
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
+.team-news-item:last-child {
+  border-bottom: 0;
+}
+
 .team-news-item:hover {
-  transform: translateY(-1px);
-  border-color: rgba(226, 190, 99, 0.24);
-  background: rgba(255, 255, 255, 0.042);
+  transform: none;
+  background:
+    linear-gradient(90deg, rgba(217, 179, 95, 0.08), transparent 34%),
+    rgba(255, 255, 255, 0.04);
 }
 
 .team-news-item.roster-match {
-  border-color: rgba(226, 190, 99, 0.3);
+  border-left: 3px solid rgba(226, 190, 99, 0.72);
   background:
-    linear-gradient(180deg, rgba(217, 179, 95, 0.08), transparent 60%),
+    linear-gradient(90deg, rgba(217, 179, 95, 0.1), transparent 32%),
     rgba(255, 255, 255, 0.035);
 }
 
-.team-news-item-top,
-.team-news-item-footer {
-  justify-content: space-between;
+.team-news-item-meta,
+.team-news-item-action,
+.team-news-copy {
+  min-width: 0;
+}
+
+.team-news-item-meta {
+  flex-wrap: wrap;
+}
+
+.team-news-item-action {
+  justify-content: flex-end;
 }
 
 .team-news-category,
 .team-news-roster-pill,
-.team-news-item-footer > span {
+.team-news-item-action > span {
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -2587,25 +2607,25 @@ td {
 }
 
 .team-news-item h3 {
+  overflow: hidden;
   margin: 0;
-  font-size: 18px;
-  line-height: 1.18;
+  font-size: 15px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-news-item p {
+  overflow: hidden;
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.team-news-item-footer {
-  align-self: end;
-  padding-top: 4px;
-  border-top: 1px solid rgba(188, 166, 255, 0.08);
-}
-
-.team-news-item-footer a {
+.team-news-item-action a {
   font-size: 12px;
   white-space: nowrap;
 }
@@ -4683,10 +4703,13 @@ td {
   .team-detail-grid,
   .team-action-grid,
   .team-strength-grid,
-  .team-news-list,
   .my-roster-summary,
   .team-roster-picker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team-news-item {
+    grid-template-columns: 132px minmax(0, 1fr) 162px;
   }
 
   .team-slot-grid {
@@ -4830,7 +4853,6 @@ td {
   .team-detail-grid,
   .team-action-grid,
   .team-strength-grid,
-  .team-news-list,
   .my-roster-summary,
   .team-analytics-grid,
   .team-slot-grid,
@@ -4841,7 +4863,7 @@ td {
   .team-news-toolbar,
   .team-news-source,
   .team-news-actions,
-  .team-news-item-footer {
+  .team-news-item-action {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -4856,7 +4878,14 @@ td {
   }
 
   .team-news-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
     min-height: auto;
+    padding: 12px;
+  }
+
+  .team-news-item-action {
+    justify-content: flex-start;
   }
 
   .product-command-nav,

@@ -155,13 +155,15 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
       <div className="team-news-list">
         {latestItems.map((item) => (
           <article className={item.rosterMatch ? "team-news-item roster-match" : "team-news-item"} key={item.id}>
-            <div className="team-news-item-top">
+            <div className="team-news-item-meta">
               <span className={categoryClass(item.category)}>{item.category}</span>
               <time>{formatNewsTime(item.publishedAt)}</time>
             </div>
-            <h3>{item.title}</h3>
-            <p>{item.summary}</p>
-            <div className="team-news-item-footer">
+            <div className="team-news-copy">
+              <h3>{item.title}</h3>
+              <p>{item.summary}</p>
+            </div>
+            <div className="team-news-item-action">
               {item.rosterMatch ? <span className="team-news-roster-pill">On roster</span> : <span>{item.player || "NFL update"}</span>}
               <a href={item.sourceUrl} target="_blank" rel="noreferrer">
                 Read on RotoWire <ExternalLink size={13} />
