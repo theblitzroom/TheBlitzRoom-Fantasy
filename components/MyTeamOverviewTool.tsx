@@ -89,7 +89,10 @@ function clamp(value: number, min: number, max: number) {
 }
 
 const roleOrder = ["Starter", "Bench", "Taxi", "Reserve"];
-const positionOrder = ["QB", "RB", "WR", "TE", "FLEX"];
+const positionOrder = ["QB", "RB", "WR", "TE", "Other"];
+const primaryRosterPositions = ["QB", "RB", "WR", "TE"];
+const primaryRosterPositionSet = new Set(primaryRosterPositions);
+const playerLookupBatchSize = 80;
 
 function playerName(playerId: string, player?: LeagueToolPlayer) {
   const joinedName = [player?.first_name, player?.last_name].filter(Boolean).join(" ");
@@ -150,8 +153,33 @@ function sortIndex(values: string[], value: string) {
   return index === -1 ? values.length : index;
 }
 
-function rosterPositionGroup(position: string) {
-  return positionOrder.includes(position) ? position : "FLEX";
+function chunkItems<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
+
+async function fetchPlayerDirectoryBatch(playerIds: string[]) {
+  const response = await fetch(`/api/sleeper/players?ids=${encodeURIComponent(playerIds.join(","))}`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Sleeper player lookup failed.");
+  }
+
+  const data = await response.json() as { players?: Record<string, LeagueToolPlayer> };
+  return data.players ?? {};
+}
+
+function rosterPositionGroup(player?: LeagueToolPlayer) {
+  const positions = [player?.position, ...(player?.fantasy_positions ?? [])].filter(Boolean) as string[];
+  const skillPosition = positions.find((position) => primaryRosterPositionSet.has(position));
+  return skillPosition ?? "Other";
 }
 
 export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolProps) {
@@ -287,7 +315,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
       .map((playerId) => {
         const player = playerDirectory[playerId];
         const role = rosterRole(playerId, selectedRoster);
-        const position = player?.position || player?.fantasy_positions?.[0] || "-";
+        const position = rosterPositionGroup(player);
 
         return {
           playerId,
@@ -318,8 +346,8 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
   const rosterGroups = useMemo(() => (
     positionOrder.map((position) => ({
       position,
-      players: selectedRosterPlayers.filter((player) => rosterPositionGroup(player.position) === position)
-    }))
+      players: selectedRosterPlayers.filter((player) => player.position === position)
+    })).filter((group) => group.position !== "Other" || group.players.length)
   ), [selectedRosterPlayers]);
   const strengthProfile = useMemo(() => {
     const rosterMetrics = (summary?.rosters ?? []).map((roster) => ({
@@ -397,16 +425,18 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
     setLoadingPlayers(true);
 
     try {
-      const response = await fetch(`/api/sleeper/players?ids=${encodeURIComponent(playerIds.join(","))}`, {
-        cache: "no-store"
-      });
+      const results = await Promise.allSettled(
+        chunkItems(playerIds, playerLookupBatchSize).map((batch) => fetchPlayerDirectoryBatch(batch))
+      );
+      const players = results.reduce<Record<string, LeagueToolPlayer>>((merged, result) => (
+        result.status === "fulfilled" ? { ...merged, ...result.value } : merged
+      ), {});
 
-      if (!response.ok) {
+      if (!Object.keys(players).length) {
         throw new Error("Sleeper player lookup failed.");
       }
 
-      const data = await response.json() as { players?: Record<string, LeagueToolPlayer> };
-      setPlayerDirectory((current) => ({ ...current, ...(data.players ?? {}) }));
+      setPlayerDirectory((current) => ({ ...current, ...players }));
     } catch {
       // Keep the roster usable with Sleeper IDs if player metadata is temporarily unavailable.
     } finally {
