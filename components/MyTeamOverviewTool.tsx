@@ -543,6 +543,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
   return (
     <div className="team-hub-page">
       <ProductCommandNav />
+      <TeamNewsPanel players={selectedRosterPlayers} />
       <section className="team-hero-panel">
         <div className="team-hero-copy">
           <span className="badge badge-premium"><Users size={14} /> {liveAccess ? "Live Team Hub" : "Team Hub preview"}</span>
@@ -717,8 +718,6 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
           </table>
         </div>
       </section>
-
-      <TeamNewsPanel players={selectedRosterPlayers} />
 
       <section className="team-detail-grid">
         <article className="team-detail-card">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Newspaper, Radio, RefreshCcw, Sparkles } from "lucide-react";
+import { Newspaper, RefreshCcw } from "lucide-react";
 
 type TeamNewsPlayer = {
   name: string;
@@ -13,6 +13,9 @@ type NewsItem = {
   id: string;
   title: string;
   player: string;
+  imageUrl: string | null;
+  position: string | null;
+  team: string | null;
   category: string;
   summary: string;
   publishedAt: string | null;
@@ -53,15 +56,20 @@ function formatNewsTime(value: string | null) {
   }).format(date);
 }
 
-function categoryClass(category: string) {
-  return `team-news-category category-${category.toLowerCase()}`;
+function initials(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "NFL";
 }
 
 export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   const [news, setNews] = useState<NewsResponse | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [error, setError] = useState("");
-  const [showRosterOnly, setShowRosterOnly] = useState(true);
+  const [showRosterOnly, setShowRosterOnly] = useState(false);
 
   const rosterNameLookup = useMemo(() => {
     return new Set(players.map((player) => normalizeName(player.name)).filter(Boolean));
@@ -104,73 +112,68 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   }, [news?.items, rosterNameLookup]);
   const rosterItems = enrichedItems.filter((item) => item.rosterMatch);
   const visibleItems = showRosterOnly && rosterItems.length ? rosterItems : enrichedItems;
-  const latestItems = visibleItems.slice(0, 8);
+  const latestItems = visibleItems.slice(0, 10);
 
   return (
-    <section className="team-news-panel">
-      <div className="league-card-header">
+    <section className="team-news-strip" aria-label="Player news from RotoWire">
+      <div className="team-news-strip-label">
+        <Newspaper size={16} />
         <div>
-          <span className="eyebrow">Live player news</span>
-          <h2>RotoWire NFL updates</h2>
-        </div>
-        <span className={`team-news-status status-${status}`}>
-          <Radio size={14} />
-          {status === "loading" ? "Refreshing" : status === "error" ? "Issue" : "Live feed"}
-        </span>
-      </div>
-
-      <div className="team-news-toolbar">
-        <div className="team-news-source">
-          <Newspaper size={16} />
-          <span>Source: RotoWire public NFL RSS</span>
-          <a href="https://www.rotowire.com/rss/" target="_blank" rel="noreferrer">Feed details <ExternalLink size={13} /></a>
-        </div>
-        <div className="team-news-actions">
-          <button className={showRosterOnly ? "team-news-toggle active" : "team-news-toggle"} onClick={() => setShowRosterOnly(true)} type="button">
-            Roster watch {rosterItems.length ? `(${rosterItems.length})` : ""}
-          </button>
-          <button className={!showRosterOnly ? "team-news-toggle active" : "team-news-toggle"} onClick={() => setShowRosterOnly(false)} type="button">
-            All NFL
-          </button>
-          <button className="team-news-refresh" disabled={status === "loading"} onClick={() => void fetchNews()} type="button" aria-label="Refresh player news">
-            <RefreshCcw size={15} />
-          </button>
+          <strong>Player news</strong>
+          <span>RotoWire</span>
         </div>
       </div>
 
-      {error ? (
-        <div className="team-news-empty">
-          <strong>News feed paused</strong>
-          <span>{error}</span>
-        </div>
-      ) : null}
-
-      {!error && showRosterOnly && !rosterItems.length && enrichedItems.length ? (
-        <div className="team-news-empty">
-          <Sparkles size={16} />
-          <span>No direct roster hits right now, so showing the latest NFL fantasy updates.</span>
-        </div>
-      ) : null}
-
-      <div className="team-news-list">
+      <div className="team-news-strip-scroll" role="list">
         {latestItems.map((item) => (
-          <article className={item.rosterMatch ? "team-news-item roster-match" : "team-news-item"} key={item.id}>
-            <div className="team-news-item-meta">
-              <span className={categoryClass(item.category)}>{item.category}</span>
-              <time>{formatNewsTime(item.publishedAt)}</time>
+          <article className={item.rosterMatch ? "team-news-strip-item roster-match" : "team-news-strip-item"} key={item.id} role="listitem">
+            <div className="team-news-photo" aria-hidden="true">
+              <em>{initials(item.player || item.title)}</em>
+              {item.imageUrl ? <span style={{ backgroundImage: `url(${item.imageUrl})` }} /> : null}
             </div>
-            <div className="team-news-copy">
-              <h3>{item.title}</h3>
+            <div className="team-news-strip-copy">
+              <div className="team-news-strip-meta">
+                <span>{item.player || item.category}</span>
+                <time>{formatNewsTime(item.publishedAt)}</time>
+                {item.position ? <small>{item.position}{item.team ? ` / ${item.team}` : ""}</small> : null}
+              </div>
+              <a href={item.sourceUrl} target="_blank" rel="noreferrer">{item.title}</a>
               <p>{item.summary}</p>
-            </div>
-            <div className="team-news-item-action">
-              {item.rosterMatch ? <span className="team-news-roster-pill">On roster</span> : <span>{item.player || "NFL update"}</span>}
-              <a href={item.sourceUrl} target="_blank" rel="noreferrer">
-                Read on RotoWire <ExternalLink size={13} />
-              </a>
             </div>
           </article>
         ))}
+
+        {status === "error" ? (
+          <div className="team-news-strip-item team-news-strip-empty" role="listitem">
+            <div className="team-news-photo"><em>NFL</em></div>
+            <div className="team-news-strip-copy">
+              <strong>News feed paused</strong>
+              <p>{error}</p>
+            </div>
+          </div>
+        ) : null}
+
+        {status === "loading" && !latestItems.length ? (
+          <div className="team-news-strip-item team-news-strip-empty" role="listitem">
+            <div className="team-news-photo"><em>NFL</em></div>
+            <div className="team-news-strip-copy">
+              <strong>Loading player news</strong>
+              <p>Checking the latest RotoWire player updates.</p>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="team-news-strip-actions">
+        <button className={showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(true)} type="button">
+          Roster{rosterItems.length ? ` ${rosterItems.length}` : ""}
+        </button>
+        <button className={!showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(false)} type="button">
+          All
+        </button>
+        <button disabled={status === "loading"} onClick={() => void fetchNews()} type="button" aria-label="Refresh player news">
+          <RefreshCcw size={14} />
+        </button>
       </div>
     </section>
   );
