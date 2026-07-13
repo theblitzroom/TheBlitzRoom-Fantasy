@@ -113,7 +113,7 @@ export const productSuiteGroups = [
 ];
 
 export const productCommandNav = [
-  { label: "Ops", href: "/command-center", description: "Next move", icon: Command },
+  { label: "Dashboard", href: "/command-center", description: "Command hub", icon: Command },
   { label: "Draft", href: "/draft-room", description: "Live sync", icon: Gauge },
   { label: "Team", href: "/team-hub/my-team", description: "My roster", icon: Users },
   { label: "League", href: "/league-hub", description: "Room context", icon: Trophy },
