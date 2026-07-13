@@ -18,6 +18,8 @@ const NEWS_FEEDS = [
 ] as const;
 
 const FANTASY_NEWS_POSITIONS = new Set(["QB", "RB", "WR", "TE"]);
+const NEWS_WINDOW_DAYS = 3;
+const NEWS_WINDOW_MS = NEWS_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 type RssItem = {
   description?: unknown;
@@ -90,6 +92,20 @@ function parseNewsDate(value?: unknown) {
 
   const date = new Date(rawDate);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function isWithinNewsWindow(value: string | null) {
+  if (!value) {
+    return false;
+  }
+
+  const publishedAt = new Date(value).getTime();
+
+  if (Number.isNaN(publishedAt)) {
+    return false;
+  }
+
+  return publishedAt >= Date.now() - NEWS_WINDOW_MS;
 }
 
 function compactSummary(value: string) {
@@ -240,7 +256,7 @@ export async function GET() {
       .filter((item) => {
         const key = normalizeName(item.title);
 
-        if (!key || seenTitles.has(key)) {
+        if (!key || seenTitles.has(key) || !isWithinNewsWindow(item.publishedAt)) {
           return false;
         }
 
@@ -279,10 +295,11 @@ export async function GET() {
       .slice(0, 36);
 
     if (!items.length) {
-      throw new Error("Player news feeds returned no fantasy player stories.");
+      throw new Error(`Player news feeds returned no fantasy player stories from the last ${NEWS_WINDOW_DAYS} days.`);
     }
 
     return NextResponse.json({
+      dateWindowDays: NEWS_WINDOW_DAYS,
       feedUrls: NEWS_FEEDS.map((feed) => feed.url),
       fetchedAt: new Date().toISOString(),
       items,
