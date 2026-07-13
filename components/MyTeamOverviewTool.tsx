@@ -531,7 +531,6 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
     })).filter((group) => group.position !== "Other" || group.players.length)
   ), [selectedRosterPlayers]);
   const draftPicks = useMemo(() => selectedRosterDraftPicks(summary, selectedRoster, activeLeague), [activeLeague, selectedRoster, summary]);
-  const firstRoundPickCount = draftPicks.filter((pick) => pick.round === 1).length;
   const strengthProfile = useMemo(() => {
     const rosterMetrics = (summary?.rosters ?? []).map((roster) => ({
       roster,
@@ -842,10 +841,6 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
                 <div className="team-position-roster-header">
                   <span className="position-chip position-chip-picks">Picks</span>
                   <strong>{draftPicks.length || "-"}</strong>
-                </div>
-                <div className="team-picks-snapshot">
-                  <span><small>1sts</small><strong>{firstRoundPickCount || "-"}</strong></span>
-                  <span><small>Next</small><strong>{draftPicks[0]?.label ?? "-"}</strong></span>
                 </div>
                 <div className="team-picks-list">
                   {draftPicks.map((pick) => (

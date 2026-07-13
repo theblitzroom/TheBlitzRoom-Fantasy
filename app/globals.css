@@ -2899,35 +2899,6 @@ td {
   background: rgba(217, 179, 95, 0.08);
 }
 
-.team-picks-snapshot {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.team-picks-snapshot span {
-  display: grid;
-  gap: 4px;
-  padding: 7px;
-  border: 1px solid rgba(188, 166, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(8, 6, 13, 0.3);
-}
-
-.team-picks-snapshot small {
-  color: var(--faint);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.team-picks-snapshot strong {
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1;
-}
-
 .team-picks-list {
   display: grid;
   gap: 5px;
