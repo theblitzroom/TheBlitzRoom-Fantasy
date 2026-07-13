@@ -26,6 +26,7 @@ import {
   saveStoredLeagueConnection,
   subscribeStoredLeagueConnection
 } from "@/lib/sleeper/leagueConnection";
+import { TeamNewsPanel } from "@/components/TeamNewsPanel";
 import {
   deriveLeagueProfile,
   formatLeagueScoringLabel,
@@ -59,13 +60,6 @@ type LeagueLookupResponse = {
 type CommandCenterLaunchProps = {
   signedIn: boolean;
 };
-
-const tickerItems = [
-  "Check format before you trust any ranking",
-  "Use Draft Room when picks are moving",
-  "Use Team Hub when roster construction matters",
-  "Use Market tools before sending a trade"
-];
 
 const launchTools = [
   {
@@ -409,15 +403,7 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
   return (
     <div className="command-center-launch">
       <ProductCommandNav />
-
-      <div className="command-ticker" aria-label="Fantasy intelligence ticker">
-        {tickerItems.map((item, index) => (
-          <span key={item}>
-            <strong>{String(index + 1).padStart(2, "0")}</strong>
-            {item}
-          </span>
-        ))}
-      </div>
+      <TeamNewsPanel players={[]} />
 
       <section className="command-context-bar" aria-label="Active command context">
         <div className="command-context-item primary">

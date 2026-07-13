@@ -113,13 +113,13 @@ export const productSuiteGroups = [
 ];
 
 export const productCommandNav = [
-  { label: "Team", href: "/team-hub/my-team", description: "My roster" },
-  { label: "Matchup", href: "/matchup", description: "Weekly edge" },
-  { label: "Waivers", href: "/waivers", description: "Add/drop" },
-  { label: "League", href: "/league-hub", description: "Room context" },
-  { label: "Trades", href: "/trade-value", description: "Market hub" },
-  { label: "Calc", href: "/trade-calculator", description: "Deal math" },
-  { label: "Finder", href: "/trade-finder", description: "Targets" },
-  { label: "Draft", href: "/draft-room", description: "Live sync" },
-  { label: "Ops", href: "/command-center", description: "Next move" }
+  { label: "Ops", href: "/command-center", description: "Next move", icon: Command },
+  { label: "Draft", href: "/draft-room", description: "Live sync", icon: Gauge },
+  { label: "Team", href: "/team-hub/my-team", description: "My roster", icon: Users },
+  { label: "League", href: "/league-hub", description: "Room context", icon: Trophy },
+  { label: "Matchup", href: "/matchup", description: "Weekly edge", icon: Crosshair },
+  { label: "Waivers", href: "/waivers", description: "Add/drop", icon: ListPlus },
+  { label: "Trades", href: "/trade-value", description: "Market hub", icon: Swords },
+  { label: "Calc", href: "/trade-calculator", description: "Deal math", icon: GitCompareArrows },
+  { label: "Finder", href: "/trade-finder", description: "Targets", icon: Search }
 ];

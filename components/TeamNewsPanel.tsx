@@ -113,7 +113,8 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
     }));
   }, [news?.items, rosterNameLookup]);
   const rosterItems = enrichedItems.filter((item) => item.rosterMatch);
-  const visibleItems = showRosterOnly && rosterItems.length ? rosterItems : enrichedItems;
+  const hasRosterFilter = players.length > 0;
+  const visibleItems = hasRosterFilter && showRosterOnly && rosterItems.length ? rosterItems : enrichedItems;
   const latestItems = visibleItems.slice(0, 18);
 
   useEffect(() => {
@@ -210,9 +211,11 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
       </div>
 
       <div className="team-news-strip-actions">
-        <button className={showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(true)} type="button">
-          Team{rosterItems.length ? ` ${rosterItems.length}` : ""}
-        </button>
+        {hasRosterFilter ? (
+          <button className={showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(true)} type="button">
+            Team{rosterItems.length ? ` ${rosterItems.length}` : ""}
+          </button>
+        ) : null}
         <button className={!showRosterOnly ? "active" : ""} onClick={() => setShowRosterOnly(false)} type="button">
           All
         </button>
