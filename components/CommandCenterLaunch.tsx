@@ -27,7 +27,6 @@ import {
 } from "@/lib/sleeper/leagueConnection";
 import { TeamNewsPanel } from "@/components/TeamNewsPanel";
 import {
-  deriveLeagueProfile,
   formatLeagueScoringLabel,
   formatLeagueTypeLabel
 } from "@/lib/fantasyModel";
@@ -219,25 +218,6 @@ function getPrimaryCommand(league?: SleeperLeague | null) {
     label: "Roster audit",
     href: "/team-hub/my-team"
   };
-}
-
-function getFormatSignal(league?: SleeperLeague | null) {
-  if (!league) {
-    return "No live league selected yet. Demo data is shown until a Sleeper scan is connected.";
-  }
-
-  const profile = deriveLeagueProfile(league);
-  const teams = league.total_rosters ? `${league.total_rosters}-team` : "This";
-
-  if (profile.isSuperflex) {
-    return `${teams} superflex setup: protect QB scarcity in close calls and avoid letting QB2 value slip too far.`;
-  }
-
-  if (profile.tePremium) {
-    return `${teams} TE premium setup: tight end value deserves a real bump when tiers flatten.`;
-  }
-
-  return `${teams} 1QB setup: elite skill-position value can win close calls over replaceable quarterback points.`;
 }
 
 export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
@@ -552,31 +532,6 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
       ) : null}
 
       <section className="command-focus-grid">
-        <article className="command-board-card compact">
-          <div className="command-card-header">
-            <div>
-              <span className="eyebrow">Room read</span>
-              <h2>{selectedLeague ? "What matters right now." : "Connect a league for live context."}</h2>
-            </div>
-            <span className="league-filter-pill">{selectedLeague ? `${selectedScoring} - ${selectedLineup}` : "Awaiting scan"}</span>
-          </div>
-          <div className="command-board-list">
-            <div className="command-board-row featured">
-              <span>Format pressure</span>
-              <strong>{getFormatSignal(selectedLeague)}</strong>
-            </div>
-            <div className="command-board-row">
-              <span>Best next page</span>
-              <strong>{primaryCommand.title}</strong>
-              <Link href={gatedHref(primaryCommand.href)}>Open <ArrowRight size={14} /></Link>
-            </div>
-            <div className="command-board-row">
-              <span>Data handoff</span>
-              <strong>{selectedLeague ? "League context is available across the app." : "Sleeper scan will populate the rest of the product."}</strong>
-            </div>
-          </div>
-        </article>
-
         <article className="command-quick-tools-card">
           <div className="command-card-header compact">
             <div>
