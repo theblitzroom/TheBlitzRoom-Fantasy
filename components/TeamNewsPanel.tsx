@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Newspaper, RefreshCcw } from "lucide-react";
 
 type TeamNewsPlayer = {
@@ -32,6 +33,10 @@ type NewsResponse = {
 
 type TeamNewsPanelProps = {
   players: TeamNewsPlayer[];
+};
+
+type EnrichedNewsItem = NewsItem & {
+  rosterMatch: boolean;
 };
 
 function normalizeName(value: string) {
@@ -66,8 +71,6 @@ function initials(value: string) {
 }
 
 export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const pausedRef = useRef(false);
   const [news, setNews] = useState<NewsResponse | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [error, setError] = useState("");
@@ -116,36 +119,31 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   const hasRosterFilter = players.length > 0;
   const visibleItems = hasRosterFilter && showRosterOnly && rosterItems.length ? rosterItems : enrichedItems;
   const latestItems = visibleItems.slice(0, 18);
+  const shouldAnimateNews = latestItems.length > 1;
+  const tickerStyle = useMemo(() => ({
+    "--team-news-ticker-duration": `${Math.max(18, Math.min(56, latestItems.length * 3.1))}s`
+  }) as CSSProperties, [latestItems.length]);
 
-  useEffect(() => {
-    const element = scrollRef.current;
-
-    if (!element || latestItems.length < 2) {
-      return;
-    }
-
-    let frameId = 0;
-    let lastTime = performance.now();
-    let scrollPosition = element.scrollLeft;
-    const pixelsPerSecond = 18;
-
-    const tick = (time: number) => {
-      const maxScroll = element.scrollWidth - element.clientWidth;
-
-      if (!pausedRef.current && maxScroll > 0) {
-        const delta = ((time - lastTime) / 1000) * pixelsPerSecond;
-        scrollPosition = scrollPosition >= maxScroll - 1 ? 0 : scrollPosition + delta;
-        element.scrollLeft = scrollPosition;
-      }
-
-      lastTime = time;
-      frameId = window.requestAnimationFrame(tick);
-    };
-
-    frameId = window.requestAnimationFrame(tick);
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [latestItems.length, showRosterOnly]);
+  const renderNewsItem = (item: EnrichedNewsItem, duplicate = false) => (
+    <article
+      aria-hidden={duplicate ? true : undefined}
+      className={item.rosterMatch ? "team-news-strip-item roster-match" : "team-news-strip-item"}
+      key={`${duplicate ? "copy" : "item"}-${item.id}`}
+      role={duplicate ? "presentation" : "listitem"}
+    >
+      <div className="team-news-photo" aria-hidden="true">
+        {item.imageUrl ? <span style={{ backgroundImage: `url(${item.imageUrl})` }} /> : <em>{initials(item.player || item.title)}</em>}
+      </div>
+      <div className="team-news-strip-copy">
+        <div className="team-news-strip-meta">
+          <span>{item.player || item.category}</span>
+          <time>{formatNewsTime(item.publishedAt)}</time>
+          {item.position ? <small>{item.position}{item.team ? ` / ${item.team}` : ""}</small> : null}
+        </div>
+        <a href={item.sourceUrl} tabIndex={duplicate ? -1 : undefined} target="_blank" rel="noreferrer">{item.title}</a>
+      </div>
+    </article>
+  );
 
   return (
     <section className="team-news-strip" aria-label="Player news">
@@ -156,38 +154,19 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
         </div>
       </div>
 
-      <div
-        className="team-news-strip-scroll"
-        onBlur={() => {
-          pausedRef.current = false;
-        }}
-        onFocus={() => {
-          pausedRef.current = true;
-        }}
-        onPointerEnter={() => {
-          pausedRef.current = true;
-        }}
-        onPointerLeave={() => {
-          pausedRef.current = false;
-        }}
-        ref={scrollRef}
-        role="list"
-      >
-        {latestItems.map((item) => (
-          <article className={item.rosterMatch ? "team-news-strip-item roster-match" : "team-news-strip-item"} key={item.id} role="listitem">
-            <div className="team-news-photo" aria-hidden="true">
-              {item.imageUrl ? <span style={{ backgroundImage: `url(${item.imageUrl})` }} /> : <em>{initials(item.player || item.title)}</em>}
+      <div className="team-news-strip-scroll" role="list">
+        {latestItems.length ? (
+          <div className={shouldAnimateNews ? "team-news-strip-track" : "team-news-strip-track static"} style={tickerStyle}>
+            <div className="team-news-strip-group">
+              {latestItems.map((item) => renderNewsItem(item))}
             </div>
-            <div className="team-news-strip-copy">
-              <div className="team-news-strip-meta">
-                <span>{item.player || item.category}</span>
-                <time>{formatNewsTime(item.publishedAt)}</time>
-                {item.position ? <small>{item.position}{item.team ? ` / ${item.team}` : ""}</small> : null}
+            {shouldAnimateNews ? (
+              <div aria-hidden="true" className="team-news-strip-group">
+                {latestItems.map((item) => renderNewsItem(item, true))}
               </div>
-              <a href={item.sourceUrl} target="_blank" rel="noreferrer">{item.title}</a>
-            </div>
-          </article>
-        ))}
+            ) : null}
+          </div>
+        ) : null}
 
         {status === "error" ? (
           <div className="team-news-strip-item team-news-strip-empty" role="listitem">
