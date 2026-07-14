@@ -3474,12 +3474,6 @@ td {
   opacity: 0.6;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .team-news-strip-track {
-    animation: none;
-  }
-}
-
 .team-detail-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
