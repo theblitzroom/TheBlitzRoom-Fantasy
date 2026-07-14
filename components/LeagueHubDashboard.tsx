@@ -17,6 +17,7 @@ import {
   Trophy,
   Users
 } from "lucide-react";
+import { ManagerIdentity } from "@/components/FootballIdentity";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
 import {
   deriveLeagueProfile,
@@ -52,6 +53,7 @@ type SleeperLeague = {
 type SleeperLeagueUser = {
   user_id: string;
   display_name?: string;
+  avatar?: string | null;
   metadata?: {
     team_name?: string;
   };
@@ -104,6 +106,7 @@ type PowerRow = {
   rank: string;
   team: string;
   manager: string;
+  managerAvatar?: string | null;
   tier: string;
   score: number;
   trend: string;
@@ -116,6 +119,7 @@ type ValueStandingRow = {
   rank: number;
   team: string;
   manager: string;
+  managerAvatar?: string | null;
   value: number;
   position: string;
   rosterId: number;
@@ -208,6 +212,10 @@ function managerName(users: SleeperLeagueUser[], roster: SleeperRoster) {
   return user?.metadata?.team_name || user?.display_name || `Roster ${roster.roster_id}`;
 }
 
+function managerForRoster(users: SleeperLeagueUser[], roster: SleeperRoster) {
+  return users.find((item) => item.user_id === roster.owner_id) ?? null;
+}
+
 function buildPowerRows(summary: LeagueSummary | null): PowerRow[] {
   if (!summary) {
     return [];
@@ -253,6 +261,7 @@ function buildPowerRows(summary: LeagueSummary | null): PowerRow[] {
     })
     .sort((a, b) => b.score - a.score)
     .map((row, index) => {
+      const manager = managerForRoster(summary.users, row.roster);
       const tier = index <= 1 ? "Contender" : row.upsideGap > 125 ? "Builder" : "Middle";
       const depth = row.depthCount >= 24 ? "Deep" : row.depthCount >= 20 ? "Stable" : "Thin";
       const signal = tier === "Contender"
@@ -265,6 +274,7 @@ function buildPowerRows(summary: LeagueSummary | null): PowerRow[] {
         rank: String(index + 1).padStart(2, "0"),
         team: managerName(summary.users, row.roster),
         manager: `Roster ${row.roster.roster_id}`,
+        managerAvatar: manager?.avatar ?? null,
         tier,
         score: row.score,
         trend: row.upsideGap > 100 ? `+${Math.min(Math.round(row.upsideGap / 20), 9)}` : "-1",
@@ -328,6 +338,7 @@ function buildValueStandings(summary: LeagueSummary | null, kind: "dynasty" | "r
 
   return summary.rosters
     .map((roster) => {
+      const manager = managerForRoster(summary.users, roster);
       const points = decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal);
       const potential = decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal);
       const depth = roster.players?.length ?? 0;
@@ -349,6 +360,7 @@ function buildValueStandings(summary: LeagueSummary | null, kind: "dynasty" | "r
         rank: 0,
         team: managerName(summary.users, roster),
         manager: `Roster ${roster.roster_id}`,
+        managerAvatar: manager?.avatar ?? null,
         value,
         position: selectedPosition,
         rosterId: roster.roster_id
@@ -717,8 +729,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                   <tr key={`${row.rank}-${row.team}`}>
                     <td><span className="rank-chip">{row.rank}</span></td>
                     <td>
-                      <strong>{row.team}</strong>
-                      <small>{row.manager}</small>
+                      <ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} />
                     </td>
                     <td><span className="league-tier">{row.tier}</span></td>
                     <td>
@@ -796,7 +807,9 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             {dynastyValueRows.map((row) => (
               <div className="league-value-row" key={`dynasty-${row.rosterId}`}>
                 <span>#{row.rank}</span>
-                <button type="button">{row.team}</button>
+                <button type="button">
+                  <ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} />
+                </button>
                 <strong>{formatValue(row.value)}</strong>
               </div>
             ))}
@@ -821,7 +834,9 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             {redraftValueRows.map((row) => (
               <div className="league-value-row" key={`redraft-${row.rosterId}`}>
                 <span>#{row.rank}</span>
-                <button type="button">{row.team}</button>
+                <button type="button">
+                  <ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} />
+                </button>
                 <strong>{formatValue(row.value)}</strong>
               </div>
             ))}

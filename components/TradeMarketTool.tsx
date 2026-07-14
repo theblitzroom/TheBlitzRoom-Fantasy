@@ -14,6 +14,7 @@ import {
   Users
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
+import { PlayerIdentity, TeamIdentity } from "@/components/FootballIdentity";
 import {
   demoLeagues,
   demoPlayerDirectory,
@@ -87,6 +88,10 @@ function uniqueAssets(assets: TradeAsset[]) {
   });
 }
 
+function assetPlayerId(asset: TradeAsset) {
+  return asset.type === "player" ? asset.id.replace(/^player:/, "") : undefined;
+}
+
 function buildTradeIdeas(
   summary: LeagueToolSummary | null,
   user: LeagueToolUser | null,
@@ -158,9 +163,23 @@ function buildTradeIdeas(
 
 function AssetPill({ asset, onRemove }: { asset: TradeAsset; onRemove: () => void }) {
   return (
-    <button className="trade-asset-pill" onClick={onRemove} type="button">
-      <span>{asset.position}</span>
-      <strong>{asset.name}</strong>
+    <button className={asset.type === "player" ? "trade-asset-pill player-asset" : "trade-asset-pill"} onClick={onRemove} type="button">
+      {asset.type === "player" ? (
+        <PlayerIdentity
+          avatarSize="sm"
+          compact
+          detail={asset.note}
+          name={asset.name}
+          playerId={assetPlayerId(asset)}
+          position={asset.position}
+          team={asset.team}
+        />
+      ) : (
+        <>
+          <span>{asset.position}</span>
+          <strong>{asset.name}</strong>
+        </>
+      )}
       <small>{formatValue(asset.value)}</small>
     </button>
   );
@@ -488,9 +507,28 @@ export function TradeMarketTool({ mode, paidAccess, signedIn, plan }: TradeMarke
                 <span className="league-filter-pill"><Sparkles size={14} />{idea.confidence}% fit</span>
               </div>
               <div className="trade-idea-flow">
-                <div><span>You offer</span><strong>{idea.give.map((asset) => asset.name).join(" + ")}</strong><small>{formatValue(idea.calculation.sideA.total)} value</small></div>
+                <div>
+                  <span>You offer</span>
+                  <strong>{idea.give.map((asset) => asset.name).join(" + ")}</strong>
+                  <small>{formatValue(idea.calculation.sideA.total)} value</small>
+                </div>
                 <ArrowRight size={18} />
-                <div><span>You target</span><strong>{idea.target.name}</strong><small>{formatValue(idea.calculation.sideB.total)} value</small></div>
+                <div>
+                  <span>You target</span>
+                  {idea.target.type === "player" ? (
+                    <PlayerIdentity
+                      avatarSize="sm"
+                      compact
+                      name={idea.target.name}
+                      playerId={assetPlayerId(idea.target)}
+                      position={idea.target.position}
+                      team={idea.target.team}
+                    />
+                  ) : (
+                    <strong>{idea.target.name}</strong>
+                  )}
+                  <small>{formatValue(idea.calculation.sideB.total)} value</small>
+                </div>
               </div>
               <p>{idea.reason}</p>
               <button className="premium-button premium-button-secondary" onClick={() => loadIdea(idea)} type="button">Load in calculator</button>
@@ -524,10 +562,27 @@ export function TradeMarketTool({ mode, paidAccess, signedIn, plan }: TradeMarke
             <tbody>
               {filteredAssets.map((asset) => (
                 <tr key={asset.id}>
-                  <td><strong>{asset.name}</strong><small>{asset.note}</small></td>
+                  <td>
+                    {asset.type === "player" ? (
+                      <PlayerIdentity
+                        avatarSize="sm"
+                        compact
+                        detail={asset.note}
+                        name={asset.name}
+                        playerId={assetPlayerId(asset)}
+                        position={asset.position}
+                        team={asset.team}
+                      />
+                    ) : (
+                      <>
+                        <strong>{asset.name}</strong>
+                        <small>{asset.note}</small>
+                      </>
+                    )}
+                  </td>
                   <td><span className="league-tier">{asset.position}</span></td>
                   <td>{formatValue(asset.value)}</td>
-                  <td>{asset.team ?? "-"}</td>
+                  <td>{asset.team ? <TeamIdentity team={asset.team} showName compact /> : "-"}</td>
                   <td>{asset.manager ?? "Pick bank"}</td>
                   <td><div className="trade-add-actions"><button onClick={() => addAsset(asset, "A")} type="button">A</button><button onClick={() => addAsset(asset, "B")} type="button">B</button></div></td>
                 </tr>

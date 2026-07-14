@@ -14,6 +14,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
+import { PlayerIdentity, TeamIdentity } from "@/components/FootballIdentity";
 import {
   demoLeagues,
   demoPlayerDirectory,
@@ -391,9 +392,19 @@ export function WaiverWireTool({ paidAccess, signedIn }: WaiverWireToolProps) {
                 {boostedCandidates.slice(0, 18).map((candidate, index) => (
                   <tr key={candidate.player_id}>
                     <td><span className="rank-chip">{String(index + 1).padStart(2, "0")}</span></td>
-                    <td><strong>{candidate.name}</strong><small>{candidate.age ? `Age ${candidate.age}` : "Age unavailable"}{candidate.injury_status ? ` - ${candidate.injury_status}` : ""}</small></td>
+                    <td>
+                      <PlayerIdentity
+                        avatarSize="sm"
+                        compact
+                        detail={candidate.age ? `Age ${candidate.age}${candidate.injury_status ? ` - ${candidate.injury_status}` : ""}` : candidate.injury_status ?? "Age unavailable"}
+                        name={candidate.name}
+                        playerId={candidate.player_id}
+                        position={candidate.position}
+                        team={candidate.team}
+                      />
+                    </td>
                     <td><span className="league-tier">{candidate.position}</span></td>
-                    <td>{candidate.team}</td>
+                    <td><TeamIdentity team={candidate.team} showName compact /></td>
                     <td><strong>{candidate.boostedScore}</strong><small>Base {candidate.score}</small></td>
                     <td>{candidate.reason}</td>
                   </tr>
@@ -431,7 +442,15 @@ export function WaiverWireTool({ paidAccess, signedIn }: WaiverWireToolProps) {
               {dropWatch.map(({ playerId, player, score }) => (
                 <div key={playerId}>
                   <ShieldAlert size={15} />
-                  <span><strong>{playerName(playerId, player)}</strong><small>{playerPosition(player)} - pressure {score}</small></span>
+                  <PlayerIdentity
+                    avatarSize="xs"
+                    compact
+                    detail={`Pressure ${score}`}
+                    name={playerName(playerId, player)}
+                    playerId={playerId}
+                    position={playerPosition(player)}
+                    team={player?.team}
+                  />
                 </div>
               ))}
               {!dropWatch.length ? <p>Load your roster to see drop candidates.</p> : null}

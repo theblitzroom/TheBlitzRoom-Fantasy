@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CircleAlert, ClipboardList, RefreshCcw, ShieldAlert, Users } from "lucide-react";
+import { ManagerIdentity } from "@/components/FootballIdentity";
 import type { SubscriptionPlan } from "@/lib/subscription";
 import {
   buildRosterRows,
@@ -232,7 +233,7 @@ export function RostersTool({ paidAccess, signedIn, plan }: RostersToolProps) {
             <tbody>
               {rows.map((row) => (
                 <tr key={`${row.rosterId}-${row.team}`}>
-                  <td><strong>{row.team}</strong><small>{row.manager}</small></td>
+                  <td><ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} /></td>
                   <td><span className="league-tier">{row.build}</span></td>
                   <td><span className={row.priority.includes("Fill") || row.priority.includes("Add") ? "roster-warning-pill" : "league-tier"}>{row.priority}</span></td>
                   <td>{row.record}</td>

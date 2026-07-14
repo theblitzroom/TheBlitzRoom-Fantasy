@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Newspaper, RefreshCcw } from "lucide-react";
+import { TeamIdentity } from "@/components/FootballIdentity";
 
 type TeamNewsPlayer = {
   name: string;
@@ -138,7 +139,12 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
         <div className="team-news-strip-meta">
           <span>{item.player || item.category}</span>
           <time>{formatNewsTime(item.publishedAt)}</time>
-          {item.position ? <small>{item.position}{item.team ? ` / ${item.team}` : ""}</small> : null}
+          {item.position ? (
+            <small>
+              <b>{item.position}</b>
+              {item.team ? <TeamIdentity team={item.team} compact /> : null}
+            </small>
+          ) : null}
         </div>
         <a href={item.sourceUrl} tabIndex={duplicate ? -1 : undefined} target="_blank" rel="noreferrer">{item.title}</a>
       </div>

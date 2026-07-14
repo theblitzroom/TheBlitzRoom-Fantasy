@@ -27,6 +27,7 @@ import {
 } from "@/lib/fantasyModel";
 import { getStoredLeagueConnection } from "@/lib/sleeper/leagueConnection";
 import type { SleeperPick } from "@/lib/sleeper/client";
+import { PlayerIdentity, TeamIdentity } from "@/components/FootballIdentity";
 
 type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
@@ -35,6 +36,7 @@ type DraftBoardPick = {
   round: number;
   slot: number;
   teamName: string;
+  playerId?: string;
   playerName: string;
   position: string;
   nflTeam: string;
@@ -142,6 +144,7 @@ function buildDemoBoard(league: LeagueToolLeague): DraftBoardPick[] {
       round,
       slot,
       teamName: teamNames[slot - 1],
+      playerId: item.id,
       playerName: item.player.full_name ?? item.id,
       position: item.player.position ?? "-",
       nflTeam: item.player.team ?? "-",
@@ -161,6 +164,7 @@ function buildSyncedBoard(picks: SleeperPick[]): DraftBoardPick[] {
       round,
       slot,
       teamName: teamNames[slot - 1] ?? `Team ${slot}`,
+      playerId: pick.player_id,
       playerName: pickToPlayerName(pick),
       position: pick.metadata?.position ?? "-",
       nflTeam: pick.metadata?.team ?? "-",
@@ -378,10 +382,17 @@ export function DraftRoomCommandCenter() {
                           <span className="draft-pick-label">{formatPick(round, slot)} <b>#{pickNo}</b></span>
                           {pick ? (
                             <>
-                              <strong>{pick.playerName}</strong>
+                              <PlayerIdentity
+                                avatarSize="xs"
+                                compact
+                                name={pick.playerName}
+                                playerId={pick.playerId}
+                                position={pick.position}
+                                team={pick.nflTeam}
+                              />
                               <div className="draft-pick-meta">
                                 <span className={positionColor(pick.position)}>{pick.position}</span>
-                                <small>{pick.nflTeam}</small>
+                                <small><TeamIdentity team={pick.nflTeam} compact /></small>
                                 {pick.score ? <small>{pick.score}</small> : null}
                               </div>
                               <em>{pick.signal}</em>
@@ -406,7 +417,13 @@ export function DraftRoomCommandCenter() {
         <aside className="draft-side-rail">
           <article className="draft-recommendation-card">
             <span className="badge badge-premium"><Sparkles size={14} /> Best current pick</span>
-            <h2>{topRecommendation.player.full_name}</h2>
+            <PlayerIdentity
+              avatarSize="lg"
+              name={topRecommendation.player.full_name ?? topRecommendation.id}
+              playerId={topRecommendation.id}
+              position={topRecommendation.player.position}
+              team={topRecommendation.player.team}
+            />
             <p>{topRecommendation.read.signals.join(". ")}.</p>
             <div className="score-grid">
               <span><strong>{topRecommendation.read.score}</strong><small>Draft score</small></span>
@@ -423,7 +440,14 @@ export function DraftRoomCommandCenter() {
               {recommendations.map((item, index) => (
                 <div key={item.id}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
-                  <strong>{item.player.full_name}</strong>
+                  <PlayerIdentity
+                    avatarSize="xs"
+                    compact
+                    name={item.player.full_name ?? item.id}
+                    playerId={item.id}
+                    position={item.player.position}
+                    team={item.player.team}
+                  />
                   <small>{item.player.position} · {item.read.confidence} · {item.read.score}</small>
                 </div>
               ))}
@@ -458,7 +482,14 @@ export function DraftRoomCommandCenter() {
             {[...boardPicks].sort((a, b) => b.pickNo - a.pickNo).slice(0, 10).map((pick) => (
               <div key={`stream-${pick.pickNo}`}>
                 <span>{pick.pickNo}</span>
-                <strong>{pick.playerName}</strong>
+                <PlayerIdentity
+                  avatarSize="xs"
+                  compact
+                  name={pick.playerName}
+                  playerId={pick.playerId}
+                  position={pick.position}
+                  team={pick.nflTeam}
+                />
                 <small>{pick.teamName} · {pick.position} · {pick.signal}</small>
               </div>
             ))}

@@ -2454,14 +2454,14 @@ td {
     rgba(255, 255, 255, 0.045);
 }
 
-.league-picker-card span,
-.league-picker-card small,
-.league-picker-card em {
+.league-picker-card > span,
+.league-picker-card > small,
+.league-picker-card > em {
   color: var(--muted);
   font-size: 12px;
 }
 
-.league-picker-card span {
+.league-picker-card > span {
   width: fit-content;
   padding: 5px 7px;
   border: 1px solid rgba(188, 166, 255, 0.12);
@@ -2469,12 +2469,12 @@ td {
   text-transform: capitalize;
 }
 
-.league-picker-card strong {
+.league-picker-card > strong {
   font-size: 17px;
   line-height: 1.2;
 }
 
-.league-picker-card em {
+.league-picker-card > em {
   align-self: flex-end;
   color: var(--gold-2);
   font-style: normal;
@@ -2554,6 +2554,225 @@ td {
 .league-table td small {
   margin-top: 3px;
   color: var(--faint);
+}
+
+.league-table .player-identity,
+.league-table .manager-identity,
+.league-table .team-identity {
+  vertical-align: middle;
+}
+
+.league-table .player-identity-copy small,
+.league-table .manager-identity small,
+.league-table .team-identity small {
+  margin-top: 0;
+}
+
+.football-avatar,
+.team-logo,
+.manager-avatar {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(226, 190, 99, 0.16);
+  color: var(--gold-2);
+  background:
+    radial-gradient(circle at 50% 12%, rgba(217, 179, 95, 0.18), transparent 72%),
+    linear-gradient(135deg, rgba(126, 87, 229, 0.2), rgba(10, 7, 15, 0.82));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.football-avatar {
+  border-radius: 12px;
+}
+
+.football-avatar-xs {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+}
+
+.football-avatar-sm {
+  width: 34px;
+  height: 34px;
+}
+
+.football-avatar-md {
+  width: 42px;
+  height: 42px;
+}
+
+.football-avatar-lg {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+}
+
+.football-avatar img,
+.manager-avatar img {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.football-avatar em,
+.manager-avatar em,
+.team-logo em {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+}
+
+.team-logo {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.team-logo-xs {
+  width: 18px;
+  height: 18px;
+}
+
+.team-logo-sm {
+  width: 22px;
+  height: 22px;
+}
+
+.team-logo-md {
+  width: 28px;
+  height: 28px;
+}
+
+.team-logo img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+}
+
+.team-identity,
+.manager-identity,
+.player-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.team-identity {
+  gap: 6px;
+  color: var(--text);
+}
+
+.team-identity.compact {
+  gap: 5px;
+}
+
+.team-identity > span:last-child,
+.manager-identity > span:last-child,
+.player-identity-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.team-identity strong,
+.manager-identity strong,
+.player-identity-copy strong {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-identity strong {
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.team-identity small,
+.manager-identity small {
+  overflow: hidden;
+  color: var(--faint);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-identity-copy {
+  gap: 5px;
+}
+
+.player-identity-copy strong {
+  font-size: 13px;
+  line-height: 1.16;
+}
+
+.player-identity-copy small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.player-identity-copy small b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  padding: 0 7px;
+  border: 1px solid rgba(188, 166, 255, 0.14);
+  border-radius: 999px;
+  color: var(--gold-2);
+  background: rgba(155, 123, 234, 0.11);
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.player-identity-copy small em {
+  overflow: hidden;
+  color: var(--faint);
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-identity.compact {
+  gap: 8px;
+}
+
+.player-identity.compact .player-identity-copy {
+  gap: 3px;
+}
+
+.player-identity.compact .player-identity-copy strong {
+  font-size: 12px;
+}
+
+.manager-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.manager-identity.compact .manager-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.manager-identity strong {
+  font-size: 13px;
 }
 
 .rank-chip {
@@ -3475,6 +3694,22 @@ td {
   white-space: nowrap;
 }
 
+.team-news-strip-meta small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.team-news-strip-meta small b {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.team-news-strip-meta .team-identity strong {
+  color: var(--muted);
+  font-size: 10px;
+}
+
 .team-news-strip-copy a,
 .team-news-strip-copy strong,
 .team-news-strip-copy p {
@@ -3908,6 +4143,8 @@ td {
 }
 
 .league-value-row button {
+  display: inline-flex;
+  align-items: center;
   overflow: hidden;
   border: 0;
   color: var(--text);
@@ -3917,6 +4154,10 @@ td {
   white-space: nowrap;
   background: transparent;
   font-weight: 850;
+}
+
+.league-value-row button .manager-identity {
+  width: 100%;
 }
 
 .league-value-row strong {
@@ -4225,7 +4466,7 @@ td {
 }
 
 .waiver-table {
-  min-width: 900px;
+  min-width: 980px;
 }
 
 .waiver-need-list,
@@ -4270,6 +4511,11 @@ td {
 .waiver-drop-list strong,
 .waiver-drop-list small {
   display: block;
+}
+
+.waiver-drop-list .player-identity-copy small {
+  display: flex;
+  margin-top: 0;
 }
 
 .waiver-drop-list p {
@@ -4417,13 +4663,25 @@ td {
   background: rgba(255, 255, 255, 0.032);
 }
 
+.trade-asset-pill.player-asset {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.trade-asset-pill.player-asset > small {
+  justify-self: end;
+}
+
+.trade-asset-pill .player-identity {
+  min-width: 0;
+}
+
 .trade-asset-pill:hover {
   border-color: rgba(226, 190, 99, 0.28);
   background: rgba(217, 179, 95, 0.06);
 }
 
-.trade-asset-pill span,
-.trade-asset-pill small {
+.trade-asset-pill > span,
+.trade-asset-pill > small {
   color: var(--gold-2);
   font-size: 12px;
   font-weight: 900;
@@ -4462,8 +4720,8 @@ td {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.trade-idea-flow span,
-.trade-idea-flow small {
+.trade-idea-flow div > span,
+.trade-idea-flow div > small {
   color: var(--faint);
   font-size: 11px;
   font-weight: 850;
@@ -4878,6 +5136,26 @@ td {
   line-height: 1.22;
 }
 
+.draft-pick-cell .player-identity {
+  align-items: start;
+}
+
+.draft-pick-cell .player-identity-copy {
+  gap: 4px;
+}
+
+.draft-pick-cell .player-identity-copy strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.18;
+  white-space: normal;
+}
+
+.draft-pick-cell .player-identity-copy small {
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
 .draft-pick-cell em {
   color: var(--muted);
   font-size: 11px;
@@ -4950,6 +5228,21 @@ td {
   line-height: 1;
 }
 
+.draft-recommendation-card > .player-identity .football-avatar {
+  border-color: rgba(226, 190, 99, 0.34);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.draft-recommendation-card > .player-identity .player-identity-copy strong {
+  font-size: 30px;
+  line-height: 0.98;
+  white-space: normal;
+}
+
+.draft-recommendation-card > .player-identity .player-identity-copy small {
+  margin-top: 3px;
+}
+
 .draft-recommendation-card p,
 .draft-policy-card p {
   margin: 0;
@@ -4992,6 +5285,11 @@ td {
 .draft-queue-list div {
   grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
+}
+
+.draft-queue-list .player-identity,
+.draft-stream-list .player-identity {
+  min-width: 0;
 }
 
 .draft-queue-list span {

@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ManagerIdentity } from "@/components/FootballIdentity";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, CircleAlert, RefreshCcw, ShieldCheck } from "lucide-react";
 import type { SubscriptionPlan } from "@/lib/subscription";
 import {
@@ -244,7 +245,7 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
               {rows.map((row) => (
                 <tr key={`${row.rank}-${row.team}`}>
                   <td><span className="rank-chip">{row.rank}</span></td>
-                  <td><strong>{row.team}</strong><small>{row.manager}</small></td>
+                  <td><ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} /></td>
                   <td><span className="league-tier">{row.tier}</span></td>
                   <td><div className="score-cell"><strong>{row.score}</strong><TrendBadge trend={row.trend} /></div></td>
                   <td>{row.record}</td>

@@ -16,6 +16,7 @@ import {
   Users
 } from "lucide-react";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
+import { ManagerIdentity } from "@/components/FootballIdentity";
 import { TeamNewsPanel } from "@/components/TeamNewsPanel";
 import {
   buildPowerRows,
@@ -26,6 +27,7 @@ import {
   formatLeagueType,
   formatScoring,
   getDemoSummary,
+  managerForRoster,
   managerName,
   type LeagueLookupResponse,
   type LeagueToolLeague,
@@ -1073,14 +1075,16 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
             </div>
           </div>
           <div className="team-roster-picker">
-            {summary.rosters.map((roster) => (
-              <button className={selectedRoster?.roster_id === roster.roster_id ? "league-picker-card active" : "league-picker-card"} key={roster.roster_id} onClick={() => setSelectedRosterId(roster.roster_id)} type="button">
-                <span>Roster {roster.roster_id}</span>
-                <strong>{managerName(summary.users, roster)}</strong>
-                <small>{rosterRecord(roster)} - {roster.players?.length ?? 0} players</small>
-                <em>{Math.round(rosterPoints(roster))} points</em>
-              </button>
-            ))}
+            {summary.rosters.map((roster) => {
+              const rosterManager = managerForRoster(summary.users, roster);
+              return (
+                <button className={selectedRoster?.roster_id === roster.roster_id ? "league-picker-card active" : "league-picker-card"} key={roster.roster_id} onClick={() => setSelectedRosterId(roster.roster_id)} type="button">
+                  <span>Roster {roster.roster_id}</span>
+                  <ManagerIdentity avatar={rosterManager?.avatar} compact name={managerName(summary.users, roster)} subtitle={`${rosterRecord(roster)} - ${roster.players?.length ?? 0} players`} />
+                  <em>{Math.round(rosterPoints(roster))} points</em>
+                </button>
+              );
+            })}
           </div>
         </section>
       ) : null}

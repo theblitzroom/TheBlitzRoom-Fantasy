@@ -26,6 +26,7 @@ export type LeagueToolLeague = {
 export type LeagueToolManager = {
   user_id: string;
   display_name?: string;
+  avatar?: string | null;
   metadata?: {
     team_name?: string;
   };
@@ -96,8 +97,10 @@ export type LeagueLookupResponse = {
 
 export type PowerRankingRow = {
   rank: string;
+  rosterId: number;
   team: string;
   manager: string;
+  managerAvatar?: string | null;
   tier: string;
   score: number;
   trend: string;
@@ -111,6 +114,7 @@ export type PowerRankingRow = {
 export type RosterBuildRow = {
   team: string;
   manager: string;
+  managerAvatar?: string | null;
   rosterId: number;
   starters: number;
   players: number;
@@ -401,6 +405,10 @@ export function managerName(users: LeagueToolManager[], roster: LeagueToolRoster
   return user?.metadata?.team_name || user?.display_name || `Roster ${roster.roster_id}`;
 }
 
+export function managerForRoster(users: LeagueToolManager[], roster: LeagueToolRoster) {
+  return users.find((item) => item.user_id === roster.owner_id) ?? null;
+}
+
 export function buildPowerRows(summary: LeagueToolSummary | null): PowerRankingRow[] {
   if (!summary) {
     return [];
@@ -427,6 +435,7 @@ export function buildPowerRows(summary: LeagueToolSummary | null): PowerRankingR
     })
     .sort((a, b) => b.score - a.score)
     .map((row, index) => {
+      const manager = managerForRoster(summary.users, row.roster);
       const tier = index <= 1 ? "Contender" : row.upsideGap > 125 ? "Builder" : "Middle";
       const depth = row.depthCount >= 24 ? "Deep" : row.depthCount >= 20 ? "Stable" : "Thin";
       const signal = tier === "Contender"
@@ -437,8 +446,10 @@ export function buildPowerRows(summary: LeagueToolSummary | null): PowerRankingR
 
       return {
         rank: String(index + 1).padStart(2, "0"),
+        rosterId: row.roster.roster_id,
         team: managerName(summary.users, row.roster),
         manager: `Roster ${row.roster.roster_id}`,
+        managerAvatar: manager?.avatar ?? null,
         tier,
         score: row.score,
         trend: row.upsideGap > 100 ? `+${Math.min(Math.round(row.upsideGap / 20), 9)}` : "-1",
@@ -458,6 +469,7 @@ export function buildRosterRows(summary: LeagueToolSummary | null): RosterBuildR
 
   return summary.rosters
     .map((roster) => {
+      const manager = managerForRoster(summary.users, roster);
       const players = roster.players?.length ?? 0;
       const starters = roster.starters?.length ?? 0;
       const bench = Math.max(players - starters, 0);
@@ -478,6 +490,7 @@ export function buildRosterRows(summary: LeagueToolSummary | null): RosterBuildR
       return {
         team: managerName(summary.users, roster),
         manager: `Roster ${roster.roster_id}`,
+        managerAvatar: manager?.avatar ?? null,
         rosterId: roster.roster_id,
         starters,
         players,
