@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronDown, LogOut, Menu, UserCircle, X } from "lucide-react";
+import { ChevronDown, LogIn, LogOut, Menu, UserCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { navItems } from "@/config/navigation";
@@ -167,8 +167,11 @@ export function SiteHeader() {
           {user ? (
             <div className="header-account-pill" aria-label={`Signed in as ${userEmail}`}>
               <Link className="header-account-link" href="/account">
-                <UserCircle size={16} />
-                <span>
+                <span className="header-account-avatar" aria-hidden="true">
+                  <UserCircle size={17} />
+                  <span className="header-account-status-dot" />
+                </span>
+                <span className="header-account-copy">
                   <small>Signed in</small>
                   <strong>{shortEmail}</strong>
                 </span>
@@ -178,7 +181,15 @@ export function SiteHeader() {
               </button>
             </div>
           ) : authReady ? (
-            <PremiumButton href="/login" variant="ghost">Sign in</PremiumButton>
+            <Link className="header-account-pill header-account-pill-login" href="/login" aria-label="Sign in to TheBlitzRoom">
+              <span className="header-account-avatar" aria-hidden="true">
+                <LogIn size={16} />
+              </span>
+              <span className="header-account-copy">
+                <small>Account</small>
+                <strong>Sign in</strong>
+              </span>
+            </Link>
           ) : (
             <span className="header-auth-loading" aria-label="Checking account status" />
           )}
