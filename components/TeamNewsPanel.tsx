@@ -121,7 +121,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   const latestItems = visibleItems.slice(0, 18);
   const shouldAnimateNews = latestItems.length > 1;
   const tickerStyle = useMemo(() => ({
-    "--team-news-ticker-duration": `${Math.max(22, Math.min(68, latestItems.length * 3.8))}s`
+    "--team-news-ticker-duration": `${Math.max(27, Math.min(82, latestItems.length * 4.6))}s`
   }) as CSSProperties, [latestItems.length]);
 
   const renderNewsItem = (item: EnrichedNewsItem, duplicate = false) => (
