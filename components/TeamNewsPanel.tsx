@@ -122,7 +122,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
   const latestItems = visibleItems.slice(0, 18);
   const shouldAnimateNews = latestItems.length > 1;
   const tickerStyle = useMemo(() => ({
-    "--team-news-ticker-duration": `${Math.max(36, Math.min(108, latestItems.length * 6))}s`
+    "--team-news-ticker-duration": `${Math.min(108, Math.max(6, latestItems.length * 6))}s`
   }) as CSSProperties, [latestItems.length]);
 
   const renderNewsItem = (item: EnrichedNewsItem, duplicate = false) => (
@@ -162,7 +162,7 @@ export function TeamNewsPanel({ players }: TeamNewsPanelProps) {
 
       <div className="team-news-strip-scroll" role="list">
         {latestItems.length ? (
-          <div className={shouldAnimateNews ? "team-news-strip-track" : "team-news-strip-track static"} style={tickerStyle}>
+          <div className={shouldAnimateNews ? "team-news-strip-track" : "team-news-strip-track static"} key={showRosterOnly ? "my-team-news" : "all-news"} style={tickerStyle}>
             <div className="team-news-strip-group">
               {latestItems.map((item) => renderNewsItem(item))}
             </div>
