@@ -1,0 +1,10 @@
+{
+  "name": "the-blitz-room-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "advisor": "node advisor-server/server.js",
+    "check": "node --check advisor-server/server.js && node --check src/sidepanel.js && node --check src/rankings-editor.js && node --check src/background.js && node --check src/lib/blitzValue.js && node --check src/lib/recommender.js && node --check src/lib/sleeper.js && node --check src/lib/theme.js"
+  }
+}

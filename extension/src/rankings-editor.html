@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Blitz Room Rankings Editor</title>
+    <link rel="stylesheet" href="./rankings-editor.css">
+  </head>
+  <body>
+    <main class="editor-shell">
+      <header class="editor-topbar">
+        <div class="brand-cluster">
+          <img class="brand-logo" src="./assets/blitz-room-logo.png" alt="The Blitz Room">
+          <div class="brand-copy">
+            <p class="eyebrow">The Blitz Room</p>
+            <h1>Rankings Editor</h1>
+          </div>
+        </div>
+        <div class="status-cluster">
+          <span id="statusMessage" class="status-message">Loading...</span>
+          <button id="saveButton" class="primary-button" type="button">Save live</button>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="Ranking controls">
+        <label class="field board-name-field">
+          <span>Board name</span>
+          <input id="boardNameInput" type="text" autocomplete="off" placeholder="My custom board">
+        </label>
+
+        <label class="field">
+          <span>Scoring</span>
+          <select id="scoringSelect">
+            <option value="ppr">PPR</option>
+            <option value="half_ppr">Half PPR</option>
+            <option value="superflex_dynasty">Superflex Dynasty</option>
+            <option value="dynasty">Dynasty</option>
+            <option value="standard">Standard</option>
+          </select>
+        </label>
+
+        <label class="field search-field">
+          <span>Search</span>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="Player, team, position">
+        </label>
+
+        <label class="toggle-field">
+          <input id="autoSaveToggle" type="checkbox" checked>
+          <span>Live save</span>
+        </label>
+
+        <div class="field appearance-field">
+          <span>Appearance</span>
+          <div id="themeModeControl" class="segmented-control" role="group" aria-label="Appearance">
+            <button type="button" data-theme-mode="system">System</button>
+            <button type="button" data-theme-mode="light">Light</button>
+            <button type="button" data-theme-mode="dark">Dark</button>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="loadPprButton" class="secondary-button" type="button">Load PPR</button>
+          <button id="loadHalfButton" class="secondary-button" type="button">Load half PPR</button>
+          <button id="loadSuperflexDynastyButton" class="secondary-button" type="button">Load SF dynasty</button>
+          <button id="loadDynastyButton" class="secondary-button" type="button">Load dynasty</button>
+          <button id="addRowButton" class="secondary-button" type="button">Add player</button>
+          <button id="sortButton" class="secondary-button" type="button">Sort by rank</button>
+          <button id="exportButton" class="secondary-button" type="button">Export JSON</button>
+          <button id="importButton" class="secondary-button" type="button">Import JSON</button>
+          <input id="importFile" class="hidden-file" type="file" accept="application/json">
+        </div>
+      </section>
+
+      <section class="command-center" aria-label="Command Center rankings">
+        <div class="command-heading">
+          <div>
+            <p class="eyebrow">Command Center</p>
+            <h2>Redraft ranking source</h2>
+          </div>
+          <div id="rankingSourceControl" class="segmented-control source-control" role="group" aria-label="Ranking source">
+            <button id="useCustomRankingsButton" type="button" data-ranking-source="custom">TheBlitzRoom Custom</button>
+            <button id="useProviderRankingsButton" type="button" data-ranking-source="provider">Default Provider</button>
+          </div>
+        </div>
+        <div class="command-grid">
+          <label class="toggle-field ranking-value-toggle">
+            <input id="rankingAffectsValueToggle" type="checkbox">
+            <span>Ranking affects player value</span>
+          </label>
+          <div class="field format-target-field">
+            <span>Save edits to</span>
+            <div id="multiFormatTargets" class="format-targets" role="group" aria-label="Save edits to redraft formats">
+              <label><input type="checkbox" value="ppr"> PPR</label>
+              <label><input type="checkbox" value="half_ppr"> Half PPR</label>
+              <label><input type="checkbox" value="standard"> Standard</label>
+            </div>
+          </div>
+          <div class="button-row command-buttons">
+            <button id="uploadCsvButton" class="secondary-button" type="button">Upload CSV</button>
+            <button id="uploadJsonButton" class="secondary-button" type="button">Upload JSON</button>
+            <button id="resetCustomRankingsButton" class="secondary-button" type="button">Reset custom file</button>
+            <button id="exportCsvButton" class="secondary-button" type="button">Export CSV</button>
+            <button id="exportJsonButton" class="secondary-button" type="button">Export JSON</button>
+            <input id="customImportFile" class="hidden-file" type="file" accept=".csv,.json,text/csv,application/json">
+          </div>
+        </div>
+        <div id="importReviewPanel" class="import-review" hidden></div>
+        <div id="validationPanel" class="validation-panel" hidden></div>
+      </section>
+
+      <section class="table-section" aria-label="Editable rankings">
+        <div class="table-heading">
+          <h2>Player board</h2>
+          <span id="rowCount">0 players</span>
+        </div>
+        <div id="editorPositionTabs" class="position-tabs" role="tablist" aria-label="Position rankings"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="drag-column"></th>
+                <th class="rank-column">Rank</th>
+                <th class="value-column">Value</th>
+                <th class="pos-rank-column">Pos Rank</th>
+                <th class="tier-column">Pos Tier</th>
+                <th>Player</th>
+                <th class="position-column">Pos</th>
+                <th class="team-column">Team</th>
+                <th>Notes</th>
+                <th class="action-column"></th>
+              </tr>
+            </thead>
+            <tbody id="rankingsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./rankings-editor.js"></script>
+  </body>
+</html>

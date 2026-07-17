@@ -1,0 +1,58 @@
+{
+  "updatedAt": "2026-07-09",
+  "scoring": "ppr",
+  "players": [
+    {
+      "name": "Ja'Marr Chase",
+      "team": "CIN",
+      "position": "WR",
+      "rank": 1,
+      "tier": 1,
+      "adp": 2.1,
+      "projection": 320,
+      "notes": "Sample only: replace with a current ranking export before a real draft.",
+      "sources": [
+        {
+          "label": "Sample ranking",
+          "url": "https://docs.sleeper.com/",
+          "summary": "Placeholder schema example."
+        }
+      ]
+    },
+    {
+      "name": "Bijan Robinson",
+      "team": "ATL",
+      "position": "RB",
+      "rank": 2,
+      "tier": 1,
+      "adp": 2.6,
+      "projection": 310,
+      "notes": "Sample only: replace with a current ranking export before a real draft.",
+      "sources": [
+        {
+          "label": "Sample ranking",
+          "url": "https://docs.sleeper.com/",
+          "summary": "Placeholder schema example."
+        }
+      ]
+    },
+    {
+      "name": "Justin Jefferson",
+      "team": "MIN",
+      "position": "WR",
+      "rank": 3,
+      "tier": 1,
+      "adp": 3.5,
+      "projection": 305,
+      "notes": "Sample only: replace with a current ranking export before a real draft.",
+      "sources": [
+        {
+          "label": "Sample ranking",
+          "url": "https://docs.sleeper.com/",
+          "summary": "Placeholder schema example."
+        }
+      ]
+    }
+  ]
+}
+

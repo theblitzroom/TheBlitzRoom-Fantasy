@@ -29,6 +29,23 @@ This app is ready for Vercel. See `VERCEL_DEPLOYMENT.md` for the full checklist.
 
 For the simplest setup, publish this folder as its own GitHub repository, then import that repo into Vercel as a Next.js project.
 
+## Chrome Extension
+
+The loadable Chrome/Edge extension lives in `extension/`.
+
+To load it:
+
+1. Open `chrome://extensions`.
+2. Turn on Developer mode.
+3. Click **Load unpacked**.
+4. Select this repo's `extension` folder.
+
+To sanity-check the extension scripts locally:
+
+```bash
+npm --prefix extension run check
+```
+
 ## Environment Setup
 
 Copy `.env.example` to `.env.local` and fill in your Supabase and Stripe keys.
