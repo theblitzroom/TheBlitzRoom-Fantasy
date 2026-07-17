@@ -36,6 +36,7 @@ export const navItems: NavItem[] = [
   { label: "Trade Calculator", href: "/trade-calculator", description: "Deal value math", icon: GitCompareArrows },
   { label: "Trade Finder", href: "/trade-finder", description: "Find partner fits", icon: Search },
   { label: "Draft Room", href: "/draft-room", description: "Sleeper live sync", icon: Gauge },
+  { label: "Extension", href: "/extension", description: "Chrome companion link", icon: Gauge },
   { label: "Pricing", href: "/pricing", description: "Plans and access", icon: BadgeDollarSign },
   { label: "FAQ", href: "/faq", description: "Common questions", icon: CircleHelp },
   { label: "Account", href: "/account", description: "Subscription status", icon: ShieldCheck }

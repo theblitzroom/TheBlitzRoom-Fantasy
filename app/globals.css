@@ -5488,6 +5488,110 @@ td {
   color: var(--red);
 }
 
+.extension-connect-page {
+  display: grid;
+  gap: 18px;
+}
+
+.extension-hero-panel {
+  align-items: stretch;
+}
+
+.extension-status-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 520px);
+  margin-top: 16px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.extension-status-card svg {
+  flex: 0 0 auto;
+}
+
+.extension-status-card span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.extension-status-card strong,
+.extension-status-card small {
+  display: block;
+}
+
+.extension-status-card small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.extension-status-card.syncing {
+  border-color: rgba(226, 190, 99, 0.3);
+  color: var(--gold-2);
+  background: rgba(217, 179, 95, 0.08);
+}
+
+.extension-status-card.synced {
+  border-color: rgba(73, 199, 143, 0.34);
+  color: var(--emerald);
+  background: rgba(73, 199, 143, 0.075);
+}
+
+.extension-status-card.error {
+  border-color: rgba(219, 106, 106, 0.34);
+  color: var(--red);
+  background: rgba(219, 106, 106, 0.075);
+}
+
+.extension-stat-grid .league-stat strong {
+  overflow: hidden;
+  font-size: clamp(24px, 3vw, 34px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.extension-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.extension-action-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 258px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 36%),
+    linear-gradient(180deg, rgba(35, 26, 49, 0.88), rgba(16, 11, 24, 0.9));
+  box-shadow: var(--shadow-soft);
+}
+
+.extension-action-card h3 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.05;
+}
+
+.extension-action-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.extension-panel-message {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .checkout-action {
   display: grid;
   gap: 8px;
@@ -5848,6 +5952,10 @@ td {
 
   .pricing-trust-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .extension-action-grid {
+    grid-template-columns: 1fr;
   }
 
   .site-footer {

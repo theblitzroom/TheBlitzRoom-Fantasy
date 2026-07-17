@@ -29,6 +29,12 @@ export const productSuiteGroups = [
         href: "/draft-room",
         description: "Sleeper sync, live picks, and draft decision support.",
         icon: Gauge
+      },
+      {
+        label: "Extension",
+        href: "/extension",
+        description: "Connect the local Chrome companion to the website.",
+        icon: Gauge
       }
     ]
   },
@@ -115,6 +121,7 @@ export const productSuiteGroups = [
 export const productCommandNav = [
   { label: "Dashboard", href: "/command-center", description: "Command hub", icon: Command },
   { label: "Draft", href: "/draft-room", description: "Live sync", icon: Gauge },
+  { label: "Extension", href: "/extension", description: "Companion", icon: Gauge },
   { label: "Team", href: "/team-hub/my-team", description: "My roster", icon: Users },
   { label: "League", href: "/league-hub", description: "Room context", icon: Trophy },
   { label: "Matchup", href: "/matchup", description: "Weekly edge", icon: Crosshair },
