@@ -8,14 +8,32 @@ import { getPrimaryPriceId, upsertSubscriptionFromStripe } from "@/lib/stripeSub
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
+function constructStripeEvent(payload: string, signature: string) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const testWebhookSecret = process.env.STRIPE_TEST_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    return NextResponse.json({ error: "Missing STRIPE_WEBHOOK_SECRET." }, { status: 500 });
+    throw new Error("Missing STRIPE_WEBHOOK_SECRET.");
   }
 
+  try {
+    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    return { event, stripe };
+  } catch (liveError) {
+    if (!testWebhookSecret) {
+      throw liveError;
+    }
+
+    const event = stripe.webhooks.constructEvent(payload, signature, testWebhookSecret);
+    const testSecretKey = process.env.STRIPE_TEST_SECRET_KEY;
+    const eventStripe = !event.livemode && testSecretKey?.startsWith("sk_test_") ? getStripe(testSecretKey) : stripe;
+
+    return { event, stripe: eventStripe };
+  }
+}
+
+export async function POST(request: Request) {
   const payload = await request.text();
   const signature = request.headers.get("stripe-signature");
 
@@ -24,7 +42,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    const { event, stripe } = constructStripeEvent(payload, signature);
 
     if (
       event.type === "customer.subscription.created" ||

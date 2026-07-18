@@ -108,6 +108,7 @@ Required test env vars:
 
 - `STRIPE_TEST_MODE_ENABLED=true`
 - `STRIPE_TEST_SECRET_KEY=sk_test_...`
+- `STRIPE_TEST_WEBHOOK_SECRET=whsec_...`
 - `STRIPE_TEST_DRAFT_PRO_SEASON_PRICE_ID=price_...`
 - `STRIPE_TEST_DYNASTY_ELITE_SEASON_PRICE_ID=price_...`
 - `STRIPE_TEST_DRAFT_PRO_PRICE_ID=price_...`
@@ -129,7 +130,7 @@ Any 3-digit CVC
 Any ZIP code
 ```
 
-For a full entitlement test, point a Stripe test-mode webhook at `/api/stripe/webhook` in the same environment and set that environment's `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` to the test-mode values. Keep production on live keys only.
+For a full entitlement test, point a Stripe test-mode webhook at `/api/stripe/webhook` and add its signing secret as `STRIPE_TEST_WEBHOOK_SECRET`. Keep `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` on live values in production.
 
 ## Yahoo Fantasy OAuth Setup
 

@@ -99,7 +99,9 @@ export function getPlanFromPriceId(priceId: string | null | undefined): Subscrip
     return "preview";
   }
 
-  const matchingConfig = Object.values(stripePlans).find((config) => priceId === process.env[config.priceEnvKey]);
+  const matchingConfig = Object.values(stripePlans).find(
+    (config) => priceId === process.env[config.priceEnvKey] || priceId === process.env[config.testPriceEnvKey]
+  );
 
   return matchingConfig?.accessPlan ?? "preview";
 }
@@ -109,7 +111,9 @@ export function getSeasonAccessEndFromPriceId(priceId: string | null | undefined
     return null;
   }
 
-  const matchingConfig = Object.values(stripePlans).find((config) => priceId === process.env[config.priceEnvKey]);
+  const matchingConfig = Object.values(stripePlans).find(
+    (config) => priceId === process.env[config.priceEnvKey] || priceId === process.env[config.testPriceEnvKey]
+  );
 
   return matchingConfig?.accessEndsAt ?? null;
 }
