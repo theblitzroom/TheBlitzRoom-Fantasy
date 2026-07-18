@@ -100,6 +100,37 @@ Run the schema in `supabase-schema.sql` before relying on paid access in product
 
 Billing routes now derive the user from the Supabase server session. When a signed-in user checks out, Stripe is tied back to that account through the profile row and webhook sync.
 
+### Stripe Test Mode Checkout
+
+Use `/test-checkout` for no-money payment QA. This hidden route is disabled unless all test-mode environment variables are present.
+
+Required test env vars:
+
+- `STRIPE_TEST_MODE_ENABLED=true`
+- `STRIPE_TEST_SECRET_KEY=sk_test_...`
+- `STRIPE_TEST_DRAFT_PRO_SEASON_PRICE_ID=price_...`
+- `STRIPE_TEST_DYNASTY_ELITE_SEASON_PRICE_ID=price_...`
+- `STRIPE_TEST_DRAFT_PRO_PRICE_ID=price_...`
+- `STRIPE_TEST_DYNASTY_ELITE_PRICE_ID=price_...`
+
+Create matching products/prices in Stripe test mode:
+
+- TheBlitzRoom Draft Pro Season: one-time `$39.99`
+- TheBlitzRoom Fantasy Elite Season: one-time `$59.99`
+- Draft Pro Monthly: recurring monthly `$7.99`
+- Fantasy Elite Monthly: recurring monthly `$14.99`
+
+Use Stripe's successful test card:
+
+```text
+4242 4242 4242 4242
+Any future expiration date
+Any 3-digit CVC
+Any ZIP code
+```
+
+For a full entitlement test, point a Stripe test-mode webhook at `/api/stripe/webhook` in the same environment and set that environment's `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` to the test-mode values. Keep production on live keys only.
+
 ## Yahoo Fantasy OAuth Setup
 
 Yahoo league access uses official read-only Yahoo OAuth. The app stores Yahoo tokens encrypted server-side and never stores Yahoo client secrets in the browser or Chrome extension.

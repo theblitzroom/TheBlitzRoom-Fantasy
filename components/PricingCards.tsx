@@ -10,7 +10,7 @@ function isPaidPlan(plan: Plan): plan is PaidPlan {
   return plan.id !== "preview";
 }
 
-function PricingPlanCard({ plan }: { plan: PaidPlan }) {
+function PricingPlanCard({ plan, checkoutEndpoint }: { plan: PaidPlan; checkoutEndpoint?: string }) {
   return (
     <article className={plan.highlighted ? "pricing-card highlighted" : "pricing-card"}>
       <div>
@@ -25,7 +25,7 @@ function PricingPlanCard({ plan }: { plan: PaidPlan }) {
           <li key={feature}>{feature}</li>
         ))}
       </ul>
-      <CheckoutButton plan={plan.id} highlighted={plan.highlighted}>{plan.cta}</CheckoutButton>
+      <CheckoutButton endpoint={checkoutEndpoint} plan={plan.id} highlighted={plan.highlighted}>{plan.cta}</CheckoutButton>
     </article>
   );
 }
@@ -65,7 +65,7 @@ const comparisonRows = [
   ["Trade value workspace", "Preview", "Included"]
 ];
 
-export function PricingCards() {
+export function PricingCards({ checkoutEndpoint }: { checkoutEndpoint?: string } = {}) {
   const previewPlan = plans.find((plan) => plan.billing === "preview");
   const paidPlans = plans.filter(isPaidPlan);
   const seasonPlans = paidPlans.filter((plan) => plan.billing === "season");
@@ -95,7 +95,7 @@ export function PricingCards() {
         description="A clean option if you want draft night and league prep covered without a monthly renewal."
       >
         {seasonPlans.map((plan) => (
-          <PricingPlanCard key={plan.id} plan={plan} />
+          <PricingPlanCard checkoutEndpoint={checkoutEndpoint} key={plan.id} plan={plan} />
         ))}
       </PricingGroup>
 
@@ -105,7 +105,7 @@ export function PricingCards() {
         description="Useful if you want to draft with the tools and keep access only while you are actively using them."
       >
         {monthlyPlans.map((plan) => (
-          <PricingPlanCard key={plan.id} plan={plan} />
+          <PricingPlanCard checkoutEndpoint={checkoutEndpoint} key={plan.id} plan={plan} />
         ))}
       </PricingGroup>
 

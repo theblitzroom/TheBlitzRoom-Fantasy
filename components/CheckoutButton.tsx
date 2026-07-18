@@ -7,9 +7,10 @@ type CheckoutButtonProps = {
   plan: CheckoutPlan;
   children: React.ReactNode;
   highlighted?: boolean;
+  endpoint?: string;
 };
 
-export function CheckoutButton({ plan, children, highlighted }: CheckoutButtonProps) {
+export function CheckoutButton({ plan, children, highlighted, endpoint = "/api/stripe/create-checkout-session" }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,7 +19,7 @@ export function CheckoutButton({ plan, children, highlighted }: CheckoutButtonPr
     setError("");
 
     try {
-      const response = await fetch("/api/stripe/create-checkout-session", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ plan })

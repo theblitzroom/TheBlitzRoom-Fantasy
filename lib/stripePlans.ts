@@ -15,6 +15,11 @@ export type StripePlanConfig = {
     | "STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID"
     | "STRIPE_DRAFT_PRO_PRICE_ID"
     | "STRIPE_DYNASTY_ELITE_PRICE_ID";
+  testPriceEnvKey:
+    | "STRIPE_TEST_DRAFT_PRO_SEASON_PRICE_ID"
+    | "STRIPE_TEST_DYNASTY_ELITE_SEASON_PRICE_ID"
+    | "STRIPE_TEST_DRAFT_PRO_PRICE_ID"
+    | "STRIPE_TEST_DYNASTY_ELITE_PRICE_ID";
   accessEndsAt?: string;
 };
 
@@ -26,6 +31,7 @@ export const stripePlans: Record<CheckoutPlan, StripePlanConfig> = {
     accessPlan: "draft_pro",
     checkoutMode: "payment",
     priceEnvKey: "STRIPE_DRAFT_PRO_SEASON_PRICE_ID",
+    testPriceEnvKey: "STRIPE_TEST_DRAFT_PRO_SEASON_PRICE_ID",
     accessEndsAt: seasonAccessEndsAt
   },
   dynasty_elite_season: {
@@ -33,19 +39,22 @@ export const stripePlans: Record<CheckoutPlan, StripePlanConfig> = {
     accessPlan: "dynasty_elite",
     checkoutMode: "payment",
     priceEnvKey: "STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID",
+    testPriceEnvKey: "STRIPE_TEST_DYNASTY_ELITE_SEASON_PRICE_ID",
     accessEndsAt: seasonAccessEndsAt
   },
   draft_pro_monthly: {
     checkoutPlan: "draft_pro_monthly",
     accessPlan: "draft_pro",
     checkoutMode: "subscription",
-    priceEnvKey: "STRIPE_DRAFT_PRO_PRICE_ID"
+    priceEnvKey: "STRIPE_DRAFT_PRO_PRICE_ID",
+    testPriceEnvKey: "STRIPE_TEST_DRAFT_PRO_PRICE_ID"
   },
   dynasty_elite_monthly: {
     checkoutPlan: "dynasty_elite_monthly",
     accessPlan: "dynasty_elite",
     checkoutMode: "subscription",
-    priceEnvKey: "STRIPE_DYNASTY_ELITE_PRICE_ID"
+    priceEnvKey: "STRIPE_DYNASTY_ELITE_PRICE_ID",
+    testPriceEnvKey: "STRIPE_TEST_DYNASTY_ELITE_PRICE_ID"
   }
 };
 
@@ -65,6 +74,21 @@ export function getStripePriceId(plan: CheckoutPlan) {
 
   if (!priceId) {
     throw new Error(`Missing ${config.priceEnvKey}.`);
+  }
+
+  return priceId;
+}
+
+export function getStripeTestPriceId(plan: CheckoutPlan) {
+  const config = getStripePlanConfig(plan);
+  const priceId = process.env[config.testPriceEnvKey];
+
+  if (!priceId) {
+    throw new Error(`Missing ${config.testPriceEnvKey}.`);
+  }
+
+  if (!priceId.startsWith("price_")) {
+    throw new Error(`${config.testPriceEnvKey} must be a Stripe price ID.`);
   }
 
   return priceId;
