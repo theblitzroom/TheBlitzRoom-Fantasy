@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAppUrl } from "@/lib/appUrl";
 import { getBillingProfile } from "@/lib/billingProfiles";
 import { getStripe } from "@/lib/stripe";
 import { hasSupabaseAdminConfig, hasSupabaseBrowserConfig } from "@/lib/supabase/config";
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
     const stripe = getStripe();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = getAppUrl(request);
     await request.json().catch(() => ({}));
 
     if (!hasSupabaseBrowserConfig()) {

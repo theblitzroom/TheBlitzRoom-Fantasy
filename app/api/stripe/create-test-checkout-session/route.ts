@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { getAppUrl } from "@/lib/appUrl";
 import { getStripe } from "@/lib/stripe";
 import { getStripePlanConfig, getStripeTestPriceId, type CheckoutPlan } from "@/lib/stripePlans";
 
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Stripe test checkout requires STRIPE_TEST_SECRET_KEY with an sk_test_ key." }, { status: 500 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = getAppUrl(request);
     const body = await request.json().catch(() => ({})) as CheckoutBody;
     const plan = body.plan;
 

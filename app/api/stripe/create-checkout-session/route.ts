@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { getAppUrl } from "@/lib/appUrl";
 import { ensureBillingProfile } from "@/lib/billingProfiles";
 import { getStripe } from "@/lib/stripe";
 import { getStripePlanConfig, getStripePriceId, type CheckoutPlan } from "@/lib/stripePlans";
@@ -23,7 +24,7 @@ const checkoutPlans: CheckoutPlan[] = [
 export async function POST(request: Request) {
   try {
     const stripe = getStripe();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = getAppUrl(request);
     const body = await request.json().catch(() => ({})) as CheckoutBody;
     const plan = body.plan;
 
