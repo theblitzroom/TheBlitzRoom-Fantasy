@@ -147,7 +147,11 @@ export async function fetchYahooFantasyLeagues(userId: string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Yahoo leagues request failed: ${response.status} ${response.statusText}`);
+    const detail = await response.text().catch(() => "");
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("Yahoo connected, but Fantasy Sports API access is not approved for this app yet. Submit/finish the Yahoo Fantasy API access application, then reconnect Yahoo.");
+    }
+    throw new Error(`Yahoo leagues request failed: ${response.status} ${response.statusText}${detail ? ` - ${detail.slice(0, 160)}` : ""}`);
   }
 
   const text = await response.text();
@@ -175,7 +179,10 @@ async function requestYahooToken(body: URLSearchParams): Promise<YahooTokenRespo
 
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.access_token) {
-    throw new Error(payload?.error_description || payload?.error || `Yahoo token request failed: ${response.status}`);
+    const message = payload?.error_description || payload?.error || `Yahoo token request failed: ${response.status}`;
+    throw new Error(message.includes("scope") || message.includes("fspt")
+      ? "Yahoo did not grant Fantasy Sports access for this app yet. Finish the Yahoo Fantasy API access approval, then reconnect Yahoo."
+      : message);
   }
 
   return payload as YahooTokenResponse;

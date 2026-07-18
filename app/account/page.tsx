@@ -72,7 +72,14 @@ function hasActiveAccess(subscription: SubscriptionRecord | null, grant: AccessG
   return activeSubscription || activeGrant;
 }
 
-export default async function AccountPage() {
+type AccountPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const platformNotice = getPlatformNotice(resolvedSearchParams);
+
   if (!hasSupabaseBrowserConfig()) {
     return (
       <SectionShell
@@ -227,6 +234,12 @@ export default async function AccountPage() {
       description="Manage subscription access, billing, and the league settings that will power the live fantasy tools."
     >
       <div className="account-grid">
+        {platformNotice ? (
+          <div className={`account-platform-notice ${platformNotice.kind}`}>
+            <strong>{platformNotice.title}</strong>
+            <p>{platformNotice.message}</p>
+          </div>
+        ) : null}
         <div className="account-card account-primary-card">
           <span className="badge badge-premium">Signed in</span>
           <h2>{user.email}</h2>
@@ -302,7 +315,7 @@ export default async function AccountPage() {
           <span className="eyebrow">League access</span>
           <h2>Connect ESPN</h2>
           <p>
-            ESPN currently connects by public league ID and season. This keeps the integration fast and safe without storing ESPN cookies.
+            ESPN connects by league ID and season. Public leagues connect immediately; private leagues require your own SWID and espn_s2 values.
           </p>
           <div className="account-stat-grid">
             <span>
@@ -341,6 +354,49 @@ export default async function AccountPage() {
       </section>
     </SectionShell>
   );
+}
+
+function getPlatformNotice(searchParams?: Record<string, string | string[] | undefined>) {
+  const yahoo = getFirstParam(searchParams?.yahoo);
+  if (!yahoo) {
+    return null;
+  }
+
+  if (yahoo === "connected") {
+    return {
+      kind: "success",
+      title: "Yahoo connected",
+      message: "Yahoo is connected. If leagues do not appear yet, Yahoo Fantasy API approval may still be pending on Yahoo's side."
+    };
+  }
+
+  if (yahoo.startsWith("callback-failed")) {
+    const detail = decodeURIComponent(yahoo.split(":").slice(1).join(":"));
+    return {
+      kind: "error",
+      title: "Yahoo connection needs attention",
+      message: detail || "Yahoo did not finish the connection. Most commonly, the Yahoo Fantasy API access application is still pending approval."
+    };
+  }
+
+  if (yahoo.startsWith("error")) {
+    const detail = decodeURIComponent(yahoo.split(":").slice(1).join(":"));
+    return {
+      kind: "error",
+      title: "Yahoo declined the connection",
+      message: detail || "Yahoo returned an error before completing the connection."
+    };
+  }
+
+  return {
+    kind: "error",
+    title: "Yahoo connection did not finish",
+    message: "Try reconnecting Yahoo. If it fails again, Yahoo Fantasy API approval is probably still pending."
+  };
+}
+
+function getFirstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 async function getPlatformConnectionStatus(userId: string, platform: "yahoo" | "espn"): Promise<PlatformConnectionStatus> {

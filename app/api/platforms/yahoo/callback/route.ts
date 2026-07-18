@@ -41,7 +41,8 @@ export async function GET(request: Request) {
     return response;
   } catch (callbackError) {
     console.error("Yahoo OAuth callback failed", callbackError);
-    return redirectWithStatus(requestUrl, "/account", "callback-failed");
+    const message = callbackError instanceof Error ? callbackError.message : "Yahoo connection failed.";
+    return redirectWithStatus(requestUrl, "/account", `callback-failed:${message}`);
   }
 }
 
