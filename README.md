@@ -93,6 +93,8 @@ Stripe webhooks should point to `/api/stripe/webhook` and listen for:
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
+- `charge.refunded`
+- `charge.dispute.created`
 
 Run the schema in `supabase-schema.sql` before relying on paid access in production. One-time season pass purchases are stored in `access_grants`; recurring plans are stored in `subscriptions`.
 

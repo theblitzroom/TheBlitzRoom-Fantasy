@@ -4,7 +4,7 @@ const policies = [
   ["Season passes", "Season passes are one-time purchases and do not automatically renew. Access lasts through the season date shown at checkout."],
   ["Future seasons", "Customers can buy a new season pass when the next fantasy season becomes available."],
   ["Refunds", "If a customer believes they were billed in error, they can contact support within 14 days of the charge. Refunds are reviewed case by case."],
-  ["Recurring plans", "If recurring plans are offered, customers can cancel future renewals through the account billing portal once account billing is connected."],
+  ["Recurring plans", "Recurring plans can be canceled for future renewals through the account billing portal. Canceling stops future billing but does not automatically refund previous charges."],
   ["Support", "Billing questions can be sent to theblitzroom@gmail.com."]
 ];
 

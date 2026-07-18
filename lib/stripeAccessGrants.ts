@@ -43,3 +43,22 @@ export async function upsertAccessGrantFromStripe({
     throw new Error(error.message);
   }
 }
+
+export async function updateAccessGrantStatusFromPaymentIntent(stripePaymentIntentId: string | null | undefined, status: "active" | "refunded" | "disputed") {
+  if (!stripePaymentIntentId) {
+    return;
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("access_grants")
+    .update({
+      status,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_payment_intent_id", stripePaymentIntentId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

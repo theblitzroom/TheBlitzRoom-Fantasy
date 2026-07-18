@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { attachStripeCustomerToProfile } from "@/lib/billingProfiles";
 import { getStripe } from "@/lib/stripe";
-import { upsertAccessGrantFromStripe } from "@/lib/stripeAccessGrants";
+import { updateAccessGrantStatusFromPaymentIntent, upsertAccessGrantFromStripe } from "@/lib/stripeAccessGrants";
 import { getPlanFromPriceId, getSeasonAccessEndFromPriceId } from "@/lib/stripePlans";
 import { getPrimaryPriceId, upsertSubscriptionFromStripe } from "@/lib/stripeSubscriptionSync";
 
@@ -88,6 +88,22 @@ export async function POST(request: Request) {
           });
         }
       }
+    }
+
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      await updateAccessGrantStatusFromPaymentIntent(
+        typeof charge.payment_intent === "string" ? charge.payment_intent : null,
+        "refunded"
+      );
+    }
+
+    if (event.type === "charge.dispute.created") {
+      const dispute = event.data.object as Stripe.Dispute;
+      await updateAccessGrantStatusFromPaymentIntent(
+        typeof dispute.payment_intent === "string" ? dispute.payment_intent : null,
+        "disputed"
+      );
     }
 
     return NextResponse.json({ received: true, type: event.type });
