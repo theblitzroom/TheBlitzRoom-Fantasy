@@ -7,6 +7,7 @@ import { SectionShell } from "@/components/SectionShell";
 import { SignOutButton } from "@/components/SignOutButton";
 import { isAdminEmail } from "@/lib/admin";
 import { ensureBillingProfile } from "@/lib/billingProfiles";
+import { getYahooConnection, hasYahooConfig } from "@/lib/platforms/yahoo";
 import { hasSupabaseAdminConfig, hasSupabaseBrowserConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -22,6 +23,12 @@ type AccessGrantRecord = {
   plan: string;
   status: string;
   access_ends_at: string;
+};
+
+type PlatformConnectionStatus = {
+  connected: boolean;
+  updatedAt: string | null;
+  expiresAt: string | null;
 };
 
 function formatPlan(plan: string) {
@@ -116,6 +123,10 @@ export default async function AccountPage() {
   const profile = hasSupabaseAdminConfig()
     ? await ensureBillingProfile(user.id, user.email)
     : null;
+  const yahooConnection = hasSupabaseAdminConfig()
+    ? await getPlatformConnectionStatus(user.id, "yahoo")
+    : { connected: false, updatedAt: null, expiresAt: null };
+  const yahooConfigured = hasYahooConfig();
 
   const [{ data: subscriptions }, { data: accessGrants }] = await Promise.all([
     supabase
@@ -237,9 +248,43 @@ export default async function AccountPage() {
           <h2>What this unlocks next</h2>
           <div className="account-checklist">
             <span>Stripe customer ID: {profile?.stripe_customer_id ? "Connected" : "Pending checkout"}</span>
-            <span>Saved Sleeper leagues: Coming next</span>
+            <span>Saved Sleeper leagues: Ready</span>
+            <span>Yahoo league access: {yahooConnection.connected ? "Connected" : yahooConfigured ? "Ready to connect" : "Needs Yahoo app keys"}</span>
             <span>Draft room preferences: Ready to store</span>
             <span>Roster and trade tools: Account-gated foundation</span>
+          </div>
+        </div>
+
+        <div className="account-card">
+          <span className="eyebrow">League access</span>
+          <h2>Connect Yahoo Fantasy</h2>
+          <p>
+            Yahoo connects through official read-only OAuth. Tokens are encrypted server-side and never stored in the browser extension.
+          </p>
+          <div className="account-stat-grid">
+            <span>
+              <small>Status</small>
+              <strong>{yahooConnection.connected ? "Connected" : yahooConfigured ? "Not connected" : "Setup needed"}</strong>
+            </span>
+            <span>
+              <small>Updated</small>
+              <strong>{formatDate(yahooConnection.updatedAt)}</strong>
+            </span>
+            <span>
+              <small>Token refresh</small>
+              <strong>{formatDate(yahooConnection.expiresAt)}</strong>
+            </span>
+          </div>
+          <div className="button-row">
+            {yahooConfigured ? (
+              <Link className="secondary-link premium-link" href="/api/platforms/yahoo/connect?next=/account">
+                {yahooConnection.connected ? "Reconnect Yahoo" : "Connect Yahoo"} <ArrowRight size={14} />
+              </Link>
+            ) : (
+              <Link className="secondary-link" href="/account">
+                Add Yahoo env vars
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -263,4 +308,18 @@ export default async function AccountPage() {
       </section>
     </SectionShell>
   );
+}
+
+async function getPlatformConnectionStatus(userId: string, platform: "yahoo"): Promise<PlatformConnectionStatus> {
+  try {
+    const connection = platform === "yahoo" ? await getYahooConnection(userId) : null;
+    return {
+      connected: Boolean(connection),
+      updatedAt: connection?.updated_at ?? null,
+      expiresAt: connection?.token_expires_at ?? null
+    };
+  } catch (error) {
+    console.warn("Platform connection status could not be loaded", error);
+    return { connected: false, updatedAt: null, expiresAt: null };
+  }
 }

@@ -40,6 +40,12 @@ STRIPE_DRAFT_PRO_SEASON_PRICE_ID=
 STRIPE_DYNASTY_ELITE_SEASON_PRICE_ID=
 STRIPE_DRAFT_PRO_PRICE_ID=
 STRIPE_DYNASTY_ELITE_PRICE_ID=
+
+YAHOO_CLIENT_ID=
+YAHOO_CLIENT_SECRET=
+YAHOO_REDIRECT_URI=https://theblitzroom.com/api/platforms/yahoo/callback
+YAHOO_OAUTH_STATE_SECRET=
+PLATFORM_TOKEN_ENCRYPTION_KEY=
 ```
 
 For a temporary Vercel URL before the custom domain is ready:
@@ -73,6 +79,16 @@ Listen for:
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
+
+## Yahoo OAuth
+
+In Yahoo Developer, create an app with Fantasy Sports read access and add:
+
+```text
+https://theblitzroom.com/api/platforms/yahoo/callback
+```
+
+Then add the Yahoo environment variables above in Vercel and redeploy. Apply the latest `supabase-schema.sql` first so `platform_connections` exists.
 
 ## Pre-Deploy Check
 

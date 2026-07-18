@@ -31,7 +31,7 @@ For the simplest setup, publish this folder as its own GitHub repository, then i
 
 ## Environment Setup
 
-Copy `.env.example` to `.env.local` and fill in your Supabase and Stripe keys.
+Copy `.env.example` to `.env.local` and fill in your Supabase, Stripe, and platform OAuth keys.
 
 ## Account Setup
 
@@ -97,6 +97,29 @@ Run the schema in `supabase-schema.sql` before relying on paid access in product
 
 Billing routes now derive the user from the Supabase server session. When a signed-in user checks out, Stripe is tied back to that account through the profile row and webhook sync.
 
+## Yahoo Fantasy OAuth Setup
+
+Yahoo league access uses official read-only Yahoo OAuth. The app stores Yahoo tokens encrypted server-side and never stores Yahoo client secrets in the browser or Chrome extension.
+
+1. Create a Yahoo Developer app with Fantasy Sports read access.
+2. Add this redirect URL to the Yahoo app:
+
+```text
+https://theblitzroom.com/api/platforms/yahoo/callback
+```
+
+3. Add these variables locally and in Vercel:
+
+```bash
+YAHOO_CLIENT_ID=
+YAHOO_CLIENT_SECRET=
+YAHOO_REDIRECT_URI=https://theblitzroom.com/api/platforms/yahoo/callback
+YAHOO_OAUTH_STATE_SECRET=
+PLATFORM_TOKEN_ENCRYPTION_KEY=
+```
+
+`YAHOO_OAUTH_STATE_SECRET` and `PLATFORM_TOKEN_ENCRYPTION_KEY` should each be long random values. `PLATFORM_TOKEN_ENCRYPTION_KEY` must be at least 32 bytes.
+
 Sleeper sync uses only official read-only endpoints:
 
 - `GET https://api.sleeper.app/v1/user/<username>`
@@ -107,12 +130,14 @@ Sleeper sync uses only official read-only endpoints:
 - `GET https://api.sleeper.app/v1/league/<league_id>/users`
 - `GET https://api.sleeper.app/v1/league/<league_id>/matchups/<week>`
 
-The app does not auto-draft and does not use private APIs.
+Yahoo sync uses official OAuth. ESPN remains manual/visible league context only because ESPN does not provide a documented public third-party fantasy account API.
+
+The app does not auto-draft, does not use private APIs, and does not scrape private cookies.
 
 ## Next Build Steps
 
-1. Create Supabase tables for leagues, drafts, picks, and saved rankings.
+1. Create Supabase tables for leagues, drafts, picks, platform connections, and saved rankings.
 2. Wire signed-in account plan state into `lib/subscription.ts` gates.
 3. Replace demo data with database-backed league and draft records.
-4. Add saved Sleeper league connections per user.
+4. Add saved Sleeper and Yahoo league connections per user.
 5. Add a client-side Sleeper sync controller that polls every second while a draft room is open.
