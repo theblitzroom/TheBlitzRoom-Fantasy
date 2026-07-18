@@ -132,6 +132,18 @@ Any ZIP code
 
 For a full entitlement test, point a Stripe test-mode webhook at `/api/stripe/webhook` and add its signing secret as `STRIPE_TEST_WEBHOOK_SECRET`. Keep `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` on live values in production.
 
+### Vercel Preview Billing QA
+
+Vercel Preview is configured as the safe Stripe sandbox lane. In Preview, the normal `/pricing` checkout route uses Stripe test-mode keys and test prices, so you can exercise the same customer flow without charging real cards.
+
+- Production `/pricing`: live Stripe keys and live prices
+- Preview `/pricing`: test Stripe keys and test prices
+- Preview `/test-checkout`: hidden test route, also test mode
+- Stripe test webhooks: delivered to `/api/stripe/webhook`
+- Preview deployments may be protected by Vercel Authentication; use `vercel curl` for API checks or open the deployment while signed into Vercel.
+
+Use `4242 4242 4242 4242` with any future date, any 3-digit CVC, and any ZIP code for no-money Stripe tests.
+
 ## Yahoo Fantasy OAuth Setup
 
 Yahoo league access uses official read-only Yahoo OAuth. The app stores Yahoo tokens encrypted server-side and never stores Yahoo client secrets in the browser or Chrome extension.
