@@ -5547,6 +5547,13 @@ td {
   background: rgba(219, 106, 106, 0.075);
 }
 
+.extension-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 .extension-stat-grid .league-stat strong {
   overflow: hidden;
   font-size: clamp(24px, 3vw, 34px);
