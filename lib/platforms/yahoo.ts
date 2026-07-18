@@ -1,4 +1,4 @@
-import { createClient, type User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { XMLParser } from "fast-xml-parser";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { decryptPlatformToken, encryptPlatformToken } from "@/lib/platforms/tokenCrypto";
@@ -229,24 +229,4 @@ function collectLeagueObjects(value: unknown, found: Array<Record<string, unknow
   for (const item of Object.values(record)) {
     collectLeagueObjects(item, found);
   }
-}
-
-export function createAuthedSupabaseClient(accessToken: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) {
-    throw new Error("Missing Supabase environment variables.");
-  }
-
-  return createClient(url, anonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    },
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    }
-  });
 }

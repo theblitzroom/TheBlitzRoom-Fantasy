@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AuthPanel } from "@/components/AuthPanel";
+import { EspnConnectPanel } from "@/components/EspnConnectPanel";
 import { ManageBillingButton } from "@/components/ManageBillingButton";
 import { PremiumButton } from "@/components/PremiumButton";
 import { SectionShell } from "@/components/SectionShell";
 import { SignOutButton } from "@/components/SignOutButton";
 import { isAdminEmail } from "@/lib/admin";
 import { ensureBillingProfile } from "@/lib/billingProfiles";
+import { getEspnConnection } from "@/lib/platforms/espn";
 import { getYahooConnection, hasYahooConfig } from "@/lib/platforms/yahoo";
 import { hasSupabaseAdminConfig, hasSupabaseBrowserConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -29,6 +31,9 @@ type PlatformConnectionStatus = {
   connected: boolean;
   updatedAt: string | null;
   expiresAt: string | null;
+  leagueName?: string | null;
+  leagueId?: string | null;
+  season?: string | null;
 };
 
 function formatPlan(plan: string) {
@@ -123,8 +128,11 @@ export default async function AccountPage() {
   const profile = hasSupabaseAdminConfig()
     ? await ensureBillingProfile(user.id, user.email)
     : null;
-  const yahooConnection = hasSupabaseAdminConfig()
+  const yahooConnection: PlatformConnectionStatus = hasSupabaseAdminConfig()
     ? await getPlatformConnectionStatus(user.id, "yahoo")
+    : { connected: false, updatedAt: null, expiresAt: null };
+  const espnConnection: PlatformConnectionStatus = hasSupabaseAdminConfig()
+    ? await getPlatformConnectionStatus(user.id, "espn")
     : { connected: false, updatedAt: null, expiresAt: null };
   const yahooConfigured = hasYahooConfig();
 
@@ -250,6 +258,7 @@ export default async function AccountPage() {
             <span>Stripe customer ID: {profile?.stripe_customer_id ? "Connected" : "Pending checkout"}</span>
             <span>Saved Sleeper leagues: Ready</span>
             <span>Yahoo league access: {yahooConnection.connected ? "Connected" : yahooConfigured ? "Ready to connect" : "Needs Yahoo app keys"}</span>
+            <span>ESPN public league access: {espnConnection.connected ? "Connected" : "Ready to connect"}</span>
             <span>Draft room preferences: Ready to store</span>
             <span>Roster and trade tools: Account-gated foundation</span>
           </div>
@@ -287,6 +296,29 @@ export default async function AccountPage() {
             )}
           </div>
         </div>
+
+        <div className="account-card">
+          <span className="eyebrow">League access</span>
+          <h2>Connect ESPN</h2>
+          <p>
+            ESPN currently connects by public league ID and season. This keeps the integration fast and safe without storing ESPN cookies.
+          </p>
+          <div className="account-stat-grid">
+            <span>
+              <small>Status</small>
+              <strong>{espnConnection.connected ? "Connected" : "Not connected"}</strong>
+            </span>
+            <span>
+              <small>League</small>
+              <strong>{espnConnection.leagueName ?? "Public league"}</strong>
+            </span>
+            <span>
+              <small>Updated</small>
+              <strong>{formatDate(espnConnection.updatedAt)}</strong>
+            </span>
+          </div>
+          <EspnConnectPanel defaultLeagueId={espnConnection.leagueId} defaultSeason={espnConnection.season} />
+        </div>
       </div>
 
       <section className="admin-tool-panel">
@@ -310,13 +342,18 @@ export default async function AccountPage() {
   );
 }
 
-async function getPlatformConnectionStatus(userId: string, platform: "yahoo"): Promise<PlatformConnectionStatus> {
+async function getPlatformConnectionStatus(userId: string, platform: "yahoo" | "espn"): Promise<PlatformConnectionStatus> {
   try {
-    const connection = platform === "yahoo" ? await getYahooConnection(userId) : null;
+    const connection = platform === "yahoo" ? await getYahooConnection(userId) : await getEspnConnection(userId);
+    const league = connection?.metadata?.league;
+    const leagueRecord = league && typeof league === "object" ? league as Record<string, unknown> : null;
     return {
       connected: Boolean(connection),
       updatedAt: connection?.updated_at ?? null,
-      expiresAt: connection?.token_expires_at ?? null
+      expiresAt: connection?.token_expires_at ?? null,
+      leagueName: typeof leagueRecord?.name === "string" ? leagueRecord.name : null,
+      leagueId: typeof leagueRecord?.leagueId === "string" ? leagueRecord.leagueId : null,
+      season: typeof leagueRecord?.season === "string" ? leagueRecord.season : null
     };
   } catch (error) {
     console.warn("Platform connection status could not be loaded", error);

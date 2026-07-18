@@ -12,6 +12,7 @@ A dynamic Next.js foundation for the premium fantasy football draft tool. The st
 - Stripe checkout, customer portal, and webhook routes.
 - Supabase browser/server client helpers.
 - Login, account creation, auth callback, and signed-in account hub pages.
+- Account-level Yahoo and ESPN league connection foundation.
 - Shared format-aware fantasy model for redraft, dynasty, superflex dynasty, Half PPR, Full PPR, and TE premium logic. See `RANKING_METHODOLOGY.md`.
 
 ## Run Locally
@@ -131,6 +132,12 @@ Sleeper sync uses only official read-only endpoints:
 - `GET https://api.sleeper.app/v1/league/<league_id>/matchups/<week>`
 
 Yahoo sync uses official OAuth. ESPN remains manual/visible league context only because ESPN does not provide a documented public third-party fantasy account API.
+
+## ESPN Public League Access
+
+ESPN access currently supports public leagues by league ID and season from the signed-in account page. The app validates the league with ESPN's public fantasy endpoint, stores the league metadata in `platform_connections`, and does not store ESPN cookies.
+
+Private ESPN leagues are intentionally not connected yet because ESPN does not provide a documented third-party fantasy OAuth flow comparable to Yahoo. Do not add private cookie capture unless a future secure, user-consented design is reviewed first.
 
 The app does not auto-draft, does not use private APIs, and does not scrape private cookies.
 

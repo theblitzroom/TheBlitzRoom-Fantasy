@@ -2409,6 +2409,17 @@ td {
   opacity: 0.62;
 }
 
+.account-platform-form {
+  grid-template-columns: minmax(180px, 1fr) 110px auto;
+  margin-top: 18px;
+}
+
+.account-platform-form .auth-message,
+.account-platform-form .sync-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .league-error {
   color: var(--red);
   border: 1px solid rgba(219, 106, 106, 0.28);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchYahooFantasyLeagues, hasYahooConfig } from "@/lib/platforms/yahoo";
+import { fetchSavedEspnLeagues } from "@/lib/platforms/espn";
 import { getPlatformRequestUser } from "@/lib/platforms/supabaseAuth";
 
 const corsHeaders = {
@@ -13,20 +13,16 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-  if (!hasYahooConfig()) {
-    return json({ leagues: [], connected: false, error: "Yahoo OAuth is not configured yet." }, 503);
-  }
-
   const user = await getPlatformRequestUser(request);
   if (!user) {
-    return json({ leagues: [], connected: false, error: "Sign in before loading Yahoo leagues." }, 401);
+    return json({ leagues: [], connected: false, error: "Sign in before loading ESPN leagues." }, 401);
   }
 
   try {
-    const leagues = await fetchYahooFantasyLeagues(user.id);
-    return json({ connected: true, leagues }, 200);
+    const leagues = await fetchSavedEspnLeagues(user.id);
+    return json({ connected: leagues.length > 0, leagues }, 200);
   } catch (error) {
-    return json({ leagues: [], connected: false, error: error instanceof Error ? error.message : "Yahoo leagues could not be loaded." }, 502);
+    return json({ leagues: [], connected: false, error: error instanceof Error ? error.message : "ESPN leagues could not be loaded." }, 502);
   }
 }
 

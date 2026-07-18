@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getYahooConnection, hasYahooConfig } from "@/lib/platforms/yahoo";
+import { getEspnConnection } from "@/lib/platforms/espn";
 import { getPlatformRequestUser } from "@/lib/platforms/supabaseAuth";
 
 const corsHeaders = {
@@ -16,20 +16,20 @@ export async function GET(request: Request) {
   try {
     const user = await getPlatformRequestUser(request);
     if (!user) {
-      return json({ signedIn: false, connected: false, configured: hasYahooConfig() }, 200);
+      return json({ signedIn: false, connected: false, configured: true }, 200);
     }
 
-    const connection = await getYahooConnection(user.id);
+    const connection = await getEspnConnection(user.id);
     return json({
       signedIn: true,
-      configured: hasYahooConfig(),
+      configured: true,
       connected: Boolean(connection),
-      platform: "yahoo",
-      expiresAt: connection?.token_expires_at ?? null,
+      platform: "espn",
+      league: connection?.metadata?.league ?? null,
       updatedAt: connection?.updated_at ?? null
     }, 200);
   } catch (error) {
-    return json({ signedIn: false, connected: false, configured: hasYahooConfig(), error: error instanceof Error ? error.message : "Yahoo status failed." }, 500);
+    return json({ signedIn: false, connected: false, configured: true, error: error instanceof Error ? error.message : "ESPN status failed." }, 500);
   }
 }
 
