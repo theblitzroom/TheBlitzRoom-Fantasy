@@ -61,6 +61,14 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+function formatAccessThrough(value: string | null, adminAccess: boolean) {
+  if (adminAccess) {
+    return "Admin access";
+  }
+
+  return formatDate(value);
+}
+
 function hasActiveAccess(subscription: SubscriptionRecord | null, grant: AccessGrantRecord | null) {
   const activeSubscription = subscription
     ? ["active", "trialing"].includes(subscription.status) && (!subscription.current_period_end || new Date(subscription.current_period_end).getTime() > Date.now())
@@ -161,10 +169,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   const activeSubscription = subscriptions?.[0] ?? null;
   const activeGrant = accessGrants?.[0] ?? null;
-  const activePlan = activeSubscription?.plan ?? activeGrant?.plan ?? "preview";
-  const renewalOrAccessDate = activeSubscription?.current_period_end ?? activeGrant?.access_ends_at ?? null;
-  const billingStatus = activeSubscription?.status ?? activeGrant?.status ?? "preview";
   const adminAccess = isAdminEmail(user.email);
+  const activePlan = adminAccess ? "dynasty_elite" : activeSubscription?.plan ?? activeGrant?.plan ?? "preview";
+  const renewalOrAccessDate = activeSubscription?.current_period_end ?? activeGrant?.access_ends_at ?? null;
+  const billingStatus = adminAccess ? "active" : activeSubscription?.status ?? activeGrant?.status ?? "preview";
   const paidAccess = adminAccess || hasActiveAccess(activeSubscription, activeGrant);
   const eliteAccess = adminAccess || (paidAccess && activePlan === "dynasty_elite");
   const launchTools = [
@@ -255,7 +263,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             </span>
             <span>
               <small>Access through</small>
-              <strong>{formatDate(renewalOrAccessDate)}</strong>
+              <strong>{formatAccessThrough(renewalOrAccessDate, adminAccess)}</strong>
             </span>
           </div>
           <div className="button-row">
