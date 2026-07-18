@@ -1,10 +1,12 @@
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { encryptPlatformToken } from "@/lib/platforms/tokenCrypto";
+import { decryptPlatformToken, encryptPlatformToken } from "@/lib/platforms/tokenCrypto";
 
 type PlatformConnectionRecord = {
   user_id: string;
   platform: "espn";
+  access_token_encrypted: string;
+  refresh_token_encrypted: string | null;
   token_expires_at: string | null;
   scope: string | null;
   provider_account_id: string | null;
@@ -20,6 +22,11 @@ export type EspnLeagueSummary = {
   scoringType: string;
   numTeams: number | null;
   isPublic: boolean;
+};
+
+export type EspnPrivateCredentials = {
+  swid: string;
+  espnS2: string;
 };
 
 type EspnLeaguePayload = {
@@ -38,19 +45,29 @@ type EspnLeaguePayload = {
 const ESPN_PLATFORM_TOKEN_SENTINEL = "espn-public-league";
 
 export async function verifyEspnPublicLeague(leagueId: string, season: string) {
+  return verifyEspnLeague(leagueId, season);
+}
+
+export async function verifyEspnLeague(leagueId: string, season: string, credentials?: EspnPrivateCredentials) {
   const normalizedLeagueId = normalizeLeagueId(leagueId);
   const normalizedSeason = normalizeSeason(season);
   const url = buildEspnLeagueUrl(normalizedLeagueId, normalizedSeason);
+  const normalizedCredentials = credentials ? normalizePrivateCredentials(credentials) : null;
 
   const response = await fetch(url, {
     headers: {
-      accept: "application/json"
+      accept: "application/json",
+      ...(normalizedCredentials ? { cookie: buildEspnCookieHeader(normalizedCredentials) } : {})
     },
     cache: "no-store"
   });
 
   if (response.status === 401 || response.status === 403) {
-    throw new Error("That ESPN league is private. Public ESPN league access is supported now; private ESPN access needs a future secure OAuth/cookie-safe path.");
+    throw new Error(
+      normalizedCredentials
+        ? "ESPN rejected those private league credentials. Confirm the league ID, season, SWID, and espn_s2 values."
+        : "That ESPN league is private. Turn on Private League and add your SWID and espn_s2 values."
+    );
   }
 
   if (!response.ok) {
@@ -58,25 +75,27 @@ export async function verifyEspnPublicLeague(leagueId: string, season: string) {
   }
 
   const payload = await response.json() as EspnLeaguePayload;
-  return normalizeEspnLeague(payload, normalizedLeagueId, normalizedSeason);
+  return normalizeEspnLeague(payload, normalizedLeagueId, normalizedSeason, Boolean(normalizedCredentials));
 }
 
-export async function upsertEspnConnection(user: Pick<User, "id">, league: EspnLeagueSummary) {
+export async function upsertEspnConnection(user: Pick<User, "id">, league: EspnLeagueSummary, credentials?: EspnPrivateCredentials) {
   const supabase = createSupabaseAdminClient();
   const now = new Date().toISOString();
+  const normalizedCredentials = credentials ? normalizePrivateCredentials(credentials) : null;
   const { error } = await supabase
     .from("platform_connections")
     .upsert({
       user_id: user.id,
       platform: "espn",
-      access_token_encrypted: encryptPlatformToken(ESPN_PLATFORM_TOKEN_SENTINEL),
-      refresh_token_encrypted: null,
+      access_token_encrypted: encryptPlatformToken(normalizedCredentials?.espnS2 ?? ESPN_PLATFORM_TOKEN_SENTINEL),
+      refresh_token_encrypted: normalizedCredentials?.swid ? encryptPlatformToken(normalizedCredentials.swid) : null,
       token_expires_at: null,
-      scope: "public-league-read",
+      scope: normalizedCredentials ? "private-league-read" : "public-league-read",
       provider_account_id: league.leagueId,
       metadata: {
         league,
-        source: "espn-public-league",
+        source: normalizedCredentials ? "espn-private-league" : "espn-public-league",
+        credentialMode: normalizedCredentials ? "private-cookie" : "public",
         savedAt: now
       },
       updated_at: now
@@ -91,7 +110,7 @@ export async function getEspnConnection(userId: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("platform_connections")
-    .select("user_id,platform,token_expires_at,scope,provider_account_id,metadata,updated_at")
+    .select("user_id,platform,access_token_encrypted,refresh_token_encrypted,token_expires_at,scope,provider_account_id,metadata,updated_at")
     .eq("user_id", userId)
     .eq("platform", "espn")
     .maybeSingle<PlatformConnectionRecord>();
@@ -111,14 +130,24 @@ export async function fetchSavedEspnLeagues(userId: string) {
   }
 
   try {
-    return [await verifyEspnPublicLeague(savedLeague.leagueId, savedLeague.season)];
+    const credentials = isPrivateEspnConnection(connection) ? getPrivateCredentialsFromConnection(connection) : undefined;
+    return [await verifyEspnLeague(savedLeague.leagueId, savedLeague.season, credentials)];
   } catch {
     return [savedLeague];
   }
 }
 
+export async function getSavedEspnPrivateCredentials(userId: string) {
+  const connection = await getEspnConnection(userId);
+  if (!connection || !isPrivateEspnConnection(connection)) {
+    return null;
+  }
+
+  return getPrivateCredentialsFromConnection(connection);
+}
+
 function buildEspnLeagueUrl(leagueId: string, season: string) {
-  const url = new URL(`https://fantasy.espn.com/apis/v3/games/ffl/seasons/${season}/segments/0/leagues/${leagueId}`);
+  const url = new URL(`https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${season}/segments/0/leagues/${leagueId}`);
   url.searchParams.append("view", "mSettings");
   url.searchParams.append("view", "mTeam");
   url.searchParams.append("view", "mRoster");
@@ -141,7 +170,7 @@ function normalizeSeason(value: string) {
   return trimmed;
 }
 
-function normalizeEspnLeague(payload: EspnLeaguePayload, leagueId: string, season: string): EspnLeagueSummary {
+function normalizeEspnLeague(payload: EspnLeaguePayload, leagueId: string, season: string, isPrivate: boolean): EspnLeagueSummary {
   return {
     platform: "espn",
     leagueId: String(payload.id ?? leagueId),
@@ -149,7 +178,7 @@ function normalizeEspnLeague(payload: EspnLeaguePayload, leagueId: string, seaso
     season: String(payload.seasonId ?? season),
     scoringType: payload.settings?.scoringSettings?.scoringType ?? "ESPN scoring",
     numTeams: Number(payload.settings?.size ?? payload.teams?.length ?? 0) || null,
-    isPublic: true
+    isPublic: !isPrivate
   };
 }
 
@@ -160,4 +189,35 @@ function isEspnLeagueSummary(value: unknown): value is EspnLeagueSummary {
 
   const record = value as Partial<EspnLeagueSummary>;
   return record.platform === "espn" && typeof record.leagueId === "string" && typeof record.season === "string";
+}
+
+function isPrivateEspnConnection(connection: PlatformConnectionRecord) {
+  const league = connection.metadata?.league;
+  return connection.scope === "private-league-read" || (isEspnLeagueSummary(league) && !league.isPublic);
+}
+
+function getPrivateCredentialsFromConnection(connection: PlatformConnectionRecord): EspnPrivateCredentials | undefined {
+  if (!connection.refresh_token_encrypted || !connection.access_token_encrypted) {
+    return undefined;
+  }
+
+  return {
+    swid: decryptPlatformToken(connection.refresh_token_encrypted),
+    espnS2: decryptPlatformToken(connection.access_token_encrypted)
+  };
+}
+
+function normalizePrivateCredentials(credentials: EspnPrivateCredentials) {
+  const swid = credentials.swid.trim();
+  const espnS2 = credentials.espnS2.trim();
+
+  if (!swid || !espnS2) {
+    throw new Error("Private ESPN leagues require both SWID and espn_s2.");
+  }
+
+  return { swid, espnS2 };
+}
+
+function buildEspnCookieHeader(credentials: EspnPrivateCredentials) {
+  return `swid=${credentials.swid}; espn_s2=${credentials.espnS2}`;
 }

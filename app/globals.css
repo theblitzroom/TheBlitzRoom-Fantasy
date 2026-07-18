@@ -2414,8 +2414,32 @@ td {
   margin-top: 18px;
 }
 
+.account-private-toggle,
+.account-private-fields,
 .account-platform-form .auth-message,
 .account-platform-form .sync-error {
+  grid-column: 1 / -1;
+}
+
+.account-private-toggle {
+  display: flex !important;
+  align-items: center;
+  gap: 10px !important;
+}
+
+.account-private-toggle input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--gold);
+}
+
+.account-private-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.account-private-fields p {
   grid-column: 1 / -1;
   margin: 0;
 }

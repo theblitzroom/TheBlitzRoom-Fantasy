@@ -135,11 +135,11 @@ Yahoo sync uses official OAuth. ESPN remains manual/visible league context only 
 
 ## ESPN Public League Access
 
-ESPN access currently supports public leagues by league ID and season from the signed-in account page. The app validates the league with ESPN's public fantasy endpoint, stores the league metadata in `platform_connections`, and does not store ESPN cookies.
+ESPN access supports public leagues by league ID and season from the signed-in account page. The app validates the league with ESPN's fantasy endpoint and stores the league metadata in `platform_connections`.
 
-Private ESPN leagues are intentionally not connected yet because ESPN does not provide a documented third-party fantasy OAuth flow comparable to Yahoo. Do not add private cookie capture unless a future secure, user-consented design is reviewed first.
+Private ESPN leagues can be connected by manually entering the user's own `SWID` and `espn_s2` values from an active ESPN browser session. Those values are encrypted server-side in `platform_connections`. The app never asks for an ESPN password and does not auto-extract cookies.
 
-The app does not auto-draft, does not use private APIs, and does not scrape private cookies.
+The app does not auto-draft, does not collect ESPN passwords, and does not auto-extract or scrape private cookies.
 
 ## Next Build Steps
 

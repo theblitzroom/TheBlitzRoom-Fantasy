@@ -34,6 +34,7 @@ type PlatformConnectionStatus = {
   leagueName?: string | null;
   leagueId?: string | null;
   season?: string | null;
+  isPrivate?: boolean;
 };
 
 function formatPlan(plan: string) {
@@ -306,7 +307,7 @@ export default async function AccountPage() {
           <div className="account-stat-grid">
             <span>
               <small>Status</small>
-              <strong>{espnConnection.connected ? "Connected" : "Not connected"}</strong>
+              <strong>{espnConnection.connected ? espnConnection.isPrivate ? "Private connected" : "Connected" : "Not connected"}</strong>
             </span>
             <span>
               <small>League</small>
@@ -317,7 +318,7 @@ export default async function AccountPage() {
               <strong>{formatDate(espnConnection.updatedAt)}</strong>
             </span>
           </div>
-          <EspnConnectPanel defaultLeagueId={espnConnection.leagueId} defaultSeason={espnConnection.season} />
+          <EspnConnectPanel defaultLeagueId={espnConnection.leagueId} defaultPrivate={espnConnection.isPrivate} defaultSeason={espnConnection.season} />
         </div>
       </div>
 
@@ -353,7 +354,8 @@ async function getPlatformConnectionStatus(userId: string, platform: "yahoo" | "
       expiresAt: connection?.token_expires_at ?? null,
       leagueName: typeof leagueRecord?.name === "string" ? leagueRecord.name : null,
       leagueId: typeof leagueRecord?.leagueId === "string" ? leagueRecord.leagueId : null,
-      season: typeof leagueRecord?.season === "string" ? leagueRecord.season : null
+      season: typeof leagueRecord?.season === "string" ? leagueRecord.season : null,
+      isPrivate: leagueRecord?.isPublic === false || connection?.scope === "private-league-read"
     };
   } catch (error) {
     console.warn("Platform connection status could not be loaded", error);

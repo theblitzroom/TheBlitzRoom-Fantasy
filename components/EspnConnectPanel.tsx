@@ -6,11 +6,15 @@ import type { FormEvent } from "react";
 type EspnConnectPanelProps = {
   defaultLeagueId?: string | null;
   defaultSeason?: string | null;
+  defaultPrivate?: boolean;
 };
 
-export function EspnConnectPanel({ defaultLeagueId, defaultSeason }: EspnConnectPanelProps) {
+export function EspnConnectPanel({ defaultLeagueId, defaultSeason, defaultPrivate = false }: EspnConnectPanelProps) {
   const [leagueId, setLeagueId] = useState(defaultLeagueId ?? "");
   const [season, setSeason] = useState(defaultSeason ?? String(new Date().getFullYear()));
+  const [isPrivate, setIsPrivate] = useState(defaultPrivate);
+  const [swid, setSwid] = useState("");
+  const [espnS2, setEspnS2] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +31,13 @@ export function EspnConnectPanel({ defaultLeagueId, defaultSeason }: EspnConnect
         headers: {
           "content-type": "application/json"
         },
-        body: JSON.stringify({ leagueId, season })
+        body: JSON.stringify({
+          leagueId,
+          season,
+          isPrivate,
+          swid: swid.trim() || undefined,
+          espnS2: espnS2.trim() || undefined
+        })
       });
       const payload = await response.json() as { connected?: boolean; error?: string; league?: { name?: string } };
 
@@ -70,6 +80,41 @@ export function EspnConnectPanel({ defaultLeagueId, defaultSeason }: EspnConnect
       <button className="premium-button premium-button-primary" disabled={loading} type="submit">
         {loading ? "Checking..." : defaultLeagueId ? "Update ESPN" : "Connect ESPN"}
       </button>
+      <label className="account-private-toggle">
+        <input
+          checked={isPrivate}
+          onChange={(event) => setIsPrivate(event.target.checked)}
+          type="checkbox"
+        />
+        <span>Private league</span>
+      </label>
+      {isPrivate ? (
+        <div className="account-private-fields">
+          <p>
+            ESPN private leagues need your `SWID` and `espn_s2` values from your own logged-in ESPN browser session. We never ask for your ESPN password.
+            {defaultPrivate ? " Leave these blank to reuse the encrypted values already saved." : ""}
+          </p>
+          <label>
+            <span>SWID</span>
+            <input
+              autoComplete="off"
+              onChange={(event) => setSwid(event.target.value)}
+              placeholder="{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}"
+              value={swid}
+            />
+          </label>
+          <label>
+            <span>espn_s2</span>
+            <input
+              autoComplete="off"
+              onChange={(event) => setEspnS2(event.target.value)}
+              placeholder="Paste espn_s2 value"
+              type="password"
+              value={espnS2}
+            />
+          </label>
+        </div>
+      ) : null}
       {message ? <p className="auth-message">{message}</p> : null}
       {error ? <p className="sync-error">{error}</p> : null}
     </form>
