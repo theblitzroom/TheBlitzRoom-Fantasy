@@ -23,7 +23,6 @@ const checkoutPlans: CheckoutPlan[] = [
 
 export async function POST(request: Request) {
   try {
-    const stripe = getStripe();
     const appUrl = getAppUrl(request);
     const body = await request.json().catch(() => ({})) as CheckoutBody;
     const plan = body.plan;
@@ -46,6 +45,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const stripe = getStripe();
     const planConfig = getStripePlanConfig(plan);
     const price = getStripePriceId(plan);
     const profile = user && hasSupabaseAdminConfig()
