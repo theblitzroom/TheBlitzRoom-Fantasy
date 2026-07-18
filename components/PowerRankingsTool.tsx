@@ -120,6 +120,10 @@ export function PowerRankingsTool({ paidAccess, signedIn, plan }: PowerRankingsT
       setLoadedUser(connection.user);
       setLeagues(connection.leagues);
       setSelectedLeagueId(connection.selectedLeagueId);
+
+      if (connection.selectedLeagueId) {
+        void loadLeagueSummary(connection.selectedLeagueId);
+      }
     });
   }, [paidAccess, loadLeagueSummary]);
 

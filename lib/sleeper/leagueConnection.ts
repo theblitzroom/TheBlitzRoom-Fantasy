@@ -55,6 +55,7 @@ export function saveStoredLeagueConnection(connection: Omit<StoredLeagueConnecti
     return;
   }
 
+  const current = getStoredLeagueConnection();
   const normalized: StoredLeagueConnection = {
     ...connection,
     username: connection.username.trim(),
@@ -63,12 +64,24 @@ export function saveStoredLeagueConnection(connection: Omit<StoredLeagueConnecti
   };
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-  window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: normalized }));
+  const changed = !current
+    || current.username !== normalized.username
+    || current.season !== normalized.season
+    || current.selectedLeagueId !== normalized.selectedLeagueId
+    || current.leagues.length !== normalized.leagues.length;
+
+  if (changed) {
+    window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: normalized }));
+  }
 }
 
 export function updateStoredLeagueSelection(selectedLeagueId: string) {
   const stored = getStoredLeagueConnection();
   if (!stored) {
+    return;
+  }
+
+  if (stored.selectedLeagueId === selectedLeagueId) {
     return;
   }
 

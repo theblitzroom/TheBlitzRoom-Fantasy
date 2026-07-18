@@ -312,6 +312,10 @@ export function TradeMarketTool({ mode, paidAccess, signedIn, plan }: TradeMarke
       setLoadedUser(connection.user);
       setLeagues(connection.leagues);
       setSelectedLeagueId(connection.selectedLeagueId);
+
+      if (connection.selectedLeagueId) {
+        void loadLeagueSummary(connection.selectedLeagueId, connection.user);
+      }
     });
   }, [liveAccess, loadLeagueSummary]);
 

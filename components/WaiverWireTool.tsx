@@ -255,6 +255,10 @@ export function WaiverWireTool({ paidAccess, signedIn }: WaiverWireToolProps) {
       setLoadedUser(connection.user);
       setLeagues(connection.leagues);
       setSelectedLeagueId(connection.selectedLeagueId);
+
+      if (connection.selectedLeagueId) {
+        void loadLeagueSummary(connection.selectedLeagueId, connection.user);
+      }
     });
   }, [liveAccess, loadLeagueSummary]);
 

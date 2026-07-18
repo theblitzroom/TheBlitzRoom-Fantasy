@@ -694,6 +694,10 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
       setLoadedUser(connection.user);
       setLeagues(connection.leagues);
       setSelectedLeagueId(connection.selectedLeagueId);
+
+      if (connection.selectedLeagueId) {
+        void loadLeagueSummary(connection.selectedLeagueId, connection.user);
+      }
     });
   }, [liveAccess, loadLeagueSummary]);
 

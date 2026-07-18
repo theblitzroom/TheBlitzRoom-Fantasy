@@ -525,6 +525,10 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
       setLoadedUser(connection.user);
       setLeagues(connection.leagues);
       setSelectedLeagueId(connection.selectedLeagueId);
+
+      if (connection.selectedLeagueId) {
+        void loadLeagueSummary(connection.selectedLeagueId);
+      }
     });
   }, [liveAccess, loadLeagueSummary]);
 
