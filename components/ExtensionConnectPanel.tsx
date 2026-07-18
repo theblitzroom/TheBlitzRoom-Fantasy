@@ -18,7 +18,6 @@ type BridgeState = "checking" | "connected" | "missing";
 const SITE_SOURCE = "the-blitz-room-site";
 const EXTENSION_SOURCE = "the-blitz-room-extension";
 const EXTENSION_REPO_URL = "https://github.com/theblitzroom/extension";
-const EXTENSION_DOWNLOAD_URL = "https://github.com/theblitzroom/extension/raw/main/dist/the-blitz-room-extension-0.1.0.zip";
 
 export function ExtensionConnectPanel() {
   const [bridgeState, setBridgeState] = useState<BridgeState>("checking");
@@ -38,7 +37,7 @@ export function ExtensionConnectPanel() {
     if (bridgeState === "missing") {
       return {
         label: "Not detected",
-        detail: "Install or reload the Chrome extension, then refresh this page.",
+        detail: "Install from the Chrome Web Store once the listing is approved, then refresh this page.",
         icon: CircleAlert,
         className: "error"
       };
@@ -116,16 +115,16 @@ export function ExtensionConnectPanel() {
       <section className="league-command-panel extension-hero-panel">
         <div className="league-command-copy">
           <span className="badge badge-premium"><PlugZap size={14} /> Chrome companion</span>
-          <h2>Install The Blitz Room draft extension.</h2>
+          <h2>The Chrome extension is being prepared for the Chrome Web Store.</h2>
           <p>
-            Download the public Chrome package, connect your paid account, and use the side-panel assistant inside Sleeper draft rooms.
+            Once the listing is approved, this page will link directly to the Chrome Web Store install flow. Paid users can then sign in inside the extension and use the side-panel assistant in Sleeper draft rooms.
           </p>
           <div className="extension-cta-row">
-            <a className="premium-button premium-button-primary" href={EXTENSION_DOWNLOAD_URL}>
-              Download extension <ExternalLink size={14} />
-            </a>
+            <button className="premium-button premium-button-primary" disabled type="button">
+              Chrome Web Store coming soon
+            </button>
             <a className="premium-button premium-button-secondary" href={EXTENSION_REPO_URL} target="_blank" rel="noreferrer">
-              View GitHub <ExternalLink size={14} />
+              View source <ExternalLink size={14} />
             </a>
           </div>
           <div className={`extension-status-card ${statusCopy.className}`}>
@@ -149,16 +148,16 @@ export function ExtensionConnectPanel() {
         <article className="extension-action-card">
           <div className="league-team-icon"><Gauge size={20} /></div>
           <span className="eyebrow">Step 1</span>
-          <h3>Download the package</h3>
-          <p>Use the public GitHub package while the Chrome Web Store listing is being prepared. Unzip it before loading it in Chrome.</p>
-          <a className="league-inline-link" href={EXTENSION_DOWNLOAD_URL}>Download ZIP <ExternalLink size={14} /></a>
+          <h3>Submit to Chrome Web Store</h3>
+          <p>The extension package is prepared for Google review. After the listing is approved, the public install button will live here.</p>
+          <a className="league-inline-link" href="https://chrome.google.com/webstore/devconsole/" target="_blank" rel="noreferrer">Chrome Developer Dashboard <ExternalLink size={14} /></a>
         </article>
 
         <article className="extension-action-card">
           <div className="league-team-icon"><PlugZap size={20} /></div>
           <span className="eyebrow">Step 2</span>
-          <h3>Load it in Chrome</h3>
-          <p>Open Chrome extensions, enable Developer mode, choose Load unpacked, and select the unzipped extension folder.</p>
+          <h3>Install from the Store</h3>
+          <p>When approved, users install it directly from the Chrome Web Store instead of downloading a ZIP or loading unpacked files.</p>
           <button className="premium-button premium-button-secondary" onClick={() => window.location.reload()} type="button">
             <RefreshCcw size={16} /> Recheck
           </button>
