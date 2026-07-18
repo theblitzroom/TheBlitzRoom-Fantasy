@@ -8,7 +8,7 @@ export default async function CommandCenterPage() {
 
   return (
     <main className="command-center-page">
-      <CommandCenterLaunch signedIn={entitlement.signedIn} />
+      <CommandCenterLaunch paidAccess={entitlement.hasPaidAccess} signedIn={entitlement.signedIn} />
     </main>
   );
 }

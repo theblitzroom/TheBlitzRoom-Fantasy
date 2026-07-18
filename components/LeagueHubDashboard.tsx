@@ -430,7 +430,7 @@ function TrendBadge({ trend }: { trend: string }) {
 }
 
 export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardProps) {
-  const liveAccess = signedIn || paidAccess;
+  const liveAccess = paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [dynastyPosition, setDynastyPosition] = useState("All");
@@ -536,7 +536,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
     event.preventDefault();
 
     if (!liveAccess) {
-      setError("Sign in to run live Sleeper scans. Use the demo below to preview the workflow.");
+      setError(signedIn ? "Choose a plan to run live Sleeper scans. Use the demo below to preview the workflow." : "Sign in to run live Sleeper scans. Use the demo below to preview the workflow.");
       setScanStatus("error");
       return;
     }

@@ -5,6 +5,7 @@ import {
   Activity,
   ArrowRight,
   CheckCircle2,
+  CircleAlert,
   Crown,
   Radio,
   RefreshCcw,
@@ -50,6 +51,11 @@ const POLL_MS = 1000;
 const TEAM_COUNT = 12;
 const ROUND_COUNT = 6;
 const myDraftSlot = 8;
+
+type DraftRoomCommandCenterProps = {
+  paidAccess: boolean;
+  signedIn: boolean;
+};
 
 const teamNames = [
   "Apex Window",
@@ -179,7 +185,7 @@ function positionColor(position: string) {
   return position === "QB" ? "position-qb" : position === "RB" ? "position-rb" : position === "WR" ? "position-wr" : position === "TE" ? "position-te" : "position-open";
 }
 
-export function DraftRoomCommandCenter() {
+export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomCommandCenterProps) {
   const [draftId, setDraftId] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState<SyncStatus>("idle");
@@ -214,6 +220,12 @@ export function DraftRoomCommandCenter() {
   }, [draftId, enabled]);
 
   const syncNow = useCallback(async () => {
+    if (!paidAccess) {
+      setStatus("error");
+      setError(signedIn ? "Choose a plan to unlock live Sleeper draft sync." : "Sign in to unlock live Sleeper draft sync.");
+      return;
+    }
+
     if (!draftId.trim()) {
       setStatus("error");
       setError("Add a Sleeper draft ID or open Draft Room from a connected league.");
@@ -233,7 +245,8 @@ export function DraftRoomCommandCenter() {
       });
 
       if (!response.ok) {
-        throw new Error(`Sleeper returned ${response.status}`);
+        const data = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(data?.error || `Sleeper returned ${response.status}`);
       }
 
       const data = await response.json() as { picks: SleeperPick[] };
@@ -249,12 +262,19 @@ export function DraftRoomCommandCenter() {
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "Sync failed");
     }
-  }, [draftId]);
+  }, [draftId, paidAccess, signedIn]);
 
   useEffect(() => {
     if (!enabled) {
       inFlight.current?.abort();
       setStatus("idle");
+      return;
+    }
+
+    if (!paidAccess) {
+      setEnabled(false);
+      setStatus("error");
+      setError(signedIn ? "Choose a plan to start live Sleeper draft sync." : "Sign in to start live Sleeper draft sync.");
       return;
     }
 
@@ -267,7 +287,7 @@ export function DraftRoomCommandCenter() {
       window.clearInterval(interval);
       inFlight.current?.abort();
     };
-  }, [enabled, syncNow]);
+  }, [enabled, paidAccess, signedIn, syncNow]);
 
   const syncedBoard = useMemo(() => buildSyncedBoard(picks), [picks]);
   const demoBoard = useMemo(() => buildDemoBoard(selectedLeague), [selectedLeague]);
@@ -328,15 +348,22 @@ export function DraftRoomCommandCenter() {
           <div className="draft-sync-form">
             <label>
               <span>Sleeper draft ID</span>
-              <input value={draftId} onChange={(event) => setDraftId(event.target.value)} placeholder="Draft ID" autoComplete="off" />
+              <input value={draftId} onChange={(event) => setDraftId(event.target.value)} placeholder="Draft ID" autoComplete="off" disabled={!paidAccess} />
             </label>
-            <button className="premium-button premium-button-secondary" onClick={() => setEnabled((value) => !value)} type="button">
+            <button className="premium-button premium-button-secondary" onClick={() => setEnabled((value) => !value)} type="button" disabled={!paidAccess}>
               {enabled ? "Pause" : "Start 1s"}
             </button>
-            <button className="premium-button premium-button-primary" onClick={() => void syncNow()} type="button">
+            <button className="premium-button premium-button-primary" onClick={() => void syncNow()} type="button" disabled={!paidAccess}>
               <RefreshCcw size={16} />Sync
             </button>
           </div>
+          {!paidAccess ? (
+            <div className="league-access-note">
+              <CircleAlert size={18} />
+              <span>{signedIn ? "Draft Pro or Fantasy Elite unlocks live Sleeper draft sync." : "Sign in and choose a plan to unlock live draft sync."}</span>
+              <Link href={signedIn ? "/pricing" : "/login?next=/draft-room"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
+            </div>
+          ) : null}
           {error ? <p className="sync-error">{error}</p> : null}
           <div className="draft-sync-stats">
             <span><strong>{lastPickNo || demoBoard.length}</strong><small>Last pick</small></span>

@@ -12,6 +12,13 @@ export async function GET(
     return NextResponse.json({ error: "Sign in to use live matchup data." }, { status: 401 });
   }
 
+  if (!entitlement.hasPaidAccess) {
+    return NextResponse.json(
+      { error: "An active Draft Pro or Fantasy Elite plan is required for live matchup data." },
+      { status: 402 }
+    );
+  }
+
   try {
     const { leagueId, week } = await params;
     const matchups = await getSleeperLeagueMatchups(leagueId, week);

@@ -119,7 +119,7 @@ function dropScore(playerId: string, player?: LeagueToolPlayer) {
 }
 
 export function WaiverWireTool({ paidAccess, signedIn }: WaiverWireToolProps) {
-  const liveAccess = signedIn || paidAccess;
+  const liveAccess = paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
@@ -267,7 +267,7 @@ export function WaiverWireTool({ paidAccess, signedIn }: WaiverWireToolProps) {
 
     if (!liveAccess) {
       setStatus("error");
-      setError("Sign in to run live waiver sync. Use the demo to preview the tool.");
+      setError(signedIn ? "Choose a plan to run live waiver sync. Use the demo to preview the tool." : "Sign in to run live waiver sync. Use the demo to preview the tool.");
       return;
     }
 

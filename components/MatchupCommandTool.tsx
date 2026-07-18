@@ -137,7 +137,7 @@ function findMyRoster(summary: LeagueToolSummary | null, user?: LeagueToolUser |
 }
 
 export function MatchupCommandTool({ paidAccess, signedIn }: MatchupCommandToolProps) {
-  const liveAccess = signedIn || paidAccess;
+  const liveAccess = paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [week, setWeek] = useState("1");
@@ -251,7 +251,7 @@ export function MatchupCommandTool({ paidAccess, signedIn }: MatchupCommandToolP
 
     if (!liveAccess) {
       setStatus("error");
-      setError("Sign in to run live matchup sync. Use the demo to preview the tool.");
+      setError(signedIn ? "Choose a plan to run live matchup sync. Use the demo to preview the tool." : "Sign in to run live matchup sync. Use the demo to preview the tool.");
       return;
     }
 

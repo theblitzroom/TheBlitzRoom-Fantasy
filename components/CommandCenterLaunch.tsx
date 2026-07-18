@@ -56,6 +56,7 @@ type LeagueLookupResponse = {
 };
 
 type CommandCenterLaunchProps = {
+  paidAccess: boolean;
   signedIn: boolean;
 };
 
@@ -220,19 +221,20 @@ function getPrimaryCommand(league?: SleeperLeague | null) {
   };
 }
 
-export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
+export function CommandCenterLaunch({ paidAccess, signedIn }: CommandCenterLaunchProps) {
+  const liveAccess = paidAccess;
   const [username, setUsername] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "found" | "error">(signedIn ? "idle" : "found");
+  const [status, setStatus] = useState<"idle" | "loading" | "found" | "error">(liveAccess ? "idle" : "found");
   const [user, setUser] = useState<SleeperUser | null>(
-    signedIn ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
+    liveAccess ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
   );
   const [season, setSeason] = useState(String(new Date().getFullYear()));
-  const [leagues, setLeagues] = useState<SleeperLeague[]>(signedIn ? [] : demoLeagues);
-  const [selectedLeagueId, setSelectedLeagueId] = useState(signedIn ? "" : demoLeagues[0].league_id);
+  const [leagues, setLeagues] = useState<SleeperLeague[]>(liveAccess ? [] : demoLeagues);
+  const [selectedLeagueId, setSelectedLeagueId] = useState(liveAccess ? "" : demoLeagues[0].league_id);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!signedIn) {
+    if (!liveAccess) {
       return;
     }
 
@@ -258,14 +260,14 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
       setSelectedLeagueId(connection.selectedLeagueId);
       setStatus("found");
     });
-  }, [signedIn]);
+  }, [liveAccess]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!signedIn) {
+    if (!liveAccess) {
       setStatus("error");
-      setError("Sign in to run live Sleeper scans. The demo below shows how the dashboard behaves.");
+      setError(signedIn ? "Choose a plan to run live Sleeper scans. The demo below shows how the dashboard behaves." : "Sign in to run live Sleeper scans. The demo below shows how the dashboard behaves.");
       return;
     }
 
@@ -325,7 +327,7 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
   function selectLeague(leagueId: string) {
     setSelectedLeagueId(leagueId);
 
-    if (!signedIn) {
+    if (!liveAccess) {
       return;
     }
 
@@ -348,7 +350,7 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
   const selectedScoring = formatScoring(selectedLeague);
   const selectedLineup = formatLineup(selectedLeague);
   const draftRoomHref = selectedLeague?.draft_id ? `/draft-room?draftId=${encodeURIComponent(selectedLeague.draft_id)}` : "/draft-room";
-  const gatedHref = (href: string) => signedIn ? href : `/login?next=${encodeURIComponent(href)}`;
+  const gatedHref = (href: string) => liveAccess ? href : signedIn ? "/pricing" : `/login?next=${encodeURIComponent(href)}`;
   const statusLabel = status === "loading" ? "Scanning" : status === "found" ? "Connected" : status === "error" ? "Needs attention" : "Ready";
   const commandActions = [
     {
@@ -446,9 +448,9 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
               <input
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                placeholder={signedIn ? "Enter Sleeper username" : "Sign in to scan live leagues"}
+                placeholder={liveAccess ? "Enter Sleeper username" : signedIn ? "Choose a plan to scan live leagues" : "Sign in to scan live leagues"}
                 autoComplete="off"
-                disabled={!signedIn}
+                disabled={!liveAccess}
               />
             </label>
             <label className="command-season-field">
@@ -456,11 +458,11 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
               <input
                 value={season}
                 onChange={(event) => setSeason(event.target.value)}
-                disabled={!signedIn}
+                disabled={!liveAccess}
                 inputMode="numeric"
               />
             </label>
-            <button className="premium-button premium-button-primary" disabled={!signedIn || status === "loading"}>
+            <button className="premium-button premium-button-primary" disabled={!liveAccess || status === "loading"}>
               <Search size={16} />
               {status === "loading" ? "Scanning" : "Scan"}
             </button>
@@ -474,6 +476,14 @@ export function CommandCenterLaunch({ signedIn }: CommandCenterLaunchProps) {
               <CircleAlert size={18} />
               <span>Demo mode is visible. Sign in to save leagues and unlock live tool handoffs.</span>
               <Link href="/login?next=/command-center">Sign in <ArrowRight size={14} /></Link>
+            </div>
+          ) : null}
+
+          {signedIn && !liveAccess ? (
+            <div className="command-status-note warning">
+              <CircleAlert size={18} />
+              <span>Your account is in preview mode. Choose a plan to save leagues and unlock live tool handoffs.</span>
+              <Link href="/pricing">View plans <ArrowRight size={14} /></Link>
             </div>
           ) : null}
 

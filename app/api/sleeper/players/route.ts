@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getEntitlementState } from "@/lib/entitlements";
 import { getSleeperNflPlayers, type SleeperPlayer } from "@/lib/sleeper/client";
 
 function normalizePlayer(playerId: string, player?: SleeperPlayer): SleeperPlayer | null {
@@ -24,6 +25,19 @@ function normalizePlayer(playerId: string, player?: SleeperPlayer): SleeperPlaye
 }
 
 export async function GET(request: Request) {
+  const entitlement = await getEntitlementState("draft_pro");
+
+  if (!entitlement.signedIn) {
+    return NextResponse.json({ error: "Sign in to use live player lookup." }, { status: 401 });
+  }
+
+  if (!entitlement.hasPaidAccess) {
+    return NextResponse.json(
+      { error: "An active Draft Pro or Fantasy Elite plan is required for live player lookup." },
+      { status: 402 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const ids = [...new Set((searchParams.get("ids") || "")
     .split(",")

@@ -32,11 +32,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A valid checkout plan is required." }, { status: 400 });
     }
 
-    const planConfig = getStripePlanConfig(plan);
-    const price = getStripePriceId(plan);
     const supabase = hasSupabaseBrowserConfig() ? await createSupabaseServerClient() : null;
     const { data: userResult } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
     const user = userResult.user;
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "Sign in or create an account before checkout so paid access can unlock on your account.",
+          loginUrl: "/login?next=/pricing"
+        },
+        { status: 401 }
+      );
+    }
+
+    const planConfig = getStripePlanConfig(plan);
+    const price = getStripePriceId(plan);
     const profile = user && hasSupabaseAdminConfig()
       ? await ensureBillingProfile(user.id, user.email)
       : null;

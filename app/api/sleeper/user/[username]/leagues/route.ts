@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getEntitlementState } from "@/lib/entitlements";
 import { getSleeperUser, getSleeperUserLeagues } from "@/lib/sleeper/client";
 
 function getSeason(request: Request) {
@@ -7,6 +8,19 @@ function getSeason(request: Request) {
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ username: string }> }) {
+  const entitlement = await getEntitlementState("draft_pro");
+
+  if (!entitlement.signedIn) {
+    return NextResponse.json({ error: "Sign in to scan Sleeper leagues." }, { status: 401 });
+  }
+
+  if (!entitlement.hasPaidAccess) {
+    return NextResponse.json(
+      { error: "An active Draft Pro or Fantasy Elite plan is required to scan live Sleeper leagues." },
+      { status: 402 }
+    );
+  }
+
   try {
     const { username } = await params;
     const season = getSeason(request);

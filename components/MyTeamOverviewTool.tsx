@@ -363,7 +363,7 @@ function rosterPositionGroup(player?: LeagueToolPlayer) {
 }
 
 export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolProps) {
-  const liveAccess = signedIn || paidAccess;
+  const liveAccess = paidAccess;
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
@@ -706,7 +706,7 @@ export function MyTeamOverviewTool({ paidAccess, signedIn }: MyTeamOverviewToolP
 
     if (!liveAccess) {
       setStatus("error");
-      setError("Sign in to run live Team Hub scans. Use the demo to preview the workflow.");
+      setError(signedIn ? "Choose a plan to run live Team Hub scans. Use the demo to preview the workflow." : "Sign in to run live Team Hub scans. Use the demo to preview the workflow.");
       return;
     }
 

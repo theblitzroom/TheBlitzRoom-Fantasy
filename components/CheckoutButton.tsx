@@ -25,7 +25,12 @@ export function CheckoutButton({ plan, children, highlighted, endpoint = "/api/s
         body: JSON.stringify({ plan })
       });
 
-      const data = await response.json() as { url?: string; error?: string };
+      const data = await response.json() as { url?: string; loginUrl?: string; error?: string };
+
+      if (response.status === 401 && data.loginUrl) {
+        window.location.assign(data.loginUrl);
+        return;
+      }
 
       if (!response.ok || !data.url) {
         throw new Error(data.error ?? "Checkout could not be started.");

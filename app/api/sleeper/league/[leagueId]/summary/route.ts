@@ -15,6 +15,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ lea
     return NextResponse.json({ error: "Sign in to use the live League Hub." }, { status: 401 });
   }
 
+  if (!entitlement.hasPaidAccess) {
+    return NextResponse.json(
+      { error: "An active Draft Pro or Fantasy Elite plan is required for live League Hub data." },
+      { status: 402 }
+    );
+  }
+
   try {
     const { leagueId } = await params;
     const [league, users, rosters, drafts, tradedPicksResult] = await Promise.all([
