@@ -1,4 +1,5 @@
 import { PricingCards } from "@/components/PricingCards";
+import { PricingCheckoutLauncher } from "@/components/PricingCheckoutLauncher";
 import { SectionShell } from "@/components/SectionShell";
 
 export default function PricingPage() {
@@ -8,6 +9,7 @@ export default function PricingPage() {
       title="Simple access for draft season."
       description="Start with a preview, choose monthly access, or use a season pass if you want the draft room and league tools available through the 2026 fantasy season."
     >
+      <PricingCheckoutLauncher />
       <PricingCards />
     </SectionShell>
   );

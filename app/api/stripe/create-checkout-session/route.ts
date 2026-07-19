@@ -36,10 +36,11 @@ export async function POST(request: Request) {
     const user = userResult.user;
 
     if (!user) {
+      const pricingReturnPath = `/pricing?checkoutPlan=${encodeURIComponent(plan)}`;
       return NextResponse.json(
         {
           error: "Sign in or create an account before checkout so paid access can unlock on your account.",
-          loginUrl: "/login?next=/pricing"
+          loginUrl: `/login?next=${encodeURIComponent(pricingReturnPath)}`
         },
         { status: 401 }
       );
