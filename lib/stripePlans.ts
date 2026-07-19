@@ -70,10 +70,10 @@ export function getStripePlanConfig(plan: CheckoutPlan) {
 
 export function getStripePriceId(plan: CheckoutPlan) {
   const config = getStripePlanConfig(plan);
-  const priceId = process.env[config.priceEnvKey];
+  const priceId = normalizeStripeEnv(process.env[config.priceEnvKey]);
 
-  if (!priceId) {
-    throw new Error(`Missing ${config.priceEnvKey}.`);
+  if (!priceId.startsWith("price_")) {
+    throw new Error(`${config.priceEnvKey} must be a real Stripe price ID that starts with price_.`);
   }
 
   return priceId;
@@ -81,11 +81,7 @@ export function getStripePriceId(plan: CheckoutPlan) {
 
 export function getStripeTestPriceId(plan: CheckoutPlan) {
   const config = getStripePlanConfig(plan);
-  const priceId = process.env[config.testPriceEnvKey];
-
-  if (!priceId) {
-    throw new Error(`Missing ${config.testPriceEnvKey}.`);
-  }
+  const priceId = normalizeStripeEnv(process.env[config.testPriceEnvKey]);
 
   if (!priceId.startsWith("price_")) {
     throw new Error(`${config.testPriceEnvKey} must be a Stripe price ID.`);
@@ -95,25 +91,34 @@ export function getStripeTestPriceId(plan: CheckoutPlan) {
 }
 
 export function getPlanFromPriceId(priceId: string | null | undefined): SubscriptionPlan {
-  if (!priceId) {
+  const normalizedPriceId = normalizeStripeEnv(priceId ?? undefined);
+
+  if (!normalizedPriceId) {
     return "preview";
   }
 
   const matchingConfig = Object.values(stripePlans).find(
-    (config) => priceId === process.env[config.priceEnvKey] || priceId === process.env[config.testPriceEnvKey]
+    (config) => normalizedPriceId === normalizeStripeEnv(process.env[config.priceEnvKey]) || normalizedPriceId === normalizeStripeEnv(process.env[config.testPriceEnvKey])
   );
 
   return matchingConfig?.accessPlan ?? "preview";
 }
 
 export function getSeasonAccessEndFromPriceId(priceId: string | null | undefined) {
-  if (!priceId) {
+  const normalizedPriceId = normalizeStripeEnv(priceId ?? undefined);
+
+  if (!normalizedPriceId) {
     return null;
   }
 
   const matchingConfig = Object.values(stripePlans).find(
-    (config) => priceId === process.env[config.priceEnvKey] || priceId === process.env[config.testPriceEnvKey]
+    (config) => normalizedPriceId === normalizeStripeEnv(process.env[config.priceEnvKey]) || normalizedPriceId === normalizeStripeEnv(process.env[config.testPriceEnvKey])
   );
 
   return matchingConfig?.accessEndsAt ?? null;
+}
+
+function normalizeStripeEnv(value: string | undefined) {
+  const normalized = value?.trim().replace(/^["']|["']$/g, "");
+  return normalized && normalized !== "Encrypted" ? normalized : "";
 }
