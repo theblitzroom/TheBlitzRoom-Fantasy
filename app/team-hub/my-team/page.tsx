@@ -10,8 +10,8 @@ export default async function MyTeamPage() {
   return (
     <SectionShell
       eyebrow="Team hub"
-      title="A detailed command view for your roster."
-      description="Scan a Sleeper league, identify your roster, and review the competitive window, roster health, lineup structure, and next move."
+      title="Your roster, in full context."
+      description="See the competitive window, lineup strength, age curve, position value, future picks, and the next move for your team."
     >
       <MyTeamOverviewTool
         paidAccess={entitlement.hasPaidAccess}

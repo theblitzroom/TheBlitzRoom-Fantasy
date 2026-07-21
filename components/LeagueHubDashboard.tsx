@@ -30,6 +30,16 @@ import {
   subscribeStoredLeagueConnection,
   updateStoredLeagueSelection
 } from "@/lib/sleeper/leagueConnection";
+import {
+  AppHero,
+  MetricTile,
+  PremiumActionButton,
+  ProductBadge,
+  SegmentControl,
+  StateCallout,
+  SurfaceCard,
+  cn
+} from "@/components/DesignPrimitives";
 
 type SleeperUser = {
   user_id?: string;
@@ -128,7 +138,7 @@ type ValueStandingRow = {
 const demoLeagues: SleeperLeague[] = [
   {
     league_id: "demo-dynasty-war-room",
-    name: "Dynasty War Room",
+    name: "Apex League",
     season: "2026",
     status: "in_season",
     total_rosters: 12,
@@ -606,39 +616,41 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   }
 
   return (
-    <div className="league-hub">
+    <div className="league-hub league-hub-redesign tb-page">
       <ProductCommandNav />
-      <section className="league-command-panel" aria-label="League command overview">
-        <div className="league-command-copy">
-          <span className="badge badge-premium">
+      <AppHero
+        aria-label="League command overview"
+        className="league-command-panel"
+        eyebrow="League Hub"
+        status={(
+          <ProductBadge variant={liveAccess ? "success" : "premium"}>
             <Activity size={14} />
-            {liveAccess ? "Live League Hub" : "League Hub preview"}
-          </span>
-          <h2>{activeLeague ? activeLeague.name : "Connect Sleeper and load the league."}</h2>
-          <p>
+            {liveAccess ? "Live league access" : "Preview mode"}
+          </ProductBadge>
+        )}
+        title={activeLeague ? activeLeague.name : "Connect Sleeper and load the league."}
+        description={(
+          <>
             Scan a Sleeper username, choose a league, and turn public league settings,
             rosters, managers, and draft state into a usable power board.
-          </p>
-          {!liveAccess ? (
-            <div className="league-access-note">
-              <CircleAlert size={18} />
-              <span>Logged-out visitors see a demo preview. Sign in to unlock live Sleeper scans, power rankings, roster tables, and draft handoff.</span>
-              <Link href="/login?next=/league-hub">Sign in <ArrowRight size={14} /></Link>
-            </div>
-          ) : null}
-        </div>
-        <div className="league-stat-grid">
+          </>
+        )}
+      >
+        <div className="league-stat-grid tb-metric-grid tb-metric-grid-four">
           {leagueStats.map((stat) => (
-            <div className="league-stat" key={stat.label}>
-              <span>{stat.label}</span>
-              <strong>{stat.value}</strong>
-              <small>{stat.detail}</small>
-            </div>
+            <MetricTile detail={stat.detail} key={stat.label} label={stat.label} value={stat.value} />
           ))}
         </div>
-      </section>
+        {!liveAccess ? (
+          <StateCallout className="league-access-note" variant="premium">
+            <CircleAlert size={18} />
+            <span>Logged-out visitors see a demo preview. Sign in to unlock live Sleeper scans, power rankings, roster tables, and draft handoff.</span>
+            <Link href="/login?next=/league-hub">Sign in <ArrowRight size={14} /></Link>
+          </StateCallout>
+        ) : null}
+      </AppHero>
 
-      <section className="league-connect-panel" aria-label="Connect Sleeper league">
+      <SurfaceCard className="league-connect-panel" variant="data" aria-label="Connect Sleeper league">
         <form className="league-connect-form" onSubmit={scanLeagues}>
           <label>
             <span>Sleeper username</span>
@@ -657,27 +669,27 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
               disabled={!liveAccess}
             />
           </label>
-          <button className="premium-button premium-button-primary" disabled={!liveAccess || scanStatus === "loading"}>
+          <PremiumActionButton disabled={!liveAccess || scanStatus === "loading"}>
             <RefreshCcw size={16} />
             {scanStatus === "loading" ? "Scanning" : "Scan leagues"}
-          </button>
-          <button className="premium-button premium-button-secondary" onClick={loadDemo} type="button">
+          </PremiumActionButton>
+          <PremiumActionButton onClick={loadDemo} type="button" variant="secondary">
             Demo league
-          </button>
+          </PremiumActionButton>
         </form>
 
         {error ? (
-          <div className="league-error">
+          <StateCallout className="league-error" variant="danger">
             <CircleAlert size={18} />
             {error}
-          </div>
+          </StateCallout>
         ) : null}
 
         {scanStatus === "ready" ? (
-          <div className="league-scan-meta">
+          <StateCallout className="league-scan-meta" variant="success">
             <strong>{loadedUser?.display_name || loadedUser?.username || "Sleeper user"} loaded</strong>
             <span>{leagues.length} league{leagues.length === 1 ? "" : "s"} found for {season}</span>
-          </div>
+          </StateCallout>
         ) : null}
 
         {leagues.length ? (
@@ -700,19 +712,19 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             })}
           </div>
         ) : null}
-      </section>
+      </SurfaceCard>
 
       <section className="league-layout">
-        <article className="league-rankings-card">
+        <SurfaceCard className="league-rankings-card" variant="data">
           <div className="league-card-header">
             <div>
               <span className="eyebrow">League rankings</span>
               <h2>Power, timeline, and leverage</h2>
             </div>
-            <span className="league-filter-pill">
+            <ProductBadge className="league-filter-pill" variant="muted">
               <Gauge size={14} />
               {summaryStatus === "loading" ? "Loading" : `${formatLeagueType(activeLeague)} lens`}
-            </span>
+            </ProductBadge>
           </div>
 
           <div className="league-table-wrap">
@@ -735,7 +747,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                     <td>
                       <ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} />
                     </td>
-                    <td><span className="league-tier">{row.tier}</span></td>
+                    <td><span className="league-tier" data-tier={row.tier.toLowerCase()}>{row.tier}</span></td>
                     <td>
                       <div className="score-cell">
                         <strong>{row.score}</strong>
@@ -755,10 +767,10 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
               </tbody>
             </table>
           </div>
-        </article>
+        </SurfaceCard>
 
         <aside className="league-side-stack" aria-label="League context">
-          <article className="league-side-card">
+          <SurfaceCard className="league-side-card" variant="sports">
             <div className="league-card-header compact">
               <span className="eyebrow">Room shape</span>
               <Trophy size={18} />
@@ -773,9 +785,9 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             </div>
             <p>{draftId ? "A draft is connected, so this league can hand off to live draft sync." : "No draft ID was found for this league yet."}</p>
             {draftId ? <Link className="league-inline-link" href={`/draft-room?draftId=${encodeURIComponent(draftId)}`}>Open Draft Room <ArrowRight size={14} /></Link> : null}
-          </article>
+          </SurfaceCard>
 
-          <article className="league-side-card">
+          <SurfaceCard className="league-side-card">
             <div className="league-card-header compact">
               <span className="eyebrow">Settings snapshot</span>
               <Users size={18} />
@@ -788,25 +800,19 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                 </div>
               ))}
             </div>
-          </article>
+          </SurfaceCard>
         </aside>
       </section>
 
       <section className="league-value-board-grid" aria-label="League value boards">
-        <article className="league-value-board">
+        <SurfaceCard className="league-value-board" variant="data">
           <div className="league-card-header compact">
             <div>
               <span className="eyebrow">Dynasty Value by Position</span>
               <h2>Long-window roster leverage</h2>
             </div>
           </div>
-          <div className="value-filter-row" aria-label="Dynasty position filters">
-            {dynastyPositions.map((position) => (
-              <button className={dynastyPosition === position ? "active" : ""} key={position} onClick={() => setDynastyPosition(position)} type="button">
-                {position}
-              </button>
-            ))}
-          </div>
+          <SegmentControl ariaLabel="Dynasty position filters" className="value-filter-row" onChange={setDynastyPosition} options={dynastyPositions} value={dynastyPosition} />
           <div className="league-value-list">
             {dynastyValueRows.map((row) => (
               <div className="league-value-row" key={`dynasty-${row.rosterId}`}>
@@ -818,22 +824,16 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
               </div>
             ))}
           </div>
-        </article>
+        </SurfaceCard>
 
-        <article className="league-value-board">
+        <SurfaceCard className="league-value-board" variant="data">
           <div className="league-card-header compact">
             <div>
               <span className="eyebrow">Redraft Value by Position</span>
               <h2>Current scoring power</h2>
             </div>
           </div>
-          <div className="value-filter-row" aria-label="Redraft position filters">
-            {redraftPositions.map((position) => (
-              <button className={redraftPosition === position ? "active" : ""} key={position} onClick={() => setRedraftPosition(position)} type="button">
-                {position}
-              </button>
-            ))}
-          </div>
+          <SegmentControl ariaLabel="Redraft position filters" className="value-filter-row" onChange={setRedraftPosition} options={redraftPositions} value={redraftPosition} />
           <div className="league-value-list">
             {redraftValueRows.map((row) => (
               <div className="league-value-row" key={`redraft-${row.rosterId}`}>
@@ -845,16 +845,16 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
               </div>
             ))}
           </div>
-        </article>
+        </SurfaceCard>
       </section>
 
-      <section className="league-economy-panel" aria-label="League economy">
+      <SurfaceCard className="league-economy-panel" variant="data" aria-label="League economy">
         <div className="league-card-header">
           <div>
             <span className="eyebrow">League Economy</span>
             <h2>Who has points, who has future leverage, and who is stuck</h2>
           </div>
-          <span className="league-filter-pill">Normalized to room average</span>
+          <ProductBadge className="league-filter-pill" variant="muted">Normalized to room average</ProductBadge>
         </div>
         <div className="economy-map" aria-label="Current value and future leverage chart">
           <span className="economy-axis top">Future leverage</span>
@@ -883,7 +883,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             </article>
           ))}
         </div>
-      </section>
+      </SurfaceCard>
 
       <section className="league-card-grid" aria-label="Team callouts">
         {[
@@ -893,37 +893,37 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
         ].map((card) => {
           const Icon = card.icon;
           return (
-            <article className="league-team-card" key={card.title}>
+            <SurfaceCard className={cn("league-team-card", card.title === "Best Title Window" && "tb-card-premium")} key={card.title} variant="sports">
               <div className="league-team-icon"><Icon size={20} /></div>
               <span className="eyebrow">{card.title}</span>
               <h3>{card.row?.team ?? "Load league"}</h3>
               <p>{card.copy}</p>
               <strong>{card.row ? `${card.row.score} power score` : "Waiting for data"}</strong>
-            </article>
+            </SurfaceCard>
           );
         })}
       </section>
 
-      <section className="league-signal-panel" aria-label="League signals">
+      <SurfaceCard className="league-signal-panel" variant="data" aria-label="League signals">
         <div className="league-card-header">
           <div>
             <span className="eyebrow">Actionable signals</span>
             <h2>What the league is telling you</h2>
           </div>
-          <span className="league-filter-pill">
+          <ProductBadge className="league-filter-pill" variant="premium">
             <Target size={14} />
             Strategy layer
-          </span>
+          </ProductBadge>
         </div>
         <div className="league-signal-grid">
           {leagueSignals.map(([title, copy]) => (
-            <article className="league-signal-card" key={title}>
+            <SurfaceCard className="league-signal-card" key={title}>
               <h3>{title}</h3>
               <p>{copy}</p>
-            </article>
+            </SurfaceCard>
           ))}
         </div>
-      </section>
+      </SurfaceCard>
     </div>
   );
 }

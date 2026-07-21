@@ -1,4 +1,4 @@
-# TheBlitzRoom Fantasy App
+# theblitzroom Fantasy App
 
 A dynamic Next.js foundation for the premium fantasy football draft tool. The static demo remains in `../fantasy-draft-tool`; this app is the path toward real accounts, paid subscriptions, saved leagues, and read-only Sleeper live sync.
 
@@ -68,13 +68,13 @@ The live account routes are:
 
 Create two one-time season pass prices in Stripe:
 
-- TheBlitzRoom Draft Pro 2026 Season Pass: live draft support, Sleeper sync, rankings, and draft recommendations.
-- TheBlitzRoom Fantasy Elite 2026 Season Pass: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
+- theblitzroom Draft Pro 2026 Season Pass: live draft support, Sleeper sync, rankings, and draft recommendations.
+- theblitzroom Fantasy Elite 2026 Season Pass: Draft Pro plus redraft and dynasty modes, league hub, power rankings, rosters, and trade value.
 
 Create two monthly subscription prices in Stripe:
 
-- TheBlitzRoom Draft Pro Monthly: $7.99 per month.
-- TheBlitzRoom Fantasy Elite Monthly: $14.99 per month.
+- theblitzroom Draft Pro Monthly: $7.99 per month.
+- theblitzroom Fantasy Elite Monthly: $14.99 per month.
 
 Paste the price IDs into `.env.local`:
 
@@ -116,8 +116,8 @@ Required test env vars:
 
 Create matching products/prices in Stripe test mode:
 
-- TheBlitzRoom Draft Pro Season: one-time `$39.99`
-- TheBlitzRoom Fantasy Elite Season: one-time `$59.99`
+- theblitzroom Draft Pro Season: one-time `$39.99`
+- theblitzroom Fantasy Elite Season: one-time `$59.99`
 - Draft Pro Monthly: recurring monthly `$7.99`
 - Fantasy Elite Monthly: recurring monthly `$14.99`
 

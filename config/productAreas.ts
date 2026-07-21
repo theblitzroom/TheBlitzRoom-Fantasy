@@ -1,6 +1,6 @@
 export const productAreas = [
   {
-    title: "Draft Command Center",
+    title: "Command Center",
     href: "/command-center",
     eyebrow: "Launch pad",
     description: "One command surface for league scans, live draft prep, roster reads, and the next best tool to open.",

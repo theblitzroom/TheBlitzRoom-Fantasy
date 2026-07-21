@@ -12,8 +12,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { PremiumButton } from "./PremiumButton";
 
 const visibleNav = navItems.filter((item) => item.label !== "Billing");
-const productNav = productSuiteGroups.flatMap((group) => group.items);
-const primaryNav = visibleNav.filter((item) => ["Home", "Draft Room", "Pricing"].includes(item.label));
+const primaryNav = visibleNav.filter((item) => item.label === "Home");
 const mobilePrimaryNav = visibleNav.filter((item) => ["Home", "Command Center", "Draft Room", "Team Hub"].includes(item.label));
 const mobileUtilityNav = visibleNav.filter((item) => ["Pricing", "FAQ"].includes(item.label));
 
@@ -24,7 +23,6 @@ export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const productActive = productNav.some((item) => pathname === item.href);
   const defaultMobileGroup = useMemo(() => {
     return productSuiteGroups.find((group) => group.label !== "Market" && group.items.some((item) => pathname === item.href))?.label ?? "";
   }, [pathname]);
@@ -106,53 +104,18 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link className="brand-lockup" href="/" aria-label="TheBlitzRoom Fantasy home">
+      <Link className="brand-lockup" href="/" aria-label="theblitzroom home">
         <span className="brand-mark">
           <Image src="/theblitzroom-logo.png" alt="" width={46} height={46} priority />
         </span>
         <span>
-          <strong>TheBlitzRoom</strong>
-          <small>Fantasy</small>
+          <strong>theblitzroom</strong>
+          <small>Fantasy intelligence</small>
         </span>
       </Link>
 
       <nav className="desktop-nav" aria-label="Primary navigation">
-        {primaryNav.slice(0, 1).map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link className={active ? "nav-link active" : "nav-link"} href={item.href} key={item.href}>
-              {item.label}
-            </Link>
-          );
-        })}
-        <details className={productActive ? "nav-menu active" : "nav-menu"}>
-          <summary>
-            Product
-            <ChevronDown size={14} />
-          </summary>
-          <div className="nav-menu-panel product-mega-panel">
-            {productSuiteGroups.map((group) => (
-              <section className="nav-menu-group" key={group.label}>
-                <span className="nav-menu-group-title">{group.label}</span>
-                <p>{group.description}</p>
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const active = pathname === item.href;
-                  return (
-                    <Link className={active ? "nav-menu-link active" : "nav-menu-link"} href={item.href} key={`${group.label}-${item.href}`}>
-                      <Icon size={16} />
-                      <span>
-                        <strong>{item.label}</strong>
-                        <small>{item.description}</small>
-                      </span>
-                    </Link>
-                  );
-                })}
-              </section>
-            ))}
-          </div>
-        </details>
-        {primaryNav.slice(1).map((item) => {
+        {primaryNav.map((item) => {
           const active = pathname === item.href;
           return (
             <Link className={active ? "nav-link active" : "nav-link"} href={item.href} key={item.href}>
@@ -181,7 +144,7 @@ export function SiteHeader() {
               </button>
             </div>
           ) : authReady ? (
-            <Link className="header-account-pill header-account-pill-login" href="/login" aria-label="Sign in to TheBlitzRoom">
+            <Link className="header-account-pill header-account-pill-login" href="/login" aria-label="Sign in to theblitzroom">
               <span className="header-account-avatar" aria-hidden="true">
                 <LogIn size={16} />
               </span>
@@ -194,7 +157,7 @@ export function SiteHeader() {
             <span className="header-auth-loading" aria-label="Checking account status" />
           )}
         </span>
-        <PremiumButton href="/pricing" variant="secondary">Plans</PremiumButton>
+        <PremiumButton href="/pricing" variant="secondary">View plans</PremiumButton>
         <button className="icon-button mobile-menu-button" onClick={() => setOpen(true)} aria-label="Open menu">
           <Menu size={20} />
         </button>
@@ -206,7 +169,7 @@ export function SiteHeader() {
             <div className="mobile-drawer-top">
               <div>
                 <span className="eyebrow">Menu</span>
-                <strong>TheBlitzRoom</strong>
+                <strong>Fantasy intelligence</strong>
               </div>
               <button className="icon-button close-button" onClick={() => setOpen(false)} aria-label="Close menu">
                 <X size={20} />

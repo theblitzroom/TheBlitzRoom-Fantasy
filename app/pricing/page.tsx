@@ -6,8 +6,8 @@ export default function PricingPage() {
   return (
     <SectionShell
       eyebrow="Pricing"
-      title="Simple access for draft season."
-      description="Start with a preview, choose monthly access, or use a season pass if you want the draft room and league tools available through the 2026 fantasy season."
+      title="Choose your season."
+      description="Preview the product, choose monthly access, or use a season pass for the Draft Room and complete league toolkit through 2026."
     >
       <PricingCheckoutLauncher />
       <PricingCards />

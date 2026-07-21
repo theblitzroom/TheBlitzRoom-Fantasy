@@ -8,7 +8,7 @@ export default function ResetPasswordPage() {
     <SectionShell
       eyebrow="Reset password"
       title="Get back into your account."
-      description="Use the secure reset link from your email to set a new password for TheBlitzRoom."
+      description="Use the secure reset link from your email to set a new password for theblitzroom."
     >
       <ResetPasswordPanel />
     </SectionShell>

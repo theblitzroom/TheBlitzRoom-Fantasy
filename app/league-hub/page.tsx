@@ -10,8 +10,8 @@ export default async function LeagueHubPage() {
   return (
     <SectionShell
       eyebrow="League hub"
-      title="Read the league before you draft the player."
-      description="A cleaner league command view for rankings, contender windows, roster pressure, pick leverage, and the settings that shape every recommendation."
+      title="Know the league. Find the leverage."
+      description="Rank every roster, read contender windows, track pick capital, and see the settings that shape every recommendation."
     >
       <LeagueHubDashboard
         paidAccess={entitlement.hasPaidAccess}

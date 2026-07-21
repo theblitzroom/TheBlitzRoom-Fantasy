@@ -136,7 +136,7 @@ const launchTools = [
 const demoLeagues: SleeperLeague[] = [
   {
     league_id: "demo-dynasty-war-room",
-    name: "Dynasty War Room",
+    name: "Apex League",
     season: "2026",
     status: "in_season",
     total_rosters: 12,
@@ -206,7 +206,7 @@ function getPrimaryCommand(league?: SleeperLeague | null) {
 
   if (league.status === "in_season") {
     return {
-      title: "Work the weekly edge before the market moves.",
+      title: "Stay one move ahead.",
       body: "Start with matchup pressure and waivers, then use trade tools if your roster has a clear surplus or deadline need.",
       label: "In-season workflow",
       href: "/matchup"

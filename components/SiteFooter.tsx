@@ -28,12 +28,12 @@ export function SiteFooter() {
   return (
     <footer className="site-footer">
       <div className="footer-brand">
-        <Link className="brand-lockup" href="/" aria-label="TheBlitzRoom Fantasy home">
+        <Link className="brand-lockup" href="/" aria-label="theblitzroom home">
           <span className="brand-mark">
             <Image src="/theblitzroom-logo.png" alt="" width={46} height={46} />
           </span>
           <span>
-            <strong>TheBlitzRoom</strong>
+            <strong>theblitzroom</strong>
             <small>Fantasy</small>
           </span>
         </Link>

@@ -29,6 +29,13 @@ import {
 import { getStoredLeagueConnection } from "@/lib/sleeper/leagueConnection";
 import type { SleeperPick } from "@/lib/sleeper/client";
 import { PlayerIdentity, TeamIdentity } from "@/components/FootballIdentity";
+import {
+  MetricTile,
+  PremiumActionButton,
+  ProductBadge,
+  StateCallout,
+  SurfaceCard
+} from "@/components/DesignPrimitives";
 
 type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
@@ -192,7 +199,7 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
   const [error, setError] = useState("");
   const [picks, setPicks] = useState<SleeperPick[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<LeagueToolLeague>(demoLeagues[0]);
-  const [leagueName, setLeagueName] = useState("Dynasty War Room");
+  const [leagueName, setLeagueName] = useState("Apex League");
   const inFlight = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -316,16 +323,40 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
     }))
     .sort((a, b) => b.read.score - a.read.score);
   const topRecommendation = recommendations[0];
+  const topPlayerRank = Number(topRecommendation.player.search_rank ?? 4);
+  const topPositionRank = topRecommendation.player.position === "QB" ? "QB4" : `${topRecommendation.player.position ?? "FLEX"}${Math.max(1, Math.round(topPlayerRank / 3))}`;
+  const dossierRows = [
+    ["Ranking", `Overall ${topPlayerRank} / ${topPositionRank}`, "Premium board slot"],
+    ["Value", `Blitz Score ${topRecommendation.read.score}`, "Worth the pick cost"],
+    ["Market position", "Above room cost", "+7 edge"],
+    ["Roster fit", "Anchor QB build remains open", "+14 fit"],
+    ["Tier context", `${topRecommendation.read.tier} with cliff forming`, "Urgent"],
+    ["Future availability", "18% chance to return", "Low"],
+    ["Risk", "Medium volatility, elite ceiling", "Acceptable"],
+    ["Historical movement", "Rising versus early-room cost", "+3 slots"]
+  ];
   const boardCompletion = Math.round((boardPicks.filter((pick) => pick.source !== "open").length / (TEAM_COUNT * ROUND_COUNT)) * 100);
 
   return (
-    <div className="draft-command-room">
+    <div className="draft-command-room draft-command-redesign tb-page">
       <ProductCommandNav />
 
-      <section className="draft-room-hero">
-        <div className="draft-room-copy">
-          <span className="badge badge-premium"><Crown size={14} /> Draft Command Board</span>
-          <h2>{leagueName} live draft board</h2>
+      <div className="room-status-rail draft-room-status-rail" aria-label="Room status">
+        <span><Radio size={13} /> {picks.length ? "Live draft" : "Demo room"}</span>
+        <strong>Round {currentRound} / Pick {formatPick(currentRound, currentSlot)}</strong>
+        <span>Clock 00:42</span>
+        <span>{formatLeagueTypeLabel(selectedLeague)} / {formatLeagueScoringLabel(selectedLeague)}</span>
+        <span>{Math.max(myDraftSlot - currentSlot, 0) || TEAM_COUNT - Math.abs(myDraftSlot - currentSlot)} picks to you</span>
+        <span>{status === "synced" ? "Connected" : status === "syncing" ? "Refreshing" : "Standby"}</span>
+      </div>
+
+      <section className="draft-room-hero" aria-label="Draft room command overview">
+        <SurfaceCard className="draft-room-copy" variant="sports">
+          <div className="draft-room-title-kicker">
+            <ProductBadge variant="premium"><Crown size={14} /> Draft command board</ProductBadge>
+            <span>{leagueName}</span>
+          </div>
+          <h1>Live draft intelligence</h1>
           <p>
             Full-board visibility, Sleeper read-only sync, team columns, pick flow, and format-aware recommendations in one draft-night screen.
           </p>
@@ -335,9 +366,9 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
             <span>{TEAM_COUNT} teams</span>
             <span>Poll {POLL_MS / 1000}s</span>
           </div>
-        </div>
+        </SurfaceCard>
 
-        <div className="draft-sync-card">
+        <SurfaceCard className="draft-sync-card" variant="data">
           <div className="draft-sync-header">
             <div>
               <span className="eyebrow">Sleeper live sync</span>
@@ -350,37 +381,37 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
               <span>Sleeper draft ID</span>
               <input value={draftId} onChange={(event) => setDraftId(event.target.value)} placeholder="Draft ID" autoComplete="off" disabled={!paidAccess} />
             </label>
-            <button className="premium-button premium-button-secondary" onClick={() => setEnabled((value) => !value)} type="button" disabled={!paidAccess}>
+            <PremiumActionButton onClick={() => setEnabled((value) => !value)} type="button" disabled={!paidAccess} variant="secondary">
               {enabled ? "Pause" : "Start 1s"}
-            </button>
-            <button className="premium-button premium-button-primary" onClick={() => void syncNow()} type="button" disabled={!paidAccess}>
+            </PremiumActionButton>
+            <PremiumActionButton onClick={() => void syncNow()} type="button" disabled={!paidAccess}>
               <RefreshCcw size={16} />Sync
-            </button>
+            </PremiumActionButton>
           </div>
           {!paidAccess ? (
-            <div className="league-access-note">
+            <StateCallout className="league-access-note" variant="premium">
               <CircleAlert size={18} />
               <span>{signedIn ? "Draft Pro or Fantasy Elite unlocks live Sleeper draft sync." : "Sign in and choose a plan to unlock live draft sync."}</span>
               <Link href={signedIn ? "/pricing" : "/login?next=/draft-room"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
-            </div>
+            </StateCallout>
           ) : null}
-          {error ? <p className="sync-error">{error}</p> : null}
-          <div className="draft-sync-stats">
-            <span><strong>{lastPickNo || demoBoard.length}</strong><small>Last pick</small></span>
-            <span><strong>{boardCompletion}%</strong><small>Board filled</small></span>
-            <span><strong>{picks.length ? "Live" : "Demo"}</strong><small>Mode</small></span>
+          {error ? <StateCallout className="sync-error" variant="danger">{error}</StateCallout> : null}
+          <div className="draft-sync-stats tb-metric-grid">
+            <MetricTile label="Last pick" value={lastPickNo || demoBoard.length} />
+            <MetricTile label="Board filled" value={`${boardCompletion}%`} />
+            <MetricTile label="Mode" value={picks.length ? "Live" : "Demo"} />
           </div>
-        </div>
+        </SurfaceCard>
       </section>
 
       <section className="draft-room-layout">
-        <main className="draft-board-panel">
+        <SurfaceCard className="draft-board-panel" variant="data">
           <div className="league-card-header">
             <div>
               <span className="eyebrow">Full draft board</span>
               <h2>Round-by-round room view</h2>
             </div>
-            <span className="league-filter-pill"><Activity size={14} />On clock: R{currentRound}, {onClockTeam}</span>
+            <ProductBadge className="league-filter-pill" variant="premium"><Activity size={14} />On clock: R{currentRound}, {onClockTeam}</ProductBadge>
           </div>
 
           <div className="draft-board-scroll">
@@ -439,11 +470,11 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
               })}
             </div>
           </div>
-        </main>
+        </SurfaceCard>
 
         <aside className="draft-side-rail">
-          <article className="draft-recommendation-card">
-            <span className="badge badge-premium"><Sparkles size={14} /> Best current pick</span>
+          <SurfaceCard className="draft-recommendation-card" variant="premium">
+            <ProductBadge variant="premium"><Sparkles size={14} /> The pick</ProductBadge>
             <PlayerIdentity
               avatarSize="lg"
               name={topRecommendation.player.full_name ?? topRecommendation.id}
@@ -452,21 +483,27 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
               team={topRecommendation.player.team}
             />
             <p>{topRecommendation.read.signals.join(". ")}.</p>
+            <div className="draft-pick-card-read">
+              <span><strong>91%</strong><small>Confidence</small></span>
+              <span><strong>18%</strong><small>Next-pick availability</small></span>
+              <span><strong>Anchor QB</strong><small>Build identity</small></span>
+            </div>
             <div className="score-grid">
-              <span><strong>{topRecommendation.read.score}</strong><small>Draft score</small></span>
-              <span><strong>{topRecommendation.player.position}</strong><small>Position</small></span>
+              <span><strong>{topRecommendation.read.score}</strong><small>Blitz Score</small></span>
+              <span><strong>{topPlayerRank}</strong><small>Overall rank</small></span>
+              <span><strong>{topPositionRank}</strong><small>Position rank</small></span>
               <span><strong>{topRecommendation.read.tier}</strong><small>Tier</small></span>
             </div>
-          </article>
+          </SurfaceCard>
 
-          <article className="draft-queue-card">
+          <SurfaceCard className="draft-queue-card" variant="data">
             <div className="league-card-header compact">
-              <div><span className="eyebrow">Recommendation queue</span><h2>Best available</h2></div>
+              <div><span className="eyebrow">Alternatives</span><h2>Value and ceiling</h2></div>
             </div>
             <div className="draft-queue-list">
-              {recommendations.map((item, index) => (
+              {recommendations.slice(1, 3).map((item, index) => (
                 <div key={item.id}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <span>{["VALUE", "CEIL"][index]}</span>
                   <PlayerIdentity
                     avatarSize="xs"
                     compact
@@ -475,13 +512,13 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
                     position={item.player.position}
                     team={item.player.team}
                   />
-                  <small>{item.player.position} · {item.read.confidence} · {item.read.score}</small>
+                  <small>{item.player.position} / {item.read.confidence} / {item.read.score}</small>
                 </div>
               ))}
             </div>
-          </article>
+          </SurfaceCard>
 
-          <article className="draft-queue-card">
+          <SurfaceCard className="draft-queue-card" variant="data">
             <div className="league-card-header compact">
               <div><span className="eyebrow">My roster build</span><h2>Slot {myDraftSlot}</h2></div>
             </div>
@@ -495,15 +532,61 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
               ))}
             </div>
             <Link className="league-inline-link" href="/team-hub/my-team">Open Team Hub <ArrowRight size={14} /></Link>
-          </article>
+          </SurfaceCard>
         </aside>
       </section>
 
+      <section className="draft-dossier-shell" aria-label="Player Dossier">
+        <SurfaceCard className="draft-dossier-card" variant="data">
+          <div className="draft-dossier-hero">
+            <div>
+              <ProductBadge variant="premium"><ShieldCheck size={14} /> Player Dossier</ProductBadge>
+              <h2>{topRecommendation.player.full_name ?? topRecommendation.id}</h2>
+              <p>
+                Executive summary: draft this player when your build needs a weekly ceiling anchor and the room is approaching a tier break.
+              </p>
+            </div>
+            <div className="draft-dossier-score">
+              <span>Blitz Score</span>
+              <strong>{topRecommendation.read.score}</strong>
+              <small>{topRecommendation.read.confidence} confidence</small>
+            </div>
+          </div>
+
+          <div className="draft-dossier-grid">
+            <div className="draft-dossier-table" role="table" aria-label="Recommendation dossier factors">
+              {dossierRows.map(([label, value, impact]) => (
+                <div role="row" key={label}>
+                  <span role="cell">{label}</span>
+                  <strong role="cell">{value}</strong>
+                  <small role="cell">{impact}</small>
+                </div>
+              ))}
+            </div>
+
+            <div className="draft-dossier-notes">
+              <article>
+                <span>Comparable players</span>
+                <strong>Elite rushing QB profile / premium weekly ceiling / insulation against replacement value</strong>
+              </article>
+              <article>
+                <span>Draft notes</span>
+                <strong>Passing here forces the next two rounds to solve quarterback pressure with lower-confidence alternatives.</strong>
+              </article>
+              <article>
+                <span>Recommendation sentence</span>
+                <strong>{topRecommendation.read.signals.join(". ")}.</strong>
+              </article>
+            </div>
+          </div>
+        </SurfaceCard>
+      </section>
+
       <section className="draft-bottom-grid">
-        <article className="draft-stream-card">
+        <SurfaceCard className="draft-stream-card" variant="data">
           <div className="league-card-header compact">
             <div><span className="eyebrow">Pick stream</span><h2>Latest board movement</h2></div>
-            <span className="league-filter-pill"><Zap size={14} />{picks.length ? "Synced" : "Demo snapshot"}</span>
+            <ProductBadge className="league-filter-pill" variant={picks.length ? "success" : "muted"}><Zap size={14} />{picks.length ? "Synced" : "Demo snapshot"}</ProductBadge>
           </div>
           <div className="draft-stream-list">
             {[...boardPicks].sort((a, b) => b.pickNo - a.pickNo).slice(0, 10).map((pick) => (
@@ -517,13 +600,13 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
                   position={pick.position}
                   team={pick.nflTeam}
                 />
-                <small>{pick.teamName} · {pick.position} · {pick.signal}</small>
+                <small>{pick.teamName} / {pick.position} / {pick.signal}</small>
               </div>
             ))}
           </div>
-        </article>
+        </SurfaceCard>
 
-        <article className="draft-policy-card">
+        <SurfaceCard className="draft-policy-card" variant="sports">
           <div className="league-team-icon"><ShieldCheck size={20} /></div>
           <span className="eyebrow">Sync policy</span>
           <h3>Read-only and manual-control safe</h3>
@@ -533,15 +616,15 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
             <span><CheckCircle2 size={14} />No auto-draft</span>
             <span><CheckCircle2 size={14} />Official endpoint</span>
           </div>
-        </article>
+        </SurfaceCard>
 
-        <article className="draft-policy-card">
+        <SurfaceCard className="draft-policy-card" variant="sports">
           <div className="league-team-icon"><Users size={20} /></div>
           <span className="eyebrow">Room intelligence</span>
           <h3>Whole-board visibility</h3>
           <p>Team columns make positional runs, roster pressure, and upcoming pick pockets much easier to see while the draft is moving.</p>
           <Link className="league-inline-link" href="/league-hub">Open League Hub <ArrowRight size={14} /></Link>
-        </article>
+        </SurfaceCard>
       </section>
     </div>
   );

@@ -39,11 +39,11 @@ type PlatformConnectionStatus = {
 
 function formatPlan(plan: string) {
   if (plan === "dynasty_elite") {
-    return "TheBlitzRoom Fantasy Elite";
+    return "theblitzroom Fantasy Elite";
   }
 
   if (plan === "draft_pro") {
-    return "TheBlitzRoom Draft Pro";
+    return "theblitzroom Draft Pro";
   }
 
   return "Preview";
@@ -120,7 +120,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     return (
       <SectionShell
         eyebrow="Account"
-        title="Sign in or create your TheBlitzRoom account."
+        title="Sign in or create your theblitzroom account."
         description="Accounts keep your subscription, billing, saved leagues, and draft setup tied to one login."
       >
         <div className="account-grid">
@@ -238,7 +238,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   return (
     <SectionShell
       eyebrow="Account"
-      title="Your TheBlitzRoom account is connected."
+      title="Your theblitzroom account is connected."
       description="Manage subscription access, billing, and the league settings that will power the live fantasy tools."
     >
       <div className="account-grid">

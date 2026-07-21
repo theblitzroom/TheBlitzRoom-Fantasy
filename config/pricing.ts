@@ -26,7 +26,7 @@ export const plans: Plan[] = [
   {
     id: "draft_pro_season",
     billing: "season",
-    name: "TheBlitzRoom Draft Pro",
+    name: "theblitzroom Draft Pro",
     price: "$39.99",
     priceDetail: "2026 season pass",
     badge: "Best draft-night value",
@@ -49,7 +49,7 @@ export const plans: Plan[] = [
   {
     id: "dynasty_elite_season",
     billing: "season",
-    name: "TheBlitzRoom Fantasy Elite",
+    name: "theblitzroom Fantasy Elite",
     price: "$59.99",
     priceDetail: "2026 season pass",
     badge: "Full command center",

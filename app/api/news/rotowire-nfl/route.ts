@@ -255,7 +255,7 @@ async function fetchNewsFeed(feed: NewsFeed): Promise<ParsedNewsItem[]> {
   const response = await fetch(feed.url, {
     headers: {
       Accept: "application/rss+xml, application/xml, text/xml",
-      "User-Agent": "TheBlitzRoomFantasy/1.0"
+      "User-Agent": "theblitzroom/1.0"
     },
     next: { revalidate: 300 }
   });
@@ -333,7 +333,7 @@ async function fetchNbcPlayerNews(): Promise<ParsedNewsItem[]> {
   const response = await fetch(NBC_PLAYER_NEWS_URL, {
     headers: {
       Accept: "text/html",
-      "User-Agent": "TheBlitzRoomFantasy/1.0"
+      "User-Agent": "theblitzroom/1.0"
     },
     next: { revalidate: 300 }
   });

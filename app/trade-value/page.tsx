@@ -29,7 +29,7 @@ export default async function TradeValuePage() {
     <SectionShell
       eyebrow="Trade market"
       title="Turn league context into better offers."
-      description="TheBlitzRoom trade tools combine roster construction, dynasty value, picks, format, and partner fit so you are not guessing from a single value chart."
+      description="theblitzroom trade tools combine roster construction, dynasty value, picks, format, and partner fit so you are not guessing from a single value chart."
     >
       <div className="league-hub trade-value-hub">
         <ProductCommandNav />

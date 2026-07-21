@@ -129,7 +129,7 @@ export type RosterBuildRow = {
 export const demoLeagues: LeagueToolLeague[] = [
   {
     league_id: "demo-dynasty-war-room",
-    name: "Dynasty War Room",
+    name: "Apex League",
     season: "2026",
     status: "in_season",
     total_rosters: 12,
