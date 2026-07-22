@@ -2,8 +2,11 @@ export type SleeperDraft = {
   draft_id: string;
   status: string;
   sport: string;
+  league_id?: string | null;
   settings?: Record<string, number>;
   metadata?: Record<string, string>;
+  draft_order?: Record<string, number>;
+  slot_to_roster_id?: Record<string, number>;
 };
 
 export type SleeperPick = {
@@ -25,6 +28,7 @@ export type SleeperUser = {
   user_id?: string;
   username?: string;
   display_name?: string;
+  avatar?: string | null;
 };
 
 export type SleeperLeague = {

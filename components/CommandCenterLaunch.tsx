@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ArrowRight,
   BarChart3,
   CircleAlert,
@@ -14,6 +15,7 @@ import {
   Radio,
   Search,
   ShieldCheck,
+  Sparkles,
   Swords,
   Trophy,
   Users,
@@ -381,67 +383,99 @@ export function CommandCenterLaunch({ paidAccess, signedIn }: CommandCenterLaunc
   })).filter((group) => group.tools.length);
 
   return (
-    <div className="command-center-launch">
+    <div className="command-center-launch command-center-refresh">
       <ProductCommandNav />
       <TeamNewsPanel players={[]} />
 
-      <section className="command-context-bar" aria-label="Active command context">
-        <div className="command-context-item primary">
-          <span>Workspace</span>
-          <strong>{selectedLeague?.name ?? "No league selected"}</strong>
-          <small>{displayName}</small>
-        </div>
-        <div className="command-context-item">
-          <span>Status</span>
-          <strong>{statusLabel}</strong>
-          <small>{selectedLeague ? cleanStatus(selectedLeague.status) : "Scan a Sleeper user"}</small>
-        </div>
-        <div className="command-context-item">
-          <span>Format</span>
-          <strong>{selectedLeague ? selectedFormat : "Pending"}</strong>
-          <small>{selectedLeague ? `${selectedScoring} - ${selectedLineup}` : "League settings needed"}</small>
-        </div>
-        <div className="command-context-item">
-          <span>Draft</span>
-          <strong>{selectedLeague?.draft_id ? "Ready" : "Manual"}</strong>
-          <small>{selectedLeague?.draft_id ? "Draft handoff available" : "Add draft ID in Draft Room"}</small>
-        </div>
-      </section>
-
-      <section className="command-ops-grid">
-        <article className="command-priority-card">
-          <div className="command-priority-header">
-            <span className="badge badge-premium">
-              <Zap size={14} />
-              {primaryCommand.label}
-            </span>
-            <span className="league-filter-pill">{selectedLeague ? `${selectedLeague.total_rosters ?? "-"} teams` : "Demo mode"}</span>
+      <section className="command-hero-stage" aria-labelledby="command-center-title">
+        <article className="command-hero-main">
+          <div className="command-hero-topline">
+            <span className="command-hero-kicker"><Zap size={15} /> Fantasy command center</span>
+            <span className="command-live-chip"><i /> {statusLabel}</span>
           </div>
-          <div className="command-priority-copy">
-            <h1>{primaryCommand.title}</h1>
+
+          <div className="command-hero-copy">
+            <span>{primaryCommand.label}</span>
+            <h1 id="command-center-title">{primaryCommand.title}</h1>
             <p>{primaryCommand.body}</p>
           </div>
-          <div className="command-action-grid">
-            {commandActions.map((action) => {
+
+          <div className="command-hero-actions">
+            <Link className="premium-button premium-button-primary" href={gatedHref(primaryCommand.href)}>
+              Open next move <ArrowRight size={16} />
+            </Link>
+            <Link className="premium-button premium-button-secondary" href={gatedHref("/team-hub/my-team")}>
+              Review my roster
+            </Link>
+          </div>
+
+          <div className="command-hero-context" aria-label="Current league context">
+            <div>
+              <span>League</span>
+              <strong>{selectedLeague?.name ?? "No league selected"}</strong>
+              <small>{displayName}</small>
+            </div>
+            <div>
+              <span>Format</span>
+              <strong>{selectedLeague ? selectedFormat : "Pending"}</strong>
+              <small>{selectedLeague ? selectedScoring : "Settings needed"}</small>
+            </div>
+            <div>
+              <span>Lineup</span>
+              <strong>{selectedLeague ? selectedLineup : "Pending"}</strong>
+              <small>{selectedLeague ? `${selectedLeague.total_rosters ?? "-"} teams` : "Connect Sleeper"}</small>
+            </div>
+            <div>
+              <span>Draft</span>
+              <strong>{selectedLeague?.draft_id ? "Connected" : "Manual"}</strong>
+              <small>{selectedLeague?.draft_id ? "Handoff ready" : "Draft ID optional"}</small>
+            </div>
+          </div>
+        </article>
+
+        <aside className="command-briefing-panel" aria-label="Live command briefing">
+          <div className="command-briefing-header">
+            <span><Activity size={15} /> Live command brief</span>
+            <strong>{selectedLeague?.name ?? "Demo workspace"}</strong>
+          </div>
+
+          <div className="command-briefing-primary">
+            <span><Sparkles size={14} /> Recommended route</span>
+            <h2>{commandActions[0].title}</h2>
+            <p>{commandActions[0].detail}</p>
+            <Link href={gatedHref(commandActions[0].href)}>Open workspace <ArrowRight size={14} /></Link>
+          </div>
+
+          <div className="command-briefing-grid">
+            {commandActions.slice(1).map((action) => {
               const Icon = action.icon;
 
               return (
-                <Link className="command-action-card" href={gatedHref(action.href)} key={action.title}>
-                  <span><Icon size={17} />{action.label}</span>
+                <Link className="command-briefing-action" href={gatedHref(action.href)} key={action.title}>
+                  <span><Icon size={16} /> {action.label}</span>
                   <strong>{action.title}</strong>
                   <small>{action.detail}</small>
+                  <ArrowRight size={14} />
                 </Link>
               );
             })}
           </div>
-        </article>
 
-        <aside className="command-control-card">
-          <div className="command-control-header">
-            <span className="eyebrow">League connection</span>
-            <h2>Load once, use everywhere.</h2>
-            <p>Command Center saves your Sleeper context locally so the other tools can pick up the same league.</p>
+          <div className="command-briefing-footer">
+            <span><Radio size={13} /> {selectedLeague?.draft_id ? "Draft room linked" : "Manual draft ready"}</span>
+            <span>{selectedLeague ? cleanStatus(selectedLeague.status) : "Awaiting league"}</span>
           </div>
+        </aside>
+      </section>
+
+      <section className="command-connect-band" aria-labelledby="command-connect-title">
+        <div className="command-connect-copy">
+          <span className="eyebrow">Sleeper connection</span>
+          <h2 id="command-connect-title">One scan powers every room.</h2>
+          <p>Save one public league context locally, then carry its format, roster, and draft settings across the product.</p>
+        </div>
+
+        <div className="command-connect-controls">
           <form className="command-scan-form compact" onSubmit={handleSubmit}>
             <label>
               <span>Sleeper username</span>
@@ -471,36 +505,38 @@ export function CommandCenterLaunch({ paidAccess, signedIn }: CommandCenterLaunc
             </button>
           </form>
 
-          {!signedIn ? (
-            <div className="command-status-note warning">
-              <CircleAlert size={18} />
-              <span>Demo mode is visible. Sign in to save leagues and unlock live tool handoffs.</span>
-              <Link href="/login?next=/command-center">Sign in <ArrowRight size={14} /></Link>
-            </div>
-          ) : null}
+          <div className="command-connect-feedback">
+            {!signedIn ? (
+              <div className="command-status-note warning">
+                <CircleAlert size={18} />
+                <span>Demo mode is visible. Sign in to save leagues and unlock live tool handoffs.</span>
+                <Link href="/login?next=/command-center">Sign in <ArrowRight size={14} /></Link>
+              </div>
+            ) : null}
 
-          {signedIn && !liveAccess ? (
-            <div className="command-status-note warning">
-              <CircleAlert size={18} />
-              <span>Your account is in preview mode. Choose a plan to save leagues and unlock live tool handoffs.</span>
-              <Link href="/pricing">View plans <ArrowRight size={14} /></Link>
-            </div>
-          ) : null}
+            {signedIn && !liveAccess ? (
+              <div className="command-status-note warning">
+                <CircleAlert size={18} />
+                <span>Your account is in preview mode. Choose a plan to save leagues and unlock live tool handoffs.</span>
+                <Link href="/pricing">View plans <ArrowRight size={14} /></Link>
+              </div>
+            ) : null}
 
-          {status === "found" ? (
-            <div className="command-status-note success">
-              <ShieldCheck size={18} />
-              <span>{leagues.length ? `${leagues.length} public ${season} NFL leagues loaded.` : `No public ${season} NFL leagues found.`}</span>
-            </div>
-          ) : null}
+            {status === "found" ? (
+              <div className="command-status-note success">
+                <ShieldCheck size={18} />
+                <span>{leagues.length ? `${leagues.length} public ${season} NFL leagues loaded.` : `No public ${season} NFL leagues found.`}</span>
+              </div>
+            ) : null}
 
-          {status === "error" ? (
-            <div className="command-status-note error">
-              <CircleAlert size={18} />
-              <span>{error}</span>
-            </div>
-          ) : null}
-        </aside>
+            {status === "error" ? (
+              <div className="command-status-note error">
+                <CircleAlert size={18} />
+                <span>{error}</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </section>
 
       {status === "found" ? (
@@ -545,9 +581,10 @@ export function CommandCenterLaunch({ paidAccess, signedIn }: CommandCenterLaunc
         <article className="command-quick-tools-card">
           <div className="command-card-header compact">
             <div>
-              <span className="eyebrow">Tool drawer</span>
-              <h2>Open only what you need.</h2>
+              <span className="eyebrow">Decision rooms</span>
+              <h2>Every tool, organized around the decision.</h2>
             </div>
+            <span className="league-filter-pill">10 workspaces</span>
           </div>
           <div className="command-quick-tool-groups">
             {toolGroups.map((group) => (

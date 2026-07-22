@@ -2,40 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity,
-  ArrowRight,
-  CheckCircle2,
+  ChevronDown,
   CircleAlert,
-  Crown,
   Radio,
   RefreshCcw,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  Zap
+  Search,
+  SlidersHorizontal,
+  X
 } from "lucide-react";
-import Link from "next/link";
-import { ProductCommandNav } from "@/components/ProductCommandNav";
-import {
-  demoLeagues,
-  type LeagueToolLeague,
-  type LeagueToolPlayer
-} from "@/lib/leagueTools";
-import {
-  formatLeagueScoringLabel,
-  formatLeagueTypeLabel,
-  scoreDraftRecommendation
-} from "@/lib/fantasyModel";
+import { ManagerIdentity, PlayerAvatar, teamMeta } from "@/components/FootballIdentity";
+import { demoLeagues, type LeagueToolLeague, type LeagueToolPlayer, type LeagueToolSummary } from "@/lib/leagueTools";
+import { formatLeagueScoringLabel, formatLeagueTypeLabel, scoreDraftRecommendation } from "@/lib/fantasyModel";
 import { getStoredLeagueConnection } from "@/lib/sleeper/leagueConnection";
-import type { SleeperPick } from "@/lib/sleeper/client";
-import { PlayerIdentity, TeamIdentity } from "@/components/FootballIdentity";
-import {
-  MetricTile,
-  PremiumActionButton,
-  ProductBadge,
-  StateCallout,
-  SurfaceCard
-} from "@/components/DesignPrimitives";
+import type { SleeperDraft, SleeperPick, SleeperUser } from "@/lib/sleeper/client";
 
 type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
@@ -50,68 +29,97 @@ type DraftBoardPick = {
   nflTeam: string;
   signal: string;
   score: number;
-  source: "synced" | "demo" | "open";
+  source: "synced" | "demo" | "manual" | "open";
 };
 
-const STORAGE_KEY = "theblitzroom-fantasy.sleeper-sync";
-const POLL_MS = 1000;
-const TEAM_COUNT = 12;
-const ROUND_COUNT = 6;
-const myDraftSlot = 8;
+type DraftPoolPlayer = {
+  id: string;
+  name: string;
+  position: string;
+  team: string;
+  rank: number;
+  ecr: number;
+  adp: number;
+  points: number;
+  age: number;
+  experience: number;
+  height: string;
+  weight: string;
+  positionRank: number;
+};
+
+type DraftTeam = {
+  slot: number;
+  name: string;
+  manager: string;
+  avatar?: string | null;
+  rosterId?: number;
+};
+
+type DraftContextResponse = SleeperDraft & {
+  participants?: SleeperUser[];
+};
 
 type DraftRoomCommandCenterProps = {
   paidAccess: boolean;
   signedIn: boolean;
 };
 
-const teamNames = [
-  "Apex Window",
-  "Tempo Kings",
-  "Future Bank",
-  "Need Leverage",
-  "Sunday Tilt",
-  "Pocket Kings",
-  "Route Dealers",
-  "Value Trap",
-  "Anchor Room",
-  "Late Swap",
-  "Clock Killers",
-  "Board Boss"
-];
+const STORAGE_KEY = "theblitzroom-fantasy.sleeper-sync";
+const POLL_MS = 1000;
+const TEAM_COUNT = 12;
+const ROUND_COUNT = 8;
+const DEMO_DRAFT_SLOT = 4;
+const teamNames = Array.from({ length: TEAM_COUNT }, (_, index) => `Team ${index + 1}`);
+const demoDraftTeams: DraftTeam[] = Array.from({ length: TEAM_COUNT }, (_, index) => ({
+  slot: index + 1,
+  name: `Team ${index + 1}`,
+  manager: `Team ${index + 1}`
+}));
 
 const demoDraftPlayers: Array<{ id: string; player: LeagueToolPlayer; signal: string }> = [
-  { id: "demo-chase", player: { player_id: "demo-chase", full_name: "Ja'Marr Chase", position: "WR", team: "CIN", age: 26, years_exp: 5, search_rank: 2 }, signal: "Elite WR insulation" },
-  { id: "demo-allen", player: { player_id: "demo-allen", full_name: "Josh Allen", position: "QB", team: "BUF", age: 30, years_exp: 8, search_rank: 1 }, signal: "Superflex hammer" },
-  { id: "demo-bijan", player: { player_id: "demo-bijan", full_name: "Bijan Robinson", position: "RB", team: "ATL", age: 24, years_exp: 3, search_rank: 6 }, signal: "RB tier lead" },
-  { id: "demo-lamb", player: { player_id: "demo-lamb", full_name: "CeeDee Lamb", position: "WR", team: "DAL", age: 27, years_exp: 6, search_rank: 3 }, signal: "PPR anchor" },
-  { id: "demo-daniels", player: { player_id: "demo-daniels", full_name: "Jayden Daniels", position: "QB", team: "WAS", age: 25, years_exp: 2, search_rank: 4 }, signal: "Rushing QB premium" },
-  { id: "demo-gibbs", player: { player_id: "demo-gibbs", full_name: "Jahmyr Gibbs", position: "RB", team: "DET", age: 24, years_exp: 3, search_rank: 8 }, signal: "PPR RB leverage" },
-  { id: "demo-nabers", player: { player_id: "demo-nabers", full_name: "Malik Nabers", position: "WR", team: "NYG", age: 23, years_exp: 2, search_rank: 9 }, signal: "Value hold" },
-  { id: "demo-bowers", player: { player_id: "demo-bowers", full_name: "Brock Bowers", position: "TE", team: "LV", age: 23, years_exp: 2, search_rank: 18 }, signal: "TE premium edge" },
-  { id: "demo-burrow", player: { player_id: "demo-burrow", full_name: "Joe Burrow", position: "QB", team: "CIN", age: 29, years_exp: 6, search_rank: 12 }, signal: "QB tier hold" },
-  { id: "demo-st-brown", player: { player_id: "demo-st-brown", full_name: "Amon-Ra St. Brown", position: "WR", team: "DET", age: 26, years_exp: 5, search_rank: 5 }, signal: "Reception floor" },
-  { id: "demo-hall", player: { player_id: "demo-hall", full_name: "Breece Hall", position: "RB", team: "NYJ", age: 25, years_exp: 4, search_rank: 13 }, signal: "Workhorse profile" },
-  { id: "demo-mcbride", player: { player_id: "demo-mcbride", full_name: "Trey McBride", position: "TE", team: "ARI", age: 26, years_exp: 4, search_rank: 24 }, signal: "TE tier cliff" },
-  { id: "demo-london", player: { player_id: "demo-london", full_name: "Drake London", position: "WR", team: "ATL", age: 25, years_exp: 4, search_rank: 26 }, signal: "WR value pocket" },
-  { id: "demo-herbert", player: { player_id: "demo-herbert", full_name: "Justin Herbert", position: "QB", team: "LAC", age: 28, years_exp: 6, search_rank: 15 }, signal: "QB scarcity" },
-  { id: "demo-btj", player: { player_id: "demo-btj", full_name: "Brian Thomas Jr.", position: "WR", team: "JAX", age: 23, years_exp: 2, search_rank: 22 }, signal: "Ascending WR" },
-  { id: "demo-achane", player: { player_id: "demo-achane", full_name: "De'Von Achane", position: "RB", team: "MIA", age: 24, years_exp: 3, search_rank: 27 }, signal: "Ceiling RB" },
-  { id: "demo-puka", player: { player_id: "demo-puka", full_name: "Puka Nacua", position: "WR", team: "LAR", age: 25, years_exp: 3, search_rank: 10 }, signal: "PPR volume" },
-  { id: "demo-odunze", player: { player_id: "demo-odunze", full_name: "Rome Odunze", position: "WR", team: "CHI", age: 24, years_exp: 2, search_rank: 32 }, signal: "Dynasty rise" }
+  { id: "4034", player: { player_id: "4034", full_name: "C. McCaffrey", position: "RB", team: "SF", search_rank: 1 }, signal: "Volume anchor" },
+  { id: "8155", player: { player_id: "8155", full_name: "B. Hall", position: "RB", team: "NYJ", search_rank: 2 }, signal: "Three-down ceiling" },
+  { id: "6794", player: { player_id: "6794", full_name: "J. Jefferson", position: "WR", team: "MIN", search_rank: 3 }, signal: "Target king" },
+  { id: "3321", player: { player_id: "3321", full_name: "T. Hill", position: "WR", team: "FA", search_rank: 4 }, signal: "Weekly breaker" },
+  { id: "7564", player: { player_id: "7564", full_name: "J. Chase", position: "WR", team: "CIN", search_rank: 5 }, signal: "Elite WR" },
+  { id: "7547", player: { player_id: "7547", full_name: "A. St. Brown", position: "WR", team: "DET", search_rank: 6 }, signal: "Reception floor" },
+  { id: "8154", player: { player_id: "8154", full_name: "B. Robinson", position: "RB", team: "ATL", search_rank: 7 }, signal: "Touch volume" },
+  { id: "6813", player: { player_id: "6813", full_name: "J. Taylor", position: "RB", team: "IND", search_rank: 8 }, signal: "Workhorse" },
+  { id: "4046", player: { player_id: "4046", full_name: "P. Mahomes", position: "QB", team: "KC", search_rank: 9 }, signal: "QB anchor" },
+  { id: "4984", player: { player_id: "4984", full_name: "J. Allen", position: "QB", team: "BUF", search_rank: 10 }, signal: "Rushing ceiling" },
+  { id: "7528", player: { player_id: "7528", full_name: "N. Harris", position: "RB", team: "FA", search_rank: 11 }, signal: "Goal-line volume" },
+  { id: "4866", player: { player_id: "4866", full_name: "S. Barkley", position: "RB", team: "PHI", search_rank: 12 }, signal: "Explosive workload" },
+  { id: "2133", player: { player_id: "2133", full_name: "D. Adams", position: "WR", team: "LAR", search_rank: 13 }, signal: "Target command" },
+  { id: "8144", player: { player_id: "8144", full_name: "C. Olave", position: "WR", team: "NO", search_rank: 14 }, signal: "Route volume" },
+  { id: "3198", player: { player_id: "3198", full_name: "D. Henry", position: "RB", team: "BAL", search_rank: 15 }, signal: "TD leverage" },
+  { id: "1466", player: { player_id: "1466", full_name: "T. Kelce", position: "TE", team: "KC", search_rank: 16 }, signal: "TE advantage" },
+  { id: "7553", player: { player_id: "7553", full_name: "K. Pitts", position: "TE", team: "ATL", search_rank: 17 }, signal: "Breakout bet" },
+  { id: "7525", player: { player_id: "7525", full_name: "D. Smith", position: "WR", team: "PHI", search_rank: 18 }, signal: "Efficiency edge" },
+  { id: "8146", player: { player_id: "8146", full_name: "G. Wilson", position: "WR", team: "NYJ", search_rank: 19 }, signal: "Alpha path" },
+  { id: "5012", player: { player_id: "5012", full_name: "M. Andrews", position: "TE", team: "BAL", search_rank: 20 }, signal: "Red-zone edge" },
+  { id: "7526", player: { player_id: "7526", full_name: "J. Waddle", position: "WR", team: "DEN", search_rank: 21 }, signal: "Speed ceiling" },
+  { id: "5859", player: { player_id: "5859", full_name: "A. Brown", position: "WR", team: "NE", search_rank: 22 }, signal: "Power target" },
+  { id: "4663", player: { player_id: "4663", full_name: "A. Ekeler", position: "RB", team: "FA", search_rank: 23 }, signal: "PPR utility" },
+  { id: "4018", player: { player_id: "4018", full_name: "J. Mixon", position: "RB", team: "FA", search_rank: 24 }, signal: "Stable volume" },
+  { id: "5850", player: { player_id: "5850", full_name: "J. Jacobs", position: "RB", team: "GB", search_rank: 25 }, signal: "Workload floor" },
+  { id: "8112", player: { player_id: "8112", full_name: "D. London", position: "WR", team: "ATL", search_rank: 26 }, signal: "Breakout profile" },
+  { id: "7523", player: { player_id: "7523", full_name: "T. Lawrence", position: "QB", team: "JAX", search_rank: 27 }, signal: "QB value" }
 ];
 
-const recommendationPool: Array<{ id: string; player: LeagueToolPlayer }> = [
-  { id: "demo-daniels", player: { player_id: "demo-daniels", full_name: "Jayden Daniels", position: "QB", team: "WAS", age: 25, years_exp: 2, search_rank: 4 } },
-  { id: "demo-nabers", player: { player_id: "demo-nabers", full_name: "Malik Nabers", position: "WR", team: "NYG", age: 23, years_exp: 2, search_rank: 9 } },
-  { id: "demo-bowers", player: { player_id: "demo-bowers", full_name: "Brock Bowers", position: "TE", team: "LV", age: 23, years_exp: 2, search_rank: 18 } },
-  { id: "demo-london", player: { player_id: "demo-london", full_name: "Drake London", position: "WR", team: "ATL", age: 25, years_exp: 4, search_rank: 26 } },
-  { id: "demo-achane", player: { player_id: "demo-achane", full_name: "De'Von Achane", position: "RB", team: "MIA", age: 24, years_exp: 3, search_rank: 27 } }
+const draftPlayerPool: DraftPoolPlayer[] = [
+  { id: "9226", name: "De'Von Achane", position: "RB", team: "MIA", rank: 25, ecr: 24, adp: 27.3, points: 259.1, age: 23, experience: 1, height: "5'9\"", weight: "188 lbs", positionRank: 11 },
+  { id: "7526", name: "Jaylen Waddle", position: "WR", team: "DEN", rank: 26, ecr: 25, adp: 28.1, points: 242.3, age: 25, experience: 3, height: "5'10\"", weight: "185 lbs", positionRank: 13 },
+  { id: "6801", name: "Tee Higgins", position: "WR", team: "CIN", rank: 27, ecr: 26, adp: 29.4, points: 236.8, age: 25, experience: 4, height: "6'4\"", weight: "219 lbs", positionRank: 14 },
+  { id: "4037", name: "Chris Godwin", position: "WR", team: "TB", rank: 28, ecr: 27, adp: 31.2, points: 228.7, age: 28, experience: 7, height: "6'1\"", weight: "209 lbs", positionRank: 15 },
+  { id: "8136", name: "Rachaad White", position: "RB", team: "WAS", rank: 29, ecr: 28, adp: 32.6, points: 218.4, age: 25, experience: 2, height: "6'0\"", weight: "214 lbs", positionRank: 12 },
+  { id: "4199", name: "Aaron Jones", position: "RB", team: "MIN", rank: 30, ecr: 29, adp: 33.6, points: 214.9, age: 29, experience: 7, height: "5'9\"", weight: "208 lbs", positionRank: 13 },
+  { id: "6797", name: "Justin Herbert", position: "QB", team: "LAC", rank: 31, ecr: 30, adp: 34.1, points: 318.6, age: 26, experience: 4, height: "6'6\"", weight: "236 lbs", positionRank: 8 },
+  { id: "5844", name: "T.J. Hockenson", position: "TE", team: "MIN", rank: 32, ecr: 31, adp: 35.2, points: 211.3, age: 27, experience: 5, height: "6'5\"", weight: "248 lbs", positionRank: 5 }
 ];
 
 function readSavedSync() {
-  if (typeof window === "undefined") {
-    return { draftId: "", enabled: false };
-  }
+  if (typeof window === "undefined") return { draftId: "", enabled: false };
 
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -135,8 +143,19 @@ function boardSlot(pickNo: number, teams = TEAM_COUNT) {
   return round % 2 === 1 ? positionInRound : teams - positionInRound + 1;
 }
 
-function formatPick(round: number, slot: number) {
-  return `${round}.${String(slot).padStart(2, "0")}`;
+function formatPickNumber(pickNo: number, teams = TEAM_COUNT) {
+  const round = Math.ceil(pickNo / teams);
+  const pickInRound = ((pickNo - 1) % teams) + 1;
+  return `${round}.${String(pickInRound).padStart(2, "0")}`;
+}
+
+function formatOrdinal(value: number) {
+  const remainder = value % 100;
+  if (remainder >= 11 && remainder <= 13) return `${value}th`;
+  if (value % 10 === 1) return `${value}st`;
+  if (value % 10 === 2) return `${value}nd`;
+  if (value % 10 === 3) return `${value}rd`;
+  return `${value}th`;
 }
 
 function buildDemoBoard(league: LeagueToolLeague): DraftBoardPick[] {
@@ -144,13 +163,7 @@ function buildDemoBoard(league: LeagueToolLeague): DraftBoardPick[] {
     const pickNo = index + 1;
     const round = Math.ceil(pickNo / TEAM_COUNT);
     const slot = boardSlot(pickNo);
-    const read = scoreDraftRecommendation({
-      playerId: item.id,
-      player: item.player,
-      league,
-      mode: "dynasty",
-      pickNumber: pickNo
-    });
+    const read = scoreDraftRecommendation({ playerId: item.id, player: item.player, league, mode: "dynasty", pickNumber: pickNo });
 
     return {
       pickNo,
@@ -163,15 +176,15 @@ function buildDemoBoard(league: LeagueToolLeague): DraftBoardPick[] {
       nflTeam: item.player.team ?? "-",
       signal: item.signal,
       score: read.score,
-      source: "demo" as const
+      source: "demo"
     };
   });
 }
 
-function buildSyncedBoard(picks: SleeperPick[]): DraftBoardPick[] {
+function buildSyncedBoard(picks: SleeperPick[], teams: number): DraftBoardPick[] {
   return picks.map((pick) => {
-    const round = pick.round || Math.ceil(pick.pick_no / TEAM_COUNT);
-    const slot = pick.draft_slot || boardSlot(pick.pick_no);
+    const round = pick.round || Math.ceil(pick.pick_no / teams);
+    const slot = pick.draft_slot || boardSlot(pick.pick_no, teams);
     return {
       pickNo: pick.pick_no,
       round,
@@ -183,13 +196,41 @@ function buildSyncedBoard(picks: SleeperPick[]): DraftBoardPick[] {
       nflTeam: pick.metadata?.team ?? "-",
       signal: "Synced pick",
       score: 0,
-      source: "synced" as const
+      source: "synced"
     };
   });
 }
 
-function positionColor(position: string) {
-  return position === "QB" ? "position-qb" : position === "RB" ? "position-rb" : position === "WR" ? "position-wr" : position === "TE" ? "position-te" : "position-open";
+function positionClass(position: string) {
+  return `draft-position draft-position-${position.toLowerCase()}`;
+}
+
+function buildDraftTeams(draft: DraftContextResponse, teams: number, viewerSlot: number, summary?: LeagueToolSummary | null): DraftTeam[] {
+  const participantById = new Map((draft.participants ?? []).map((participant) => [participant.user_id, participant]));
+  const managerById = new Map((summary?.users ?? []).map((manager) => [manager.user_id, manager]));
+  const rosterById = new Map((summary?.rosters ?? []).map((roster) => [roster.roster_id, roster]));
+  const userBySlot = new Map(
+    Object.entries(draft.draft_order ?? {}).map(([userId, slot]) => [Number(slot), userId])
+  );
+
+  return Array.from({ length: teams }, (_, index) => {
+    const slot = index + 1;
+    const rosterId = Number(draft.slot_to_roster_id?.[String(slot)] ?? 0) || undefined;
+    const roster = rosterId ? rosterById.get(rosterId) : undefined;
+    const userId = roster?.owner_id ?? userBySlot.get(slot);
+    const manager = userId ? managerById.get(userId) : undefined;
+    const participant = userId ? participantById.get(userId) : undefined;
+    const managerName = manager?.display_name ?? participant?.display_name ?? participant?.username ?? `Team ${slot}`;
+    const teamName = manager?.metadata?.team_name?.trim() || managerName;
+
+    return {
+      slot,
+      name: slot === viewerSlot && teamName === `Team ${slot}` ? "Your Team" : teamName,
+      manager: managerName,
+      avatar: manager?.avatar ?? participant?.avatar,
+      rosterId
+    };
+  });
 }
 
 export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomCommandCenterProps) {
@@ -199,18 +240,33 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
   const [error, setError] = useState("");
   const [picks, setPicks] = useState<SleeperPick[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<LeagueToolLeague>(demoLeagues[0]);
-  const [leagueName, setLeagueName] = useState("Apex League");
+  const [selectedPlayerId, setSelectedPlayerId] = useState("9226");
+  const [positionFilter, setPositionFilter] = useState("ALL");
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [rankingMode, setRankingMode] = useState<"ecr" | "adp" | "points">("ecr");
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(true);
+  const [manualPicks, setManualPicks] = useState<DraftBoardPick[]>([]);
+  const [draftTeams, setDraftTeams] = useState<DraftTeam[]>(demoDraftTeams);
+  const [draftTeamCount, setDraftTeamCount] = useState(TEAM_COUNT);
+  const [draftRoundCount, setDraftRoundCount] = useState(ROUND_COUNT);
+  const [myDraftSlot, setMyDraftSlot] = useState(DEMO_DRAFT_SLOT);
+  const [manualTargetPickNo, setManualTargetPickNo] = useState<number | null>(null);
+  const [selectedBoardPickNo, setSelectedBoardPickNo] = useState<number | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
+  const [notice, setNotice] = useState("");
   const inFlight = useRef<AbortController | null>(null);
+  const loadedDraftContext = useRef("");
+  const viewerUserId = useRef("");
 
   useEffect(() => {
     const saved = readSavedSync();
     const stored = getStoredLeagueConnection();
     const queryDraftId = new URLSearchParams(window.location.search).get("draftId")?.trim();
     const storedLeague = stored?.leagues.find((league) => league.league_id === stored.selectedLeagueId) ?? stored?.leagues[0];
+    viewerUserId.current = stored?.user?.user_id ?? "";
 
     if (storedLeague) {
       setSelectedLeague(storedLeague);
-      setLeagueName(storedLeague.name);
     }
 
     setDraftId(queryDraftId || saved.draftId || storedLeague?.draft_id || "");
@@ -219,12 +275,45 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
 
   useEffect(() => {
     const queryDraftId = new URLSearchParams(window.location.search).get("draftId")?.trim();
-    if (queryDraftId && queryDraftId !== draftId) {
-      return;
-    }
-
+    if (queryDraftId && queryDraftId !== draftId) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ draftId, enabled }));
   }, [draftId, enabled]);
+
+  useEffect(() => {
+    loadedDraftContext.current = "";
+  }, [draftId]);
+
+  const loadDraftContext = useCallback(async (normalizedDraftId: string) => {
+    loadedDraftContext.current = normalizedDraftId;
+
+    try {
+      const contextResponse = await fetch(`/api/sleeper/draft/${encodeURIComponent(normalizedDraftId)}`, { cache: "no-store" });
+      if (!contextResponse.ok) throw new Error("Draft context lookup failed");
+      const draft = await contextResponse.json() as DraftContextResponse;
+      let summary: LeagueToolSummary | null = null;
+
+      if (draft.league_id) {
+        const summaryResponse = await fetch(`/api/sleeper/league/${encodeURIComponent(draft.league_id)}/summary`, { cache: "no-store" });
+        if (summaryResponse.ok) summary = await summaryResponse.json() as LeagueToolSummary;
+      }
+
+      if (loadedDraftContext.current !== normalizedDraftId) return;
+      if (summary) setSelectedLeague(summary.league);
+      const teams = Number(draft.settings?.teams) || Object.keys(draft.slot_to_roster_id ?? {}).length || Object.keys(draft.draft_order ?? {}).length || TEAM_COUNT;
+      const rounds = Number(draft.settings?.rounds) || ROUND_COUNT;
+      const ownedRoster = summary?.rosters.find((roster) => roster.owner_id === viewerUserId.current);
+      const rosterSlot = ownedRoster
+        ? Number(Object.entries(draft.slot_to_roster_id ?? {}).find(([, rosterId]) => Number(rosterId) === ownedRoster.roster_id)?.[0] ?? 0)
+        : 0;
+      const viewerSlot = Number(draft.draft_order?.[viewerUserId.current]) || rosterSlot || DEMO_DRAFT_SLOT;
+      setDraftTeamCount(teams);
+      setDraftRoundCount(Math.max(ROUND_COUNT, rounds));
+      setMyDraftSlot(Math.min(Math.max(viewerSlot, 1), teams));
+      setDraftTeams(buildDraftTeams(draft, teams, viewerSlot, summary));
+    } catch {
+      if (loadedDraftContext.current === normalizedDraftId) loadedDraftContext.current = "";
+    }
+  }, []);
 
   const syncNow = useCallback(async () => {
     if (!paidAccess) {
@@ -232,7 +321,6 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
       setError(signedIn ? "Choose a plan to unlock live Sleeper draft sync." : "Sign in to unlock live Sleeper draft sync.");
       return;
     }
-
     if (!draftId.trim()) {
       setStatus("error");
       setError("Add a Sleeper draft ID or open Draft Room from a connected league.");
@@ -246,30 +334,23 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
     setError("");
 
     try {
-      const response = await fetch(`/api/sleeper/draft/${encodeURIComponent(draftId.trim())}/picks`, {
-        cache: "no-store",
-        signal: controller.signal
-      });
-
+      const normalizedDraftId = draftId.trim();
+      if (loadedDraftContext.current !== normalizedDraftId) void loadDraftContext(normalizedDraftId);
+      const response = await fetch(`/api/sleeper/draft/${encodeURIComponent(normalizedDraftId)}/picks`, { cache: "no-store", signal: controller.signal });
       if (!response.ok) {
         const data = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(data?.error || `Sleeper returned ${response.status}`);
       }
-
       const data = await response.json() as { picks: SleeperPick[] };
-      const deduped = Array.from(new Map(data.picks.map((pick) => [pick.pick_no, pick])).values())
-        .sort((a, b) => a.pick_no - b.pick_no);
+      const deduped = Array.from(new Map(data.picks.map((pick) => [pick.pick_no, pick])).values()).sort((a, b) => a.pick_no - b.pick_no);
       setPicks(deduped);
       setStatus("synced");
     } catch (caught) {
-      if (caught instanceof DOMException && caught.name === "AbortError") {
-        return;
-      }
-
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
       setStatus("error");
       setError(caught instanceof Error ? caught.message : "Sync failed");
     }
-  }, [draftId, paidAccess, signedIn]);
+  }, [draftId, loadDraftContext, paidAccess, signedIn]);
 
   useEffect(() => {
     if (!enabled) {
@@ -277,7 +358,6 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
       setStatus("idle");
       return;
     }
-
     if (!paidAccess) {
       setEnabled(false);
       setStatus("error");
@@ -286,346 +366,331 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
     }
 
     void syncNow();
-    const interval = window.setInterval(() => {
-      void syncNow();
-    }, POLL_MS);
-
+    const interval = window.setInterval(() => void syncNow(), POLL_MS);
     return () => {
       window.clearInterval(interval);
       inFlight.current?.abort();
     };
   }, [enabled, paidAccess, signedIn, syncNow]);
 
-  const syncedBoard = useMemo(() => buildSyncedBoard(picks), [picks]);
+  useEffect(() => {
+    if (!enabled || !paidAccess) return;
+
+    const refreshVisibleDraft = () => {
+      if (document.visibilityState === "visible") void syncNow();
+    };
+
+    window.addEventListener("focus", refreshVisibleDraft);
+    document.addEventListener("visibilitychange", refreshVisibleDraft);
+    return () => {
+      window.removeEventListener("focus", refreshVisibleDraft);
+      document.removeEventListener("visibilitychange", refreshVisibleDraft);
+    };
+  }, [enabled, paidAccess, syncNow]);
+
+  const syncedBoard = useMemo(() => buildSyncedBoard(picks, draftTeamCount), [draftTeamCount, picks]);
   const demoBoard = useMemo(() => buildDemoBoard(selectedLeague), [selectedLeague]);
-  const boardPicks = syncedBoard.length ? syncedBoard : demoBoard;
+  const liveMode = status === "synced" && Boolean(draftId.trim());
+  const hasConnectedSleeperDraft = paidAccess && Boolean(draftId.trim());
+  const boardPicks = useMemo(() => {
+    const source = liveMode ? syncedBoard : demoBoard;
+    return Array.from(new Map([...source, ...manualPicks].map((pick) => [pick.pickNo, pick])).values()).sort((a, b) => a.pickNo - b.pickNo);
+  }, [demoBoard, liveMode, manualPicks, syncedBoard]);
+  const activeTeamCount = liveMode ? draftTeamCount : TEAM_COUNT;
+  const activeRoundCount = liveMode ? draftRoundCount : ROUND_COUNT;
+  const activeDraftTeams = liveMode ? draftTeams : demoDraftTeams;
+  const activeMyDraftSlot = liveMode ? myDraftSlot : DEMO_DRAFT_SLOT;
   const pickLookup = useMemo(() => new Map(boardPicks.map((pick) => [pick.pickNo, pick])), [boardPicks]);
-  const lastPickNo = picks.reduce((max, pick) => Math.max(max, pick.pick_no ?? 0), 0);
-  const currentPickNo = Math.min(lastPickNo + 1 || demoBoard.length + 1, TEAM_COUNT * ROUND_COUNT);
-  const currentRound = Math.ceil(currentPickNo / TEAM_COUNT);
-  const currentSlot = boardSlot(currentPickNo);
-  const onClockTeam = teamNames[currentSlot - 1] ?? `Team ${currentSlot}`;
-  const myPicks = boardPicks.filter((pick) => pick.slot === myDraftSlot);
-  const rosterCounts = myPicks.reduce<Record<string, number>>((counts, pick) => {
-    counts[pick.position] = (counts[pick.position] ?? 0) + 1;
-    return counts;
-  }, { QB: 0, RB: 0, WR: 0, TE: 0 });
-  const recommendations = recommendationPool
-    .map((item, index) => ({
-      ...item,
-      read: scoreDraftRecommendation({
-        playerId: item.id,
-        player: item.player,
-        league: selectedLeague,
-        mode: "dynasty",
-        pickNumber: currentPickNo + index
-      })
-    }))
-    .sort((a, b) => b.read.score - a.read.score);
-  const topRecommendation = recommendations[0];
-  const topPlayerRank = Number(topRecommendation.player.search_rank ?? 4);
-  const topPositionRank = topRecommendation.player.position === "QB" ? "QB4" : `${topRecommendation.player.position ?? "FLEX"}${Math.max(1, Math.round(topPlayerRank / 3))}`;
-  const dossierRows = [
-    ["Ranking", `Overall ${topPlayerRank} / ${topPositionRank}`, "Premium board slot"],
-    ["Value", `Blitz Score ${topRecommendation.read.score}`, "Worth the pick cost"],
-    ["Market position", "Above room cost", "+7 edge"],
-    ["Roster fit", "Anchor QB build remains open", "+14 fit"],
-    ["Tier context", `${topRecommendation.read.tier} with cliff forming`, "Urgent"],
-    ["Future availability", "18% chance to return", "Low"],
-    ["Risk", "Medium volatility, elite ceiling", "Acceptable"],
-    ["Historical movement", "Rising versus early-room cost", "+3 slots"]
-  ];
-  const boardCompletion = Math.round((boardPicks.filter((pick) => pick.source !== "open").length / (TEAM_COUNT * ROUND_COUNT)) * 100);
+  const totalDraftPicks = activeTeamCount * activeRoundCount;
+  const currentPickNo = Array.from({ length: totalDraftPicks }, (_, index) => index + 1).find((pickNo) => !pickLookup.has(pickNo)) ?? totalDraftPicks;
+  const currentRound = Math.ceil(currentPickNo / activeTeamCount);
+  const currentPickInRound = ((currentPickNo - 1) % activeTeamCount) + 1;
+  const currentSlot = boardSlot(currentPickNo, activeTeamCount);
+  const teamLookup = new Map(activeDraftTeams.map((team) => [team.slot, team]));
+  const onClockDraftTeam = teamLookup.get(currentSlot) ?? demoDraftTeams[currentSlot - 1];
+  const onClockTeam = onClockDraftTeam?.name ?? `Team ${currentSlot}`;
+  const selectedPlayer = draftPlayerPool.find((player) => player.id === selectedPlayerId) ?? draftPlayerPool[0];
+  const filteredPlayers = draftPlayerPool
+    .filter((player) => {
+      const matchesPosition = positionFilter === "ALL" || player.position === positionFilter;
+      const query = playerSearch.trim().toLowerCase();
+      return matchesPosition && (!query || `${player.name} ${player.team} ${teamMeta(player.team).name} ${player.position}`.toLowerCase().includes(query));
+    })
+    .sort((a, b) => rankingMode === "adp" ? a.adp - b.adp : rankingMode === "points" ? b.points - a.points : a.rank - b.rank);
+  const myTeamPickNumbers = Array.from({ length: activeRoundCount }, (_, roundIndex) => pickNumber(roundIndex + 1, activeMyDraftSlot, activeTeamCount));
+  const nextMyPickNo = myTeamPickNumbers.find((pickNo) => pickNo >= currentPickNo && !pickLookup.has(pickNo))
+    ?? myTeamPickNumbers.find((pickNo) => !pickLookup.has(pickNo))
+    ?? myTeamPickNumbers.at(-1)
+    ?? currentPickNo;
+  const remainingPicks = Math.max(totalDraftPicks - currentPickNo, 0);
+  const nextTeams = Array.from(
+    { length: Math.min(5, remainingPicks) },
+    (_, index) => boardSlot(currentPickNo + index + 1, activeTeamCount)
+  );
+  const draftLog = [...boardPicks].sort((a, b) => b.pickNo - a.pickNo).slice(0, 5).map((pick) => ({ slot: pick.slot, team: teamLookup.get(pick.slot), pick }));
+  const boardCompletion = Math.round((boardPicks.length / totalDraftPicks) * 100);
+  const rosterOverview = [
+    ["QB", 1], ["RB", 2], ["WR", 2], ["TE", 1], ["FLEX", 0], ["DST", 1]
+  ] as const;
+
+  function makeManualPick() {
+    const targetPickNo = manualTargetPickNo ?? currentPickNo;
+    const targetRound = Math.ceil(targetPickNo / activeTeamCount);
+    const targetSlot = boardSlot(targetPickNo, activeTeamCount);
+    const targetTeam = teamLookup.get(targetSlot)?.name ?? `Team ${targetSlot}`;
+    const manualPick: DraftBoardPick = {
+      pickNo: targetPickNo,
+      round: targetRound,
+      slot: targetSlot,
+      teamName: targetTeam,
+      playerId: selectedPlayer.id,
+      playerName: selectedPlayer.name,
+      position: selectedPlayer.position,
+      nflTeam: selectedPlayer.team,
+      signal: "Manual board entry",
+      score: 0,
+      source: "manual"
+    };
+    setManualPicks((current) => [...current.filter((pick) => pick.pickNo !== targetPickNo), manualPick]);
+    setManualTargetPickNo(null);
+    setSelectedBoardPickNo(targetPickNo);
+    setNotice(`${selectedPlayer.name} marked at ${formatPickNumber(targetPickNo, activeTeamCount)} locally. Sleeper remains read-only.`);
+  }
+
+  function handleMakePick() {
+    if (!hasConnectedSleeperDraft) {
+      makeManualPick();
+      return;
+    }
+
+    setEnabled(true);
+    setNotice("Sleeper opened. Make the pick there and this board will sync it automatically.");
+    void syncNow();
+    window.open(`https://sleeper.com/draft/nfl/${encodeURIComponent(draftId.trim())}`, "_blank", "noopener,noreferrer");
+  }
+
+  function selectBoardCell(pickNo: number, pick?: DraftBoardPick) {
+    setSelectedBoardPickNo(pickNo);
+
+    if (pick) {
+      const matchedPlayer = draftPlayerPool.find((player) => player.id === pick.playerId || player.name.toLowerCase().includes(pick.playerName.replace(/^[A-Z]\.\s*/, "").toLowerCase()));
+      if (matchedPlayer) setSelectedPlayerId(matchedPlayer.id);
+      setManualTargetPickNo(null);
+      setNotice(`${pick.playerName} was selected by ${teamLookup.get(pick.slot)?.name ?? pick.teamName} at ${formatPickNumber(pick.pickNo, activeTeamCount)}.`);
+      return;
+    }
+
+    setManualTargetPickNo(pickNo);
+    setNotice(`${formatPickNumber(pickNo, activeTeamCount)} selected for a manual board entry.`);
+  }
 
   return (
-    <div className="draft-command-room draft-command-redesign tb-page">
-      <ProductCommandNav />
-
-      <div className="room-status-rail draft-room-status-rail" aria-label="Room status">
-        <span><Radio size={13} /> {picks.length ? "Live draft" : "Demo room"}</span>
-        <strong>Round {currentRound} / Pick {formatPick(currentRound, currentSlot)}</strong>
-        <span>Clock 00:42</span>
-        <span>{formatLeagueTypeLabel(selectedLeague)} / {formatLeagueScoringLabel(selectedLeague)}</span>
-        <span>{Math.max(myDraftSlot - currentSlot, 0) || TEAM_COUNT - Math.abs(myDraftSlot - currentSlot)} picks to you</span>
-        <span>{status === "synced" ? "Connected" : status === "syncing" ? "Refreshing" : "Standby"}</span>
-      </div>
-
-      <section className="draft-room-hero" aria-label="Draft room command overview">
-        <SurfaceCard className="draft-room-copy" variant="sports">
-          <div className="draft-room-title-kicker">
-            <ProductBadge variant="premium"><Crown size={14} /> Draft command board</ProductBadge>
-            <span>{leagueName}</span>
+    <div className="draft-room-workspace">
+      <section className="draft-ops-strip" aria-label="Live draft status">
+        <div className="draft-status-cluster">
+          <div className="draft-clock-block">
+            <span>Draft room</span>
+            <strong>1:24</strong>
+            <b>Round {currentRound}, Pick {currentPickInRound}</b>
+            <small>{activeTeamCount}-Team {formatLeagueTypeLabel(selectedLeague)} {formatLeagueScoringLabel(selectedLeague)}</small>
           </div>
-          <h1>Live draft intelligence</h1>
-          <p>
-            Full-board visibility, Sleeper read-only sync, team columns, pick flow, and format-aware recommendations in one draft-night screen.
-          </p>
-          <div className="draft-context-row">
-            <span>{formatLeagueTypeLabel(selectedLeague)}</span>
-            <span>{formatLeagueScoringLabel(selectedLeague)}</span>
-            <span>{TEAM_COUNT} teams</span>
-            <span>Poll {POLL_MS / 1000}s</span>
+          <div className="draft-on-clock-block">
+            <span>On the clock</span>
+            <div className="draft-live-team-identity"><ManagerIdentity compact name={onClockTeam} /></div>
+            <small>Needs <b>QB, RB, WR</b></small>
           </div>
-        </SurfaceCard>
-
-        <SurfaceCard className="draft-sync-card" variant="data">
-          <div className="draft-sync-header">
-            <div>
-              <span className="eyebrow">Sleeper live sync</span>
-              <h3>Official read-only draft state</h3>
-            </div>
-            <span className={`sync-status sync-status-${status}`}><Radio size={14} />{status}</span>
-          </div>
-          <div className="draft-sync-form">
-            <label>
-              <span>Sleeper draft ID</span>
-              <input value={draftId} onChange={(event) => setDraftId(event.target.value)} placeholder="Draft ID" autoComplete="off" disabled={!paidAccess} />
-            </label>
-            <PremiumActionButton onClick={() => setEnabled((value) => !value)} type="button" disabled={!paidAccess} variant="secondary">
-              {enabled ? "Pause" : "Start 1s"}
-            </PremiumActionButton>
-            <PremiumActionButton onClick={() => void syncNow()} type="button" disabled={!paidAccess}>
-              <RefreshCcw size={16} />Sync
-            </PremiumActionButton>
-          </div>
-          {!paidAccess ? (
-            <StateCallout className="league-access-note" variant="premium">
-              <CircleAlert size={18} />
-              <span>{signedIn ? "Draft Pro or Fantasy Elite unlocks live Sleeper draft sync." : "Sign in and choose a plan to unlock live draft sync."}</span>
-              <Link href={signedIn ? "/pricing" : "/login?next=/draft-room"}>{signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} /></Link>
-            </StateCallout>
-          ) : null}
-          {error ? <StateCallout className="sync-error" variant="danger">{error}</StateCallout> : null}
-          <div className="draft-sync-stats tb-metric-grid">
-            <MetricTile label="Last pick" value={lastPickNo || demoBoard.length} />
-            <MetricTile label="Board filled" value={`${boardCompletion}%`} />
-            <MetricTile label="Mode" value={picks.length ? "Live" : "Demo"} />
-          </div>
-        </SurfaceCard>
-      </section>
-
-      <section className="draft-room-layout">
-        <SurfaceCard className="draft-board-panel" variant="data">
-          <div className="league-card-header">
-            <div>
-              <span className="eyebrow">Full draft board</span>
-              <h2>Round-by-round room view</h2>
-            </div>
-            <ProductBadge className="league-filter-pill" variant="premium"><Activity size={14} />On clock: R{currentRound}, {onClockTeam}</ProductBadge>
-          </div>
-
-          <div className="draft-board-scroll">
-            <div className="draft-board-grid" style={{ gridTemplateColumns: `76px repeat(${TEAM_COUNT}, minmax(112px, 1fr))` }}>
-              <div className="draft-board-corner">Round</div>
-              {teamNames.map((team, index) => (
-                <div className={index + 1 === myDraftSlot ? "draft-team-header mine" : "draft-team-header"} key={team}>
-                  <strong>{team}</strong>
-                  <small>Slot {index + 1}</small>
-                </div>
-              ))}
-
-              {Array.from({ length: ROUND_COUNT }, (_, roundIndex) => {
-                const round = roundIndex + 1;
-                return (
-                  <div className="draft-board-row-fragment" key={`round-${round}`}>
-                    <div className="draft-round-label">R{round}</div>
-                    {Array.from({ length: TEAM_COUNT }, (_, slotIndex) => {
-                      const slot = slotIndex + 1;
-                      const pickNo = pickNumber(round, slot);
-                      const pick = pickLookup.get(pickNo);
-                      const active = pickNo === currentPickNo;
-
-                      return (
-                        <div className={active ? "draft-pick-cell active" : pick ? `draft-pick-cell ${pick.source}` : "draft-pick-cell open"} key={`${round}-${slot}`}>
-                          <span className="draft-pick-label">{formatPick(round, slot)} <b>#{pickNo}</b></span>
-                          {pick ? (
-                            <>
-                              <PlayerIdentity
-                                avatarSize="xs"
-                                compact
-                                name={pick.playerName}
-                                playerId={pick.playerId}
-                                position={pick.position}
-                                team={pick.nflTeam}
-                              />
-                              <div className="draft-pick-meta">
-                                <span className={positionColor(pick.position)}>{pick.position}</span>
-                                <small><TeamIdentity team={pick.nflTeam} compact /></small>
-                                {pick.score ? <small>{pick.score}</small> : null}
-                              </div>
-                              <em>{pick.signal}</em>
-                            </>
-                          ) : (
-                            <>
-                              <strong>Open pick</strong>
-                              <div className="draft-pick-meta"><span className="position-open">TBD</span><small>{teamNames[slot - 1]}</small></div>
-                              <em>Waiting on draft room</em>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </SurfaceCard>
-
-        <aside className="draft-side-rail">
-          <SurfaceCard className="draft-recommendation-card" variant="premium">
-            <ProductBadge variant="premium"><Sparkles size={14} /> The pick</ProductBadge>
-            <PlayerIdentity
-              avatarSize="lg"
-              name={topRecommendation.player.full_name ?? topRecommendation.id}
-              playerId={topRecommendation.id}
-              position={topRecommendation.player.position}
-              team={topRecommendation.player.team}
-            />
-            <p>{topRecommendation.read.signals.join(". ")}.</p>
-            <div className="draft-pick-card-read">
-              <span><strong>91%</strong><small>Confidence</small></span>
-              <span><strong>18%</strong><small>Next-pick availability</small></span>
-              <span><strong>Anchor QB</strong><small>Build identity</small></span>
-            </div>
-            <div className="score-grid">
-              <span><strong>{topRecommendation.read.score}</strong><small>Blitz Score</small></span>
-              <span><strong>{topPlayerRank}</strong><small>Overall rank</small></span>
-              <span><strong>{topPositionRank}</strong><small>Position rank</small></span>
-              <span><strong>{topRecommendation.read.tier}</strong><small>Tier</small></span>
-            </div>
-          </SurfaceCard>
-
-          <SurfaceCard className="draft-queue-card" variant="data">
-            <div className="league-card-header compact">
-              <div><span className="eyebrow">Alternatives</span><h2>Value and ceiling</h2></div>
-            </div>
-            <div className="draft-queue-list">
-              {recommendations.slice(1, 3).map((item, index) => (
-                <div key={item.id}>
-                  <span>{["VALUE", "CEIL"][index]}</span>
-                  <PlayerIdentity
-                    avatarSize="xs"
-                    compact
-                    name={item.player.full_name ?? item.id}
-                    playerId={item.id}
-                    position={item.player.position}
-                    team={item.player.team}
-                  />
-                  <small>{item.player.position} / {item.read.confidence} / {item.read.score}</small>
+          <div className="draft-next-up-block">
+            <span>Next up</span>
+            <div className="draft-next-team-row">
+              {nextTeams.map((slot) => (
+                <div key={slot} title={teamLookup.get(slot)?.manager}>
+                  <ManagerIdentity compact name={teamLookup.get(slot)?.name ?? `Team ${slot}`} />
+                  <b>{slot}</b>
                 </div>
               ))}
             </div>
-          </SurfaceCard>
-
-          <SurfaceCard className="draft-queue-card" variant="data">
-            <div className="league-card-header compact">
-              <div><span className="eyebrow">My roster build</span><h2>Slot {myDraftSlot}</h2></div>
+          </div>
+        </div>
+        <aside className="draft-your-team-block">
+          <span className="draft-your-team-avatar"><ManagerIdentity compact name={teamLookup.get(activeMyDraftSlot)?.name ?? "Your Team"} /></span>
+          <div className="draft-your-team-copy">
+            <span>Your team</span>
+            <strong>Pick {formatPickNumber(nextMyPickNo, activeTeamCount)}</strong>
+            <small>Overall: {formatOrdinal(nextMyPickNo)}</small>
+          </div>
+          <details className="draft-sync-details">
+            <summary>Roster Overview <ChevronDown size={13} /></summary>
+            <div className="draft-sync-popover">
+              <div className="draft-sync-popover-head">
+                <span><Radio size={12} /> Sleeper live sync</span>
+                <b className={`sync-dot sync-dot-${status}`}>{status}</b>
+              </div>
+              <label>
+                <span>Draft ID</span>
+                <input value={draftId} onChange={(event) => setDraftId(event.target.value)} placeholder="Sleeper draft ID" disabled={!paidAccess} />
+              </label>
+              <div>
+                <button onClick={() => setEnabled((value) => !value)} type="button" disabled={!paidAccess}>{enabled ? "Pause sync" : "Start sync"}</button>
+                <button onClick={() => void syncNow()} type="button" disabled={!paidAccess}><RefreshCcw size={13} /> Sync now</button>
+              </div>
+              {!paidAccess ? <p><CircleAlert size={13} /> {signedIn ? "Choose a paid plan for live sync." : "Sign in for live sync."}</p> : null}
+              {error ? <p className="draft-sync-error">{error}</p> : null}
             </div>
-            <div className="draft-roster-build">
-              {["QB", "RB", "WR", "TE"].map((position) => (
-                <div key={position}>
-                  <span>{position}</span>
-                  <strong>{rosterCounts[position] ?? 0}</strong>
-                  <small>{position === "QB" ? "Superflex target 2-3" : position === "WR" ? "Depth target 5+" : "Build target"}</small>
-                </div>
-              ))}
-            </div>
-            <Link className="league-inline-link" href="/team-hub/my-team">Open Team Hub <ArrowRight size={14} /></Link>
-          </SurfaceCard>
+          </details>
+          <div className="draft-roster-overview">
+            {rosterOverview.map(([position, count]) => <span className={positionClass(position)} key={position}>{position} {count}</span>)}
+          </div>
         </aside>
       </section>
 
-      <section className="draft-dossier-shell" aria-label="Player Dossier">
-        <SurfaceCard className="draft-dossier-card" variant="data">
-          <div className="draft-dossier-hero">
-            <div>
-              <ProductBadge variant="premium"><ShieldCheck size={14} /> Player Dossier</ProductBadge>
-              <h2>{topRecommendation.player.full_name ?? topRecommendation.id}</h2>
-              <p>
-                Executive summary: draft this player when your build needs a weekly ceiling anchor and the room is approaching a tier break.
-              </p>
-            </div>
-            <div className="draft-dossier-score">
-              <span>Blitz Score</span>
-              <strong>{topRecommendation.read.score}</strong>
-              <small>{topRecommendation.read.confidence} confidence</small>
-            </div>
+      <section className="draft-board-section" aria-label="Draft board">
+        <div className="draft-board-toolbar">
+          <h1>Draft board</h1>
+          <div className="draft-position-filters" aria-label="Position filters">
+            {["ALL", "QB", "RB", "WR", "TE", "FLEX", "DST"].map((position) => (
+              <button className={positionFilter === position ? "active" : ""} key={position} onClick={() => setPositionFilter(position)} type="button">{position}</button>
+            ))}
           </div>
+          <label className="draft-rankings-select">
+            <span>Rankings:</span>
+            <select aria-label="Rankings source" value={rankingMode} onChange={(event) => setRankingMode(event.target.value as "ecr" | "adp" | "points")}>
+              <option value="ecr">TBR ECR</option><option value="adp">Live ADP</option><option value="points">Projected points</option>
+            </select>
+          </label>
+          <label className="draft-player-search"><Search size={16} /><input value={playerSearch} onChange={(event) => setPlayerSearch(event.target.value)} placeholder="Search players..." /></label>
+        </div>
 
-          <div className="draft-dossier-grid">
-            <div className="draft-dossier-table" role="table" aria-label="Recommendation dossier factors">
-              {dossierRows.map(([label, value, impact]) => (
-                <div role="row" key={label}>
-                  <span role="cell">{label}</span>
-                  <strong role="cell">{value}</strong>
-                  <small role="cell">{impact}</small>
+        <div className="draft-board-table-scroll">
+          <div
+            className="draft-board-replica-grid"
+            style={{
+              gridTemplateColumns: `40px repeat(${activeTeamCount}, minmax(112px, 1fr))`,
+              minWidth: `${40 + activeTeamCount * 112}px`,
+            }}
+          >
+            <div className="draft-board-empty-head" />
+            {activeDraftTeams.map((team) => (
+              <div className={team.slot === activeMyDraftSlot ? "draft-board-team-head mine" : "draft-board-team-head"} key={team.slot} title={team.manager}>
+                <strong>{team.name}</strong>
+              </div>
+            ))}
+            {Array.from({ length: activeRoundCount }, (_, roundIndex) => {
+              const round = roundIndex + 1;
+              return (
+                <div className="draft-board-replica-row" key={round}>
+                  <div className="draft-board-round-number">{round}</div>
+                  {Array.from({ length: activeTeamCount }, (_, slotIndex) => {
+                    const slot = slotIndex + 1;
+                    const pickNo = pickNumber(round, slot, activeTeamCount);
+                    const pick = pickLookup.get(pickNo);
+                    const active = pickNo === currentPickNo;
+                    return (
+                      <button
+                        aria-label={pick ? `${formatPickNumber(pickNo, activeTeamCount)} ${pick.playerName}, ${pick.position}, ${pick.nflTeam}` : `${formatPickNumber(pickNo, activeTeamCount)} open pick for ${teamLookup.get(slot)?.name ?? `Team ${slot}`}`}
+                        className={`draft-board-replica-cell${active ? " active" : ""}${selectedBoardPickNo === pickNo ? " selected" : ""}${pick ? ` filled ${pick.source}` : ""}${slot === activeMyDraftSlot ? " mine" : ""}`}
+                        key={`${round}-${slot}`}
+                        onClick={() => selectBoardCell(pickNo, pick)}
+                        type="button"
+                      >
+                        {pick ? (
+                          <span className="draft-board-pick-copy">
+                            <strong>{pick.playerName}</strong>
+                            <small><b className={positionClass(pick.position)}>{pick.position}</b> - {pick.nflTeam}</small>
+                          </span>
+                        ) : active ? (
+                          <><strong>Pick {formatPickNumber(pickNo, activeTeamCount)}</strong><small>--</small></>
+                        ) : <span>--</span>}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-
-            <div className="draft-dossier-notes">
-              <article>
-                <span>Comparable players</span>
-                <strong>Elite rushing QB profile / premium weekly ceiling / insulation against replacement value</strong>
-              </article>
-              <article>
-                <span>Draft notes</span>
-                <strong>Passing here forces the next two rounds to solve quarterback pressure with lower-confidence alternatives.</strong>
-              </article>
-              <article>
-                <span>Recommendation sentence</span>
-                <strong>{topRecommendation.read.signals.join(". ")}.</strong>
-              </article>
-            </div>
+              );
+            })}
           </div>
-        </SurfaceCard>
+        </div>
       </section>
 
-      <section className="draft-bottom-grid">
-        <SurfaceCard className="draft-stream-card" variant="data">
-          <div className="league-card-header compact">
-            <div><span className="eyebrow">Pick stream</span><h2>Latest board movement</h2></div>
-            <ProductBadge className="league-filter-pill" variant={picks.length ? "success" : "muted"}><Zap size={14} />{picks.length ? "Synced" : "Demo snapshot"}</ProductBadge>
+      <section className="draft-intelligence-grid">
+        <article className="draft-player-pool-panel">
+          <h2>Players</h2>
+          <div className="draft-player-table-head"><span>RK</span><span>Player</span><span>Pos</span><span>Team</span><span>ECR</span><span>ADP</span><span>PTS</span></div>
+          <div className="draft-player-table-body">
+            {filteredPlayers.map((player) => (
+              <button className={selectedPlayer.id === player.id ? "selected" : ""} onClick={() => setSelectedPlayerId(player.id)} key={player.id} type="button">
+                <span>{player.rank}</span>
+                <span className="draft-player-list-identity"><strong>{player.name}</strong></span>
+                <b className={positionClass(player.position)}>{player.position}</b>
+                <span className="draft-player-team-cell" title={teamMeta(player.team).name}><small>{player.team}</small></span>
+                <span>{player.ecr}</span><span>{player.adp.toFixed(1)}</span><span>{player.points.toFixed(1)}</span>
+              </button>
+            ))}
+            {!filteredPlayers.length ? <p className="draft-player-empty">No players match this filter.</p> : null}
           </div>
-          <div className="draft-stream-list">
-            {[...boardPicks].sort((a, b) => b.pickNo - a.pickNo).slice(0, 10).map((pick) => (
-              <div key={`stream-${pick.pickNo}`}>
-                <span>{pick.pickNo}</span>
-                <PlayerIdentity
-                  avatarSize="xs"
-                  compact
-                  name={pick.playerName}
-                  playerId={pick.playerId}
-                  position={pick.position}
-                  team={pick.nflTeam}
-                />
-                <small>{pick.teamName} / {pick.position} / {pick.signal}</small>
+        </article>
+
+        <article className="draft-player-profile-panel">
+          <div className="draft-panel-heading"><h2>Player profile</h2><div><span>ECR rank</span><strong>{selectedPlayer.rank}</strong><small>{selectedPlayer.position} Rank: {selectedPlayer.positionRank}</small></div></div>
+          <div className="draft-profile-identity">
+            <PlayerAvatar playerId={selectedPlayer.id} name={selectedPlayer.name} size="lg" />
+            <div><h3>{selectedPlayer.name}</h3><p><b className={positionClass(selectedPlayer.position)}>{selectedPlayer.position}</b> {teamMeta(selectedPlayer.team).name}</p></div>
+          </div>
+          <div className="draft-profile-facts">
+            <span><small>Height</small><strong>{selectedPlayer.height}</strong></span><span><small>Weight</small><strong>{selectedPlayer.weight}</strong></span><span><small>Age</small><strong>{selectedPlayer.age}</strong></span><span><small>Exp</small><strong>{selectedPlayer.experience}</strong></span>
+          </div>
+          <div className="draft-profile-stats"><span>2023 stats</span><div><b>ATT<small>103</small></b><b>YDS<small>800</small></b><b>YPC<small>7.8</small></b><b>REC<small>27</small></b><b>YDS<small>197</small></b><b>TD<small>8</small></b><b>FPTS<small>{selectedPlayer.points}</small></b></div></div>
+          <div className="draft-profile-projection"><span>Projection</span><div><b>2024<small>875.5</small></b><b>Rush YDS<small>214.3</small></b><b>Rec YDS<small>9.2</small></b><b>TD<small>{(selectedPlayer.points + 9.3).toFixed(1)}</small></b></div></div>
+        </article>
+
+        <article className="draft-log-panel">
+          <h2>Draft log</h2>
+          <div>
+            {draftLog.map(({ slot, team, pick }) => (
+              <div key={pick.pickNo}>
+                <span>{formatPickNumber(pick.pickNo, activeTeamCount)}</span>
+                <ManagerIdentity compact name={team?.name ?? `Team ${slot}`} />
+                <p><strong>{team?.name ?? `Team ${slot}`}</strong><small>{pick ? `${pick.playerName} ${pick.position} - ${pick.nflTeam}` : "Awaiting pick"}</small></p>
               </div>
             ))}
           </div>
-        </SurfaceCard>
+          <button onClick={() => setLogOpen(true)} type="button">View Full Log</button>
+        </article>
 
-        <SurfaceCard className="draft-policy-card" variant="sports">
-          <div className="league-team-icon"><ShieldCheck size={20} /></div>
-          <span className="eyebrow">Sync policy</span>
-          <h3>Read-only and manual-control safe</h3>
-          <p>The draft room polls Sleeper public draft state, de-duplicates by pick number, and never auto-drafts or calls private endpoints.</p>
-          <div className="draft-policy-list">
-            <span><CheckCircle2 size={14} />1s sync</span>
-            <span><CheckCircle2 size={14} />No auto-draft</span>
-            <span><CheckCircle2 size={14} />Official endpoint</span>
-          </div>
-        </SurfaceCard>
-
-        <SurfaceCard className="draft-policy-card" variant="sports">
-          <div className="league-team-icon"><Users size={20} /></div>
-          <span className="eyebrow">Room intelligence</span>
-          <h3>Whole-board visibility</h3>
-          <p>Team columns make positional runs, roster pressure, and upcoming pick pockets much easier to see while the draft is moving.</p>
-          <Link className="league-inline-link" href="/league-hub">Open League Hub <ArrowRight size={14} /></Link>
-        </SurfaceCard>
+        <article className="draft-team-needs-panel">
+          <h2>Team needs</h2>
+          <div><span>QB <b className="need-weak">Weak</b></span><span>RB <b className="need-strong">Strong</b></span><span>WR <b className="need-moderate">Moderate</b></span><span>TE <b className="need-moderate">Moderate</b></span><span>FLEX <b>--</b></span><span>DST <b className="need-strong">Strong</b></span></div>
+        </article>
       </section>
+
+      <section className="draft-action-bar">
+        <div className="draft-action-controls">
+          <label>Auto Sync <button aria-checked={enabled} className={enabled ? "active" : ""} disabled={!paidAccess} onClick={() => setEnabled((value) => !value)} role="switch" type="button"><span /></button></label>
+          <label>Suggestions <button aria-checked={suggestionsEnabled} className={suggestionsEnabled ? "active" : ""} onClick={() => setSuggestionsEnabled((value) => !value)} role="switch" type="button"><span /></button></label>
+          <button className="draft-filter-button" onClick={() => document.querySelector<HTMLInputElement>(".draft-player-search input")?.focus()} type="button"><SlidersHorizontal size={16} /> Filter Players</button>
+        </div>
+        <div className="draft-on-clock-callout"><strong>{notice || "You're on the clock!"}</strong><span>{notice ? `Board ${boardCompletion}% complete` : "Make your pick."}</span></div>
+        <button className="draft-make-pick" onClick={handleMakePick} type="button">{hasConnectedSleeperDraft ? "Make Pick in Sleeper" : "Make Your Pick"}</button>
+      </section>
+
+      {logOpen ? (
+        <div className="draft-log-dialog-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setLogOpen(false); }} role="presentation">
+          <section aria-label="Full draft log" aria-modal="true" className="draft-log-dialog" role="dialog">
+            <header><div><span>Live board history</span><h2>Full Draft Log</h2></div><button aria-label="Close full draft log" onClick={() => setLogOpen(false)} type="button"><X size={18} /></button></header>
+            <div className="draft-log-dialog-list">
+              {[...boardPicks].sort((a, b) => b.pickNo - a.pickNo).map((pick) => {
+                const team = teamLookup.get(pick.slot);
+                return (
+                  <article key={`full-log-${pick.pickNo}`}>
+                    <span>{formatPickNumber(pick.pickNo, activeTeamCount)}</span>
+                    <ManagerIdentity compact name={team?.name ?? pick.teamName} />
+                    <div><strong>{pick.playerName}</strong><small><b className={positionClass(pick.position)}>{pick.position}</b>{teamMeta(pick.nflTeam).name}</small></div>
+                    <em>{pick.source}</em>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

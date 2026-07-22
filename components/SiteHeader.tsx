@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronDown, LogIn, LogOut, Menu, UserCircle, X } from "lucide-react";
+import { ArrowRight, ChevronDown, LogIn, LogOut, Menu, UserCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { navItems } from "@/config/navigation";
@@ -18,6 +18,7 @@ const mobileUtilityNav = visibleNav.filter((item) => ["Pricing", "FAQ"].includes
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const draftRoomHeader = pathname === "/draft-room";
   const [open, setOpen] = useState(false);
   const [openMobileGroup, setOpenMobileGroup] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -103,7 +104,7 @@ export function SiteHeader() {
   ) : null;
 
   return (
-    <header className="site-header">
+    <header className={draftRoomHeader ? "site-header draft-site-header" : "site-header"}>
       <Link className="brand-lockup" href="/" aria-label="theblitzroom home">
         <span className="brand-mark">
           <Image src="/branding/tbr-fantasy-neon-v1.png" alt="" width={50} height={48} priority />
@@ -149,15 +150,17 @@ export function SiteHeader() {
                 <LogIn size={16} />
               </span>
               <span className="header-account-copy">
-                <small>Account</small>
-                <strong>Sign in</strong>
+                <small>{draftRoomHeader ? "" : "Account"}</small>
+                <strong>{draftRoomHeader ? "Log In" : "Sign in"}</strong>
               </span>
             </Link>
           ) : (
             <span className="header-auth-loading" aria-label="Checking account status" />
           )}
         </span>
-        <PremiumButton href="/pricing" variant="secondary">View plans</PremiumButton>
+        <PremiumButton href="/pricing" variant="secondary">
+          {draftRoomHeader ? <>Get Started <ArrowRight size={15} /></> : "View plans"}
+        </PremiumButton>
         <button className="icon-button mobile-menu-button" onClick={() => setOpen(true)} aria-label="Open menu">
           <Menu size={20} />
         </button>

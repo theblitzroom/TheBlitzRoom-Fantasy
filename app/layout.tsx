@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Manrope, Newsreader } from "next/font/google";
 import "./globals.css";
 import "./clubhouse.css";
 import "./product-theme.css";
+import "./draft-room-workspace.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 

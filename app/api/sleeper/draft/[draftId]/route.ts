@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getEntitlementState } from "@/lib/entitlements";
-import { getSleeperDraft } from "@/lib/sleeper/client";
+import { getSleeperDraft, getSleeperUser } from "@/lib/sleeper/client";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ draftId: string }> }) {
   const entitlement = await getEntitlementState("draft_pro");
@@ -19,7 +19,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ dra
   try {
     const { draftId } = await params;
     const draft = await getSleeperDraft(draftId);
-    return NextResponse.json(draft);
+    const participantIds = draft.league_id ? [] : Object.keys(draft.draft_order ?? {});
+    const participants = await Promise.all(
+      participantIds.map((userId) => getSleeperUser(userId).catch(() => ({ user_id: userId })))
+    );
+    return NextResponse.json({ ...draft, participants });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Sleeper draft lookup failed" }, { status: 502 });
   }
