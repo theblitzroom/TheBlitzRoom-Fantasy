@@ -7181,39 +7181,31 @@ body:has(.mock-home) .site-footer {
 .mock-draft-box > span {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   color: #fff;
   font-size: 13px;
   font-weight: 850;
 }
 
-.mock-draft-box > span strong {
-  display: inline-grid;
-  min-width: 38px;
-  height: 28px;
-  place-items: center;
-  border: 1px solid rgba(0, 240, 96, 0.34);
-  border-radius: 7px;
-  padding-inline: 7px;
-  color: #00f060;
-  background: rgba(0, 240, 96, 0.09);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
-  font-size: 17px;
-  line-height: 1;
-}
-
 .mock-draft-box div {
   display: flex;
+  justify-content: center;
   gap: 8px;
   margin-top: 12px;
 }
 
 .mock-draft-box b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
   border-radius: 999px;
   padding: 7px 12px;
   color: #00eaff;
   background: rgba(0, 234, 255, 0.08);
   font-size: 11px;
+  line-height: 1;
+  text-align: center;
 }
 
 .mock-trade-box {

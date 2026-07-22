@@ -248,7 +248,7 @@ export default function HomePage() {
           <article className="mock-feature-card">
             <div className="mock-feature-title"><Bot size={42} /><span><strong>Live Draft Assistant</strong><small>Get real-time recommendations tailored to your team.</small></span></div>
             <div className="mock-draft-box">
-              <span>Draft Recommendation <strong>A+</strong></span>
+              <span>Draft Recommendation</span>
               <div><b>Best Value</b><b>Fills Need</b><b>Beats ADP</b></div>
             </div>
           </article>

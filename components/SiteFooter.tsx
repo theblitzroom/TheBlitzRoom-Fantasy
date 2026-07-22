@@ -30,10 +30,10 @@ export function SiteFooter() {
       <div className="footer-brand">
         <Link className="brand-lockup" href="/" aria-label="theblitzroom home">
           <span className="brand-mark">
-            <Image src="/theblitzroom-logo.png" alt="" width={46} height={46} />
+            <Image src="/branding/tbr-fantasy-neon-v1.png" alt="" width={50} height={48} />
           </span>
           <span>
-            <strong>theblitzroom</strong>
+            <strong>The Blitz Room</strong>
             <small>Fantasy</small>
           </span>
         </Link>

@@ -106,11 +106,11 @@ export function SiteHeader() {
     <header className="site-header">
       <Link className="brand-lockup" href="/" aria-label="theblitzroom home">
         <span className="brand-mark">
-          <Image src="/theblitzroom-logo.png" alt="" width={46} height={46} priority />
+          <Image src="/branding/tbr-fantasy-neon-v1.png" alt="" width={50} height={48} priority />
         </span>
         <span>
-          <strong>theblitzroom</strong>
-          <small>Fantasy intelligence</small>
+          <strong>The Blitz Room</strong>
+          <small>Fantasy</small>
         </span>
       </Link>
 

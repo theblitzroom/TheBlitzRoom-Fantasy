@@ -1,0 +1,901 @@
+/*
+ * TheBlitzRoom live product system
+ *
+ * This layer translates the approved landing-page language across the app
+ * without changing feature logic or the isolated .mock-home experience.
+ */
+
+:root {
+  --canvas: #02060a;
+  --canvas-raised: #040b12;
+  --surface: #07111d;
+  --surface-2: #0a1725;
+  --surface-3: #0d1e2e;
+  --line: rgba(116, 153, 194, 0.16);
+  --line-strong: rgba(135, 177, 222, 0.26);
+  --line-focus: rgba(0, 240, 96, 0.74);
+  --text: #f5f9fc;
+  --text-2: #9eacbc;
+  --text-3: #667589;
+  --violet: #00f060;
+  --violet-bright: #4dff94;
+  --violet-wash: rgba(0, 240, 96, 0.1);
+  --green: #00f060;
+  --green-wash: rgba(0, 240, 96, 0.1);
+  --brass: #00ddeb;
+  --brass-wash: rgba(0, 221, 235, 0.1);
+  --amber: #f4b847;
+  --red: #ff6877;
+  --qb: #a78bfa;
+  --rb: #00e77a;
+  --wr: #38bdf8;
+  --te: #f4b847;
+  --radius-1: 4px;
+  --radius-2: 7px;
+  --radius-3: 9px;
+  --radius-4: 12px;
+  --shadow-low: 0 14px 38px rgba(0, 0, 0, 0.28);
+  --shadow-high: 0 28px 84px rgba(0, 0, 0, 0.5);
+  --background: var(--canvas);
+  --background-secondary: var(--surface);
+  --card: var(--surface-2);
+  --primary: var(--green);
+  --primary-hover: #1cff74;
+  --secondary: var(--brass);
+  --warning: var(--amber);
+  --danger: var(--red);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-2);
+  --border: var(--line);
+}
+
+html:not(:has(.mock-home)) {
+  color-scheme: dark;
+  background: var(--canvas);
+}
+
+body:not(:has(.mock-home)) {
+  color: var(--text);
+  background:
+    radial-gradient(circle at 82% 8%, rgba(0, 240, 96, 0.055), transparent 28%),
+    radial-gradient(circle at 14% 34%, rgba(0, 221, 235, 0.035), transparent 24%),
+    linear-gradient(90deg, transparent 0, transparent calc(50% - 1px), rgba(117, 157, 199, 0.025) 50%, transparent calc(50% + 1px)),
+    linear-gradient(180deg, #02060a 0%, #040a10 48%, #02060a 100%);
+}
+
+body:not(:has(.mock-home)) ::selection {
+  color: #020703;
+  background: #00f060;
+}
+
+body:not(:has(.mock-home)) :where(h1, h2, h3, h4, strong) {
+  color: var(--text);
+}
+
+body:not(:has(.mock-home)) :where(p, small, label) {
+  color: var(--text-2);
+}
+
+body:not(:has(.mock-home)) :where(a, button, input, select, textarea):focus-visible {
+  outline-color: var(--green);
+}
+
+/* Global actions */
+
+body:not(:has(.mock-home)) :where(.premium-button, .tb-button) {
+  border-radius: var(--radius-2);
+  font-weight: 850;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+body:not(:has(.mock-home)) :where(.premium-button-primary, .tb-button-primary) {
+  color: #020703;
+  border-color: rgba(53, 255, 131, 0.64);
+  background: linear-gradient(135deg, #25ff78 0%, #00e85d 55%, #00c84e 100%);
+  box-shadow: 0 10px 28px rgba(0, 240, 96, 0.2), inset 0 1px rgba(255, 255, 255, 0.28);
+}
+
+body:not(:has(.mock-home)) :where(.premium-button-primary, .tb-button-primary):hover {
+  color: #010503;
+  border-color: #59ff99;
+  background: linear-gradient(135deg, #4dff94, #00ed65 58%, #00d254);
+  box-shadow: 0 14px 34px rgba(0, 240, 96, 0.27), inset 0 1px rgba(255, 255, 255, 0.3);
+}
+
+body:not(:has(.mock-home)) :where(.premium-button-secondary, .tb-button-secondary) {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: rgba(8, 19, 31, 0.84);
+}
+
+body:not(:has(.mock-home)) :where(.premium-button-secondary, .tb-button-secondary):hover {
+  color: #fff;
+  border-color: rgba(0, 221, 235, 0.45);
+  background: rgba(10, 29, 43, 0.94);
+}
+
+body:not(:has(.mock-home)) :where(.premium-button-ghost, .tb-button-ghost, .secondary-link) {
+  color: var(--text-2);
+}
+
+body:not(:has(.mock-home)) :where(.premium-button-ghost, .tb-button-ghost, .secondary-link):hover {
+  color: var(--brass);
+}
+
+body:not(:has(.mock-home)) :where(.badge, .tb-badge, .league-filter-pill, .sync-status, .plan-badge, .roster-warning-pill, .league-tier, .position-chip, .draft-context-row span) {
+  color: var(--text-2);
+  border-color: var(--line);
+  background: rgba(8, 22, 35, 0.78);
+}
+
+body:not(:has(.mock-home)) :where(.badge-premium, .tb-badge-premium, .plan-badge) {
+  color: #7afcaa;
+  border-color: rgba(0, 240, 96, 0.3);
+  background: rgba(0, 240, 96, 0.09);
+}
+
+body:not(:has(.mock-home)) :where(.tb-badge-success, .sync-status-synced, .sync-status-ready, .sync-status-active, .status-connected) {
+  color: #5dff9b;
+  border-color: rgba(0, 240, 96, 0.28);
+  background: rgba(0, 240, 96, 0.08);
+}
+
+body:not(:has(.mock-home)) :where(.tb-badge-warning, .sync-status-syncing, .sync-status-loading) {
+  color: #ffd078;
+  border-color: rgba(244, 184, 71, 0.3);
+  background: rgba(244, 184, 71, 0.09);
+}
+
+body:not(:has(.mock-home)) :where(.tb-badge-danger, .sync-status-error, .status-error, .league-error, .sync-error) {
+  color: #ff9ba5;
+  border-color: rgba(255, 104, 119, 0.3);
+  background: rgba(255, 104, 119, 0.08);
+}
+
+/* Application header */
+
+body:not(:has(.mock-home)) .site-header {
+  min-height: 70px;
+  padding-block: 8px;
+  border-bottom: 1px solid rgba(116, 153, 194, 0.19);
+  background: rgba(1, 5, 10, 0.9);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+body:not(:has(.mock-home)) .brand-lockup {
+  gap: 10px;
+}
+
+body:not(:has(.mock-home)) .brand-mark {
+  width: 50px;
+  height: 48px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body:not(:has(.mock-home)) .brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  filter: contrast(1.08) saturate(1.08) drop-shadow(0 0 8px rgba(0, 240, 96, 0.16));
+}
+
+body:not(:has(.mock-home)) .brand-lockup strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+body:not(:has(.mock-home)) .brand-lockup small {
+  color: var(--green);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+body:not(:has(.mock-home)) :where(.nav-link, .nav-menu summary) {
+  color: var(--text-2);
+  border-radius: var(--radius-2);
+  background: transparent;
+}
+
+body:not(:has(.mock-home)) :where(.nav-link:hover, .nav-link.active, .nav-menu[open] summary, .nav-menu.active summary) {
+  color: #fff;
+  background: rgba(0, 240, 96, 0.07);
+}
+
+body:not(:has(.mock-home)) :where(.nav-link.active, .nav-menu.active summary) {
+  box-shadow: inset 0 -2px 0 var(--green);
+}
+
+body:not(:has(.mock-home)) :where(.header-account-pill, .header-account-avatar, .header-signout-button, .icon-button, .mobile-account-card) {
+  color: var(--text-2);
+  border-color: var(--line);
+  background: rgba(8, 19, 31, 0.74);
+}
+
+body:not(:has(.mock-home)) .header-account-pill:hover {
+  border-color: rgba(0, 221, 235, 0.38);
+  background: rgba(10, 29, 43, 0.9);
+}
+
+body:not(:has(.mock-home)) :where(.header-account-copy small, .header-account-copy strong) {
+  color: var(--text-2);
+}
+
+body:not(:has(.mock-home)) .header-account-status-dot {
+  border-color: var(--surface);
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(0, 240, 96, 0.65);
+}
+
+body:not(:has(.mock-home)) :where(.nav-menu-panel, .mobile-drawer-panel) {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: rgba(4, 11, 18, 0.98);
+  box-shadow: var(--shadow-high);
+}
+
+body:not(:has(.mock-home)) :where(.nav-menu-link:hover, .nav-menu-link.active, .mobile-primary-link.active, .mobile-nav-link.active, .mobile-utility-link.active) {
+  color: #fff;
+  background: rgba(0, 240, 96, 0.08);
+}
+
+/* Product rail */
+
+body:not(:has(.mock-home)) .product-command-nav {
+  border-color: var(--line);
+  background: rgba(4, 12, 20, 0.91);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(20px) saturate(145%);
+}
+
+body:not(:has(.mock-home)) :where(.product-command-nav-label, .product-command-more) {
+  border-color: var(--line);
+}
+
+body:not(:has(.mock-home)) .product-command-nav-label span {
+  color: var(--green);
+}
+
+body:not(:has(.mock-home)) .product-command-nav-label strong {
+  color: #fff;
+}
+
+body:not(:has(.mock-home)) :where(.product-command-link, .product-command-more > summary) {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) .product-command-dock .product-command-link-icon {
+  color: var(--text-3);
+  border-color: var(--line);
+  background: rgba(8, 22, 35, 0.82);
+}
+
+body:not(:has(.mock-home)) :where(.product-command-link:hover, .product-command-more > summary:hover, .product-command-more.active > summary, .product-command-more[open] > summary) {
+  color: #fff;
+  border-color: rgba(0, 221, 235, 0.26);
+  background: rgba(0, 221, 235, 0.065);
+}
+
+body:not(:has(.mock-home)) .product-command-link.active {
+  color: #031007;
+  border-color: rgba(44, 255, 124, 0.72);
+  background: linear-gradient(145deg, #23fa72, #00cf52);
+  box-shadow: 0 10px 28px rgba(0, 240, 96, 0.2);
+}
+
+body:not(:has(.mock-home)) .product-command-dock .product-command-link.active .product-command-link-icon {
+  color: #031007;
+  border-color: rgba(2, 16, 7, 0.14);
+  background: rgba(255, 255, 255, 0.32);
+}
+
+body:not(:has(.mock-home)) :where(.product-command-more-menu, .product-command-dock .product-command-more-menu) {
+  border-color: var(--line-strong);
+  background: rgba(4, 11, 18, 0.98);
+  box-shadow: var(--shadow-high);
+}
+
+body:not(:has(.mock-home)) .product-command-track::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 96, 0.25);
+}
+
+/* Page hierarchy */
+
+body:not(:has(.mock-home)) :where(.section-shell, .command-center-page, .draft-room-page) {
+  padding-top: 26px;
+}
+
+body:not(:has(.mock-home)) .section-heading {
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 16px 4px 24px;
+  border-bottom-color: var(--line);
+}
+
+body:not(:has(.mock-home)) .section-heading h1 {
+  max-width: 900px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: clamp(38px, 4vw, 60px);
+  font-weight: 880;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+body:not(:has(.mock-home)) .section-heading p {
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+body:not(:has(.mock-home)) .eyebrow {
+  color: var(--brass);
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+
+body:not(:has(.mock-home)) .section-heading-status {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) .section-heading-status i {
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(0, 240, 96, 0.09), 0 0 12px rgba(0, 240, 96, 0.38);
+}
+
+/* Core surfaces */
+
+body:not(:has(.mock-home)) :where(
+  .tb-card,
+  .tb-app-hero,
+  .data-card,
+  .sync-panel,
+  .locked-panel,
+  .policy-card,
+  .account-card,
+  .account-benefits,
+  .auth-card,
+  .pricing-preview-card,
+  .pricing-group,
+  .pricing-compare,
+  .pricing-trust-row,
+  .extension-action-card,
+  .league-command-panel,
+  .league-connect-panel,
+  .league-rankings-card,
+  .league-side-card,
+  .league-value-board,
+  .league-economy-panel,
+  .league-team-card,
+  .league-signal-panel,
+  .league-signal-card,
+  .team-roster-board,
+  .team-score-card,
+  .team-key-metrics,
+  .team-action-card,
+  .team-strength-panel,
+  .team-detail-card,
+  .team-analytics-card,
+  .team-lineup-panel,
+  .draft-room-copy,
+  .draft-sync-card,
+  .draft-board-panel,
+  .draft-recommendation-card,
+  .draft-queue-card,
+  .draft-stream-card,
+  .draft-policy-card,
+  .draft-dossier-card,
+  .pricing-card,
+  .team-position-roster-card,
+  .team-picks-mini-card,
+  .command-context-card,
+  .command-hero-card,
+  .command-tool-drawer,
+  .command-league-card,
+  .admin-tool-card,
+  .admin-tool-panel,
+  .insight-card,
+  .trade-side-card,
+  .trade-idea-card
+) {
+  color: var(--text);
+  border-color: var(--line);
+  background:
+    linear-gradient(145deg, rgba(30, 64, 91, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(8, 20, 33, 0.97), rgba(5, 14, 24, 0.97));
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+body:not(:has(.mock-home)) :where(.tb-app-hero, .league-command-panel, .command-hero-card, .draft-room-copy) {
+  background:
+    radial-gradient(circle at 92% 10%, rgba(0, 240, 96, 0.11), transparent 32%),
+    linear-gradient(115deg, rgba(0, 221, 235, 0.055), transparent 48%),
+    linear-gradient(180deg, #081725, #05101b);
+}
+
+body:not(:has(.mock-home)) :where(.tb-card, .league-team-card, .team-action-card, .command-league-card):hover {
+  border-color: rgba(0, 240, 96, 0.3);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 240, 96, 0.035);
+}
+
+body:not(:has(.mock-home)) :where(
+  .section-heading h1,
+  .section-heading.slim h2,
+  .tb-app-hero h2,
+  .league-command-copy h2,
+  .league-card-header h2,
+  .team-roster-board h2,
+  .command-hero-card h1,
+  .command-center-launch h1,
+  .pricing-group-header h2,
+  .pricing-compare-header h2,
+  .pricing-preview-card h2,
+  .draft-room-copy h1,
+  .draft-dossier-hero h2
+) {
+  color: #fff;
+  font-family: var(--font-ui);
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+body:not(:has(.mock-home)) :where(
+  .section-heading p,
+  .tb-app-hero p,
+  .league-command-copy p,
+  .draft-room-copy p,
+  .draft-dossier-hero p,
+  .pricing-preview-card p,
+  .pricing-group-header p,
+  .pricing-compare-header p,
+  .account-benefits p,
+  .account-card p,
+  .policy-card p,
+  .locked-panel p,
+  .draft-pick-card-read p
+) {
+  color: var(--text-2);
+}
+
+body:not(:has(.mock-home)) :where(.tb-metric-tile, .league-stat, .score-grid > span, .draft-dossier-score, .draft-dossier-notes > div, .pricing-preview-features span, .pricing-trust-row span, .account-checklist span, .account-stat-grid span, .command-context-item) {
+  color: var(--text-2);
+  border-color: var(--line);
+  background: rgba(3, 11, 19, 0.72);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+body:not(:has(.mock-home)) :where(.tb-metric-tile strong, .league-stat strong, .score-grid strong, .draft-dossier-score strong, .team-score-card > strong) {
+  color: #fff;
+}
+
+body:not(:has(.mock-home)) :where(.tb-segment-control, .auth-tabs, .value-filter-row) {
+  border-color: var(--line);
+  background: rgba(2, 9, 16, 0.82);
+}
+
+body:not(:has(.mock-home)) :where(.tb-segment-control button, .auth-tabs button, .value-filter-row button) {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) :where(.tb-segment-control button.active, .auth-tabs button.active, .value-filter-row button.active) {
+  color: #021006;
+  background: var(--green);
+}
+
+/* Forms */
+
+body:not(:has(.mock-home)) :where(input, select, textarea, .tb-input) {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: rgba(2, 10, 17, 0.88);
+}
+
+body:not(:has(.mock-home)) :where(input, textarea)::placeholder {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) :where(input, select, textarea):focus {
+  border-color: rgba(0, 240, 96, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 240, 96, 0.09);
+}
+
+body:not(:has(.mock-home)) :where(input, select, textarea):disabled {
+  color: var(--text-3);
+  border-color: var(--line);
+  background: rgba(7, 17, 29, 0.68);
+  opacity: 1;
+}
+
+/* Tables and dense sports data */
+
+body:not(:has(.mock-home)) :where(.league-table-wrap, .value-table-wrap, .roster-table-wrap) {
+  border-color: var(--line);
+  background: rgba(3, 11, 19, 0.52);
+}
+
+body:not(:has(.mock-home)) :where(.league-table, .value-table, .roster-table) {
+  color: var(--text);
+}
+
+body:not(:has(.mock-home)) :where(.league-table th, .value-table th, .roster-table th) {
+  color: var(--text-3);
+  border-color: var(--line);
+  background: rgba(3, 12, 20, 0.96);
+}
+
+body:not(:has(.mock-home)) :where(.league-table td, .value-table td, .roster-table td) {
+  color: var(--text-2);
+  border-color: var(--line);
+}
+
+body:not(:has(.mock-home)) :where(.league-table tbody tr:hover, .value-table tbody tr:hover, .roster-table tbody tr:hover) {
+  background: rgba(0, 240, 96, 0.045);
+}
+
+body:not(:has(.mock-home)) :where(.rank-chip, .league-tier, .position-chip) {
+  border-color: var(--line);
+  background: rgba(8, 22, 35, 0.82);
+}
+
+/* Draft command room */
+
+body:not(:has(.mock-home)) .draft-room-copy {
+  border: 1px solid var(--line);
+}
+
+body:not(:has(.mock-home)) :where(.draft-room-status-strip, .room-status-rail) {
+  color: var(--text-2);
+  border-color: var(--line);
+  background: rgba(3, 11, 19, 0.82);
+}
+
+body:not(:has(.mock-home)) .draft-board-scroll {
+  border-color: var(--line);
+  background: #030b13;
+}
+
+body:not(:has(.mock-home)) :where(.draft-board-grid, .draft-board-team-row, .draft-board-round, .draft-board-cell, .draft-board-pick, .preview-board-pick, .draft-team-header, .draft-round-label, .draft-pick-cell) {
+  border-color: var(--line);
+}
+
+body:not(:has(.mock-home)) :where(.draft-board-team-row, .draft-board-round, .draft-board-corner, .draft-team-header, .draft-round-label) {
+  color: var(--text-3);
+  background: #07111d;
+}
+
+body:not(:has(.mock-home)) .draft-team-header.mine {
+  color: #6effa5;
+  border-color: rgba(0, 240, 96, 0.32);
+  background: rgba(0, 240, 96, 0.09);
+  box-shadow: inset 0 -2px var(--green);
+}
+
+body:not(:has(.mock-home)) :where(.draft-board-cell, .draft-board-pick, .preview-board-pick, .draft-pick-cell) {
+  color: var(--text);
+  background: #091522;
+}
+
+body:not(:has(.mock-home)) :where(.draft-board-cell:hover, .draft-board-pick:hover, .draft-pick-cell:hover, .draft-pick-cell.active) {
+  border-color: rgba(0, 240, 96, 0.34);
+  background: rgba(0, 240, 96, 0.055);
+}
+
+body:not(:has(.mock-home)) .draft-pick-cell.active {
+  border-color: rgba(0, 240, 96, 0.42);
+  background: rgba(0, 240, 96, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(0, 240, 96, 0.1), 0 0 20px rgba(0, 240, 96, 0.05);
+}
+
+body:not(:has(.mock-home)) :where(.draft-pick-label, .draft-pick-meta, .draft-dossier-table > div) {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) .draft-pick-label b {
+  color: var(--green);
+}
+
+body:not(:has(.mock-home)) .draft-recommendation-card {
+  border-color: rgba(0, 240, 96, 0.32);
+  background:
+    radial-gradient(circle at 88% 6%, rgba(0, 240, 96, 0.11), transparent 34%),
+    linear-gradient(180deg, #091824, #06111d);
+}
+
+body:not(:has(.mock-home)) :where(.draft-recommendation-card, .draft-pick-cell) .player-identity-copy strong {
+  color: #fff;
+}
+
+body:not(:has(.mock-home)) .draft-recommendation-card > .player-identity .player-identity-copy strong {
+  color: #fff;
+}
+
+body:not(:has(.mock-home)) :where(.player-identity-copy strong, .team-identity strong) {
+  color: var(--text);
+}
+
+body:not(:has(.mock-home)) :where(.player-identity-copy small, .team-identity small) {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) :where(.draft-pick-card-read, .draft-dossier-hero) {
+  border-color: var(--line);
+  background: rgba(4, 14, 24, 0.84);
+}
+
+body:not(:has(.mock-home)) .draft-dossier-notes article {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-2);
+  background: rgba(3, 11, 19, 0.66);
+}
+
+body:not(:has(.mock-home)) .draft-dossier-notes article span {
+  color: var(--text-3);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+body:not(:has(.mock-home)) .draft-dossier-notes article strong {
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* Team, league, matchup, waivers, and market */
+
+body:not(:has(.mock-home)) :where(.league-filter-bar, .team-roster-toolbar, .team-news-strip, .matchup-toolbar, .waiver-filter-row, .trade-filter-row) {
+  border-color: var(--line);
+  background: rgba(3, 11, 19, 0.78);
+}
+
+body:not(:has(.mock-home)) :where(.league-team-icon, .team-detail-icon, .player-avatar, .team-news-photo) {
+  border-color: var(--line-strong);
+  background: rgba(8, 22, 35, 0.9);
+}
+
+body:not(:has(.mock-home)) :where(.league-value-row, .team-position-player, .team-pick-row, .waiver-player-row, .matchup-team-row, .trade-asset-row) {
+  color: var(--text);
+  border-color: var(--line);
+  background: rgba(3, 11, 19, 0.58);
+}
+
+body:not(:has(.mock-home)) :where(.league-value-row:hover, .team-position-player:hover, .waiver-player-row:hover, .trade-asset-row:hover) {
+  border-color: rgba(0, 221, 235, 0.27);
+  background: rgba(0, 221, 235, 0.04);
+}
+
+body:not(:has(.mock-home)) :where(.portfolio-meter, .score-meter, .value-meter) {
+  background: rgba(2, 9, 16, 0.86);
+}
+
+body:not(:has(.mock-home)) :where(.portfolio-meter i, .score-meter i, .value-meter i) {
+  background: linear-gradient(90deg, var(--green), var(--brass));
+  box-shadow: 0 0 14px rgba(0, 240, 96, 0.2);
+}
+
+/* Pricing, access, and policy pages */
+
+body:not(:has(.mock-home)) .pricing-card.highlighted {
+  border-color: rgba(0, 240, 96, 0.42);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(0, 240, 96, 0.11), transparent 36%),
+    linear-gradient(180deg, #091c22, #06101b);
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(0, 240, 96, 0.045);
+}
+
+body:not(:has(.mock-home)) .pricing-card .price {
+  color: var(--green);
+}
+
+body:not(:has(.mock-home)) .pricing-card li {
+  color: var(--text-2);
+}
+
+body:not(:has(.mock-home)) .pricing-card li::before {
+  background: var(--green);
+}
+
+body:not(:has(.mock-home)) .economy-map {
+  border-color: var(--line);
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    #030b13;
+  background-size: 50% 50%;
+}
+
+body:not(:has(.mock-home)) .economy-dot {
+  color: #031007;
+  border-color: rgba(0, 240, 96, 0.52);
+  background: linear-gradient(145deg, #52ff98, #00cf57);
+  box-shadow: 0 0 18px rgba(0, 240, 96, 0.18);
+}
+
+body:not(:has(.mock-home)) :where(.locked-panel, .league-access-note, .command-status-note) {
+  color: var(--text-2);
+  border-color: rgba(244, 184, 71, 0.24);
+  background: rgba(244, 184, 71, 0.055);
+}
+
+/* Footer */
+
+body:not(:has(.mock-home)) .site-footer {
+  margin-top: 56px;
+  padding: 42px 0 54px;
+  border-top-color: var(--line);
+}
+
+body:not(:has(.mock-home)) .footer-brand p {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) .footer-title {
+  color: var(--green);
+}
+
+body:not(:has(.mock-home)) .site-footer nav a {
+  color: var(--text-3);
+}
+
+body:not(:has(.mock-home)) .site-footer nav a:hover {
+  color: var(--brass);
+}
+
+/* Motion */
+
+body:not(:has(.mock-home)) :where(.tb-card, .league-team-card, .team-action-card, .command-league-card, .draft-board-cell, .draft-board-pick, .product-command-link) {
+  transition:
+    transform 160ms var(--ease),
+    border-color 160ms var(--ease),
+    background 160ms var(--ease),
+    box-shadow 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+@media (min-width: 981px) {
+  body:not(:has(.mock-home)) :where(
+    .draft-command-room,
+    .command-center-launch,
+    .league-hub,
+    .team-hub-page,
+    .waiver-wire-page,
+    .matchup-command-page,
+    .trade-market-page,
+    .extension-connect-page,
+    .tb-page
+  ):has(> .product-command-dock) {
+    display: flow-root;
+    position: relative;
+    padding-left: 116px;
+  }
+
+  body:not(:has(.mock-home)) :where(
+    .draft-command-room,
+    .command-center-launch,
+    .league-hub,
+    .team-hub-page,
+    .waiver-wire-page,
+    .matchup-command-page,
+    .trade-market-page,
+    .extension-connect-page,
+    .tb-page
+  ):has(> .product-command-dock) > .product-command-dock {
+    float: left;
+    width: 98px;
+    margin-right: 18px;
+    margin-left: -116px;
+  }
+
+  body:not(:has(.mock-home)) :where(
+    .draft-command-room,
+    .command-center-launch,
+    .league-hub,
+    .team-hub-page,
+    .waiver-wire-page,
+    .matchup-command-page,
+    .trade-market-page,
+    .extension-connect-page,
+    .tb-page
+  ):has(> .product-command-dock) > :not(.product-command-dock) {
+    margin-bottom: 18px;
+  }
+
+  body:not(:has(.mock-home)) :where(
+    .draft-command-room,
+    .command-center-launch,
+    .league-hub,
+    .team-hub-page,
+    .waiver-wire-page,
+    .matchup-command-page,
+    .trade-market-page,
+    .extension-connect-page,
+    .tb-page
+  ):has(> .product-command-dock) > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  body:not(:has(.mock-home)) .site-header {
+    min-height: 64px;
+    background: #02070c;
+    backdrop-filter: none;
+  }
+
+  body:not(:has(.mock-home)) .brand-mark {
+    width: 44px;
+    height: 42px;
+  }
+
+  body:not(:has(.mock-home)) .product-command-dock {
+    background: rgba(4, 12, 20, 0.96);
+  }
+
+  body:not(:has(.mock-home)) .mobile-drawer {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    padding: 10px;
+    background: rgba(1, 5, 10, 0.82);
+    backdrop-filter: blur(14px);
+  }
+
+  body:not(:has(.mock-home)) .mobile-drawer-panel {
+    width: min(420px, 100%);
+    height: calc(100dvh - 20px);
+    border-color: var(--line-strong);
+    background: #040b12;
+  }
+
+  body:not(:has(.mock-home)) .mobile-drawer-top > div {
+    display: grid;
+    gap: 3px;
+  }
+
+  body:not(:has(.mock-home)) .mobile-primary-link.active {
+    color: #031007;
+    background: linear-gradient(145deg, #28fa76, #00cf52);
+  }
+
+  body:not(:has(.mock-home)) :where(.mobile-nav-link.active, .mobile-utility-link.active) {
+    color: var(--green);
+    background: rgba(0, 240, 96, 0.075);
+  }
+
+  body:not(:has(.mock-home)) :where(.mobile-drawer-top, .mobile-drawer-footer, .mobile-nav-group) {
+    border-color: var(--line);
+  }
+
+  body:not(:has(.mock-home)) .section-heading {
+    padding-top: 8px;
+  }
+
+  body:not(:has(.mock-home)) .section-heading h1 {
+    font-size: clamp(34px, 10vw, 48px);
+  }
+}
+
+@media (max-width: 620px) {
+  body:not(:has(.mock-home)) :where(.section-shell, .command-center-page, .draft-room-page) {
+    width: min(100% - 24px, var(--max));
+    padding-top: 16px;
+  }
+
+  body:not(:has(.mock-home)) .site-footer {
+    width: min(100% - 24px, var(--max));
+    margin-top: 32px;
+  }
+}

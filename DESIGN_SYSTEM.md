@@ -1,6 +1,6 @@
 # theblitzroom Product Design System
 
-This test rebuild establishes **Private Club** for theblitzroom: a premium football intelligence system with quiet luxury, editorial sports character, clear decision hierarchy, and a warm visual language that does not rely on the logo for recognition.
+This rebuild establishes **Live Room** for The Blitz Room: a premium football-intelligence system built around broadcast clarity, dark technical surfaces, decisive green actions, cyan data labels, and dense sports information that remains easy to scan. The product should remain recognizable when the logo is removed.
 
 ## Product Audit
 
@@ -11,9 +11,9 @@ Current inventory:
 - Data/tool components: LeagueHubDashboard, MyTeamOverviewTool, DraftRoomCommandCenter, PowerRankingsTool, MatchupCommandTool, WaiverWireTool, TradeMarketTool, RostersTool.
 
 Style inconsistencies found:
-- The previous stylesheet mixed several generations of tokens and page-specific overrides. It has been replaced by one coherent foundation with explicit sections for primitives, shell, public pages, and product surfaces.
+- The previous stylesheet mixed several generations of tokens and page-specific overrides. `product-theme.css` now provides the final scoped product layer while the approved landing page remains isolated.
 - Card treatments repeat similar gradients, borders, shadows, and radii under many names.
-- Gold is used as both an action color and a premium/value color, which weakens hierarchy.
+- Green is the only primary action and live-state color. Cyan is informational. Amber is reserved for warnings and premium/value moments.
 - Input, badge, table, and row states are restyled per feature instead of sharing primitives.
 - Product pages generally use shared navigation but not shared page, card, metric, table, or state components.
 - Dense fantasy data often has good information, but the visual hierarchy can feel equally loud across hero panels, callouts, filters, cards, and tables.
@@ -21,7 +21,7 @@ Style inconsistencies found:
 Representative migration:
 - Draft Room is the reference implementation because it is the signature product screen: live pick state, recommendation hierarchy, draft-board cells, roster build, player rows, sync state, data density, and responsive draft-night behavior.
 - Homepage hero is the public proof surface and shows the real Draft Room product immediately.
-- League Hub has an early migrated preview layer from the initial foundation pass and should be revisited after Draft Room and the homepage hero establish the final pattern.
+- Command Center, Draft Room, League Hub, Team Hub, pricing, account surfaces, and mobile navigation now use the same shared product layer.
 
 ## Reference Translation
 
@@ -40,7 +40,7 @@ Do not copy proprietary layouts, brand assets, color systems, illustrations, or 
 Typography:
 - Brand name: always `theblitzroom`.
 - Primary font: Manrope.
-- Editorial accent: Newsreader, used only for selective emphasis.
+- Editorial accent: Newsreader is not used in routine product UI; reserve it for rare long-form editorial moments.
 - Numeric font: IBM Plex Mono for pick numbers, ADP, values, clocks, and compact labels.
 - Display: 48/56, 56/60, 72/76 for public hero moments only.
 - Page title: 36/42 to 48/52.
@@ -57,16 +57,21 @@ Spacing:
 - Public page sections use 56-80px vertical rhythm.
 
 Colors:
-- 90% warm neutral: #F7F4EC canvas, #FFFEFA surfaces, #171717 text, and #E7E0D2 soft-stone structure.
-- 8% deep field green: primary actions, active navigation, live readiness, focus, and decision confidence.
-- 2% champagne gold: premium membership, elite tiers, exceptional value, plan highlights, and rare win signals.
-- Violet is secondary only: charts, position identity, and select fantasy indicators.
-- Avoid loud fantasy-football color blocks, neon glow, gradient borders, and constant champagne outlines.
+- Canvas: #02060A with #040B12 raised areas.
+- Surfaces: #07111D, #0A1725, and #0D1E2E.
+- Text: #F5F9FC primary, #9EACBC secondary, #667589 tertiary.
+- Action/live: #00F060. Use for primary commands, active navigation, healthy sync, and decisive recommendations.
+- Data: #00DDEB. Use for labels, secondary data emphasis, and informational states.
+- Warning/value: #F4B847. Use sparingly for warnings, premium context, and meaningful value signals.
+- Danger: #FF6877.
+- Position identity may use restrained violet, green, blue, and amber accents without filling entire cards.
+- Glow is limited to live indicators, focused actions, and the strongest recommendation state.
 
 Borders:
-- Default border: soft stone.
-- Strong border: field-green or deeper stone for active/focus states.
-- Gold border: premium or featured states only.
+- Default border: rgba(116, 153, 194, 0.16).
+- Strong border: rgba(135, 177, 222, 0.26).
+- Focus border: green at 50-74% opacity.
+- Amber border: premium or warning states only.
 
 Shadows:
 - Level 1: subtle card elevation.
@@ -82,21 +87,21 @@ Radius:
 - pill: 999px only for statuses, filters, tags, and segmented controls.
 
 Buttons:
-- Primary: deep field green, for main product actions.
-- Secondary: soft-white with stone border, for normal actions.
+- Primary: bright field green with near-black text.
+- Secondary: deep blue-black surface with a cool border.
 - Ghost: transparent, for low-emphasis navigation.
 - Danger: restrained red, for destructive actions.
-- Champagne is reserved for premium/high-value states, not ordinary buttons.
+- Amber is reserved for premium/high-value states, not ordinary buttons.
 
 Inputs:
-- Soft-white surface, subtle stone border, 44-48px height, clear field-green focus ring, compact labels.
+- Blue-black surface, subtle cool border, 44-48px height, clear green focus ring, compact labels.
 - Disabled states should look unavailable without disappearing.
 
 Cards:
-- App card: Linear-like elevated dark surface.
+- App card: blue-black elevated surface with subtle top-lighting.
 - Data card: Mercury-like numeric hierarchy.
 - Sports card: Sleeper-inspired identity/position/tier treatment.
-- Premium card: gold border/highlight used sparingly.
+- Premium card: green decision emphasis or amber premium emphasis, never both at once.
 
 Tables:
 - Sticky or visually anchored headers when possible.
@@ -114,7 +119,7 @@ Tier treatments:
 - Contender: restrained emerald/purple blend.
 - Builder: muted violet.
 - Middle/Neutral: cool gray.
-- Premium/high confidence: gold accent only when it changes decision priority.
+- Premium/high confidence: green accent when it changes decision priority; amber remains a paid-tier or warning cue.
 
 Loading, empty, and error:
 - Loading: quiet skeleton or status row.
@@ -135,11 +140,11 @@ Breakpoints:
 
 ## Migration Plan
 
-1. Add shared CSS tokens and primitive utility classes.
-2. Add small React primitives for cards, hero panels, badges, metrics, callouts, and segmented controls.
-3. Redesign only the public homepage hero and Draft Room as the premium vertical slice.
-4. Run visual QA at desktop, tablet, and mobile widths.
-5. After approval, apply the system to Rankings, Trade and value tools, Command Center, Account, onboarding, pricing, and remaining pages.
+1. Keep landing-specific styles isolated under `.mock-home`.
+2. Build all product pages from `globals.css`, `clubhouse.css`, and the final `product-theme.css` layer.
+3. Use shared React primitives for cards, hero panels, badges, metrics, callouts, and segmented controls.
+4. Verify Command Center, Draft Room, League Hub, Team Hub, pricing, account, and mobile navigation after shared style changes.
+5. Preserve rankings logic, live-sync behavior, auth, payments, and data models during visual work.
 
 ## Signature Components
 
