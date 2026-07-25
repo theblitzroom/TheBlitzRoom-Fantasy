@@ -68,7 +68,7 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: clamp(20px, 2.6vw, 42px);
+  gap: clamp(16px, 2vw, 34px);
 }
 
 .navLinks a {

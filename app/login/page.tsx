@@ -24,11 +24,12 @@ export default function LoginPage() {
         </Link>
 
         <div className={styles.navLinks}>
-          <Link href="/draft-room">Draft Tools</Link>
-          <Link href="/power-rankings">Rankings</Link>
+          <Link href="/">Home</Link>
+          <Link href="/draft-room">Draft Assistant</Link>
+          <Link href="/league-hub">Rankings</Link>
           <Link href="/trade-calculator">Trade Analyzer</Link>
-          <Link href="/pricing">Pricing</Link>
-          <Link href="/faq">Help</Link>
+          <Link href="/draft-room">Mock Drafts</Link>
+          <Link href="/command-center">News</Link>
           <Link className={styles.navLogin} href="/login">
             <LogIn aria-hidden="true" size={15} />
             <span>Log In</span>
