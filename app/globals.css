@@ -4205,3 +4205,16 @@ body:has(.login-page-route) .site-header,
 body:has(.login-page-route) .site-footer {
   display: none;
 }
+
+.pricing-page-route {
+  isolation: isolate;
+}
+
+body:has(.pricing-page-route) {
+  background: #02060b;
+}
+
+body:has(.pricing-page-route) .site-header,
+body:has(.pricing-page-route) .site-footer {
+  display: none;
+}
