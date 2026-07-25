@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Activity, Crosshair, LogIn, Radio, ShieldCheck, Smartphone, Trophy, Users } from "lucide-react";
+import { Activity, ChevronRight, Crosshair, Radio, ShieldCheck, Smartphone, Trophy, Users } from "lucide-react";
 import { AuthPanel } from "@/components/AuthPanel";
 import styles from "./login.module.css";
 
@@ -24,16 +24,17 @@ export default function LoginPage() {
         </Link>
 
         <div className={styles.navLinks}>
-          <Link href="/">Home</Link>
+          <Link className={styles.activeNavLink} href="/">Home</Link>
           <Link href="/draft-room">Draft Assistant</Link>
           <Link href="/league-hub">Rankings</Link>
           <Link href="/trade-calculator">Trade Analyzer</Link>
           <Link href="/draft-room">Mock Drafts</Link>
           <Link href="/command-center">News</Link>
-          <Link className={styles.navLogin} href="/login">
-            <LogIn aria-hidden="true" size={15} />
-            <span>Log In</span>
-          </Link>
+        </div>
+
+        <div className={styles.navActions}>
+          <Link href="/login">Log In</Link>
+          <Link href="/pricing">Get Started <ChevronRight aria-hidden="true" size={18} /></Link>
         </div>
       </nav>
 
