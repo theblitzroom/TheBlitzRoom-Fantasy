@@ -9,7 +9,10 @@ import {
   ArrowUpRight,
   CircleAlert,
   Crown,
+  Database,
   Gauge,
+  LayoutDashboard,
+  Link2,
   RefreshCcw,
   ShieldAlert,
   Sparkles,
@@ -631,8 +634,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
         title={activeLeague ? activeLeague.name : "Connect Sleeper and load the league."}
         description={(
           <>
-            Scan a Sleeper username, choose a league, and turn public league settings,
-            rosters, managers, and draft state into a usable power board.
+            One clean view of roster strength, contender windows, league settings,
+            and future-value leverage.
           </>
         )}
       >
@@ -644,13 +647,50 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
         {!liveAccess ? (
           <StateCallout className="league-access-note" variant="premium">
             <CircleAlert size={18} />
-            <span>Logged-out visitors see a demo preview. Sign in to unlock live Sleeper scans, power rankings, roster tables, and draft handoff.</span>
-            <Link href="/login?next=/league-hub">Sign in <ArrowRight size={14} /></Link>
+            <span>
+              {signedIn
+                ? "Preview data is shown. Choose a plan to connect your Sleeper leagues."
+                : "Preview data is shown. Sign in to connect Sleeper and load your leagues."}
+            </span>
+            <Link href={signedIn ? "/pricing" : "/login?next=/league-hub"}>
+              {signedIn ? "View plans" : "Sign in"} <ArrowRight size={14} />
+            </Link>
           </StateCallout>
         ) : null}
+        <div className="league-hero-links" aria-label="League workspace shortcuts">
+          <Link href="/power-rankings">
+            <Trophy size={15} />
+            Full rankings
+            <ArrowRight size={14} />
+          </Link>
+          <Link href="/team-hub/my-team">
+            <Users size={15} />
+            My roster
+            <ArrowRight size={14} />
+          </Link>
+          {draftId ? (
+            <Link href={`/draft-room?draftId=${encodeURIComponent(draftId)}`}>
+              <Gauge size={15} />
+              Draft room
+              <ArrowRight size={14} />
+            </Link>
+          ) : null}
+        </div>
       </AppHero>
 
       <SurfaceCard className="league-connect-panel" variant="data" aria-label="Connect Sleeper league">
+        <div className="league-panel-intro">
+          <span className="league-panel-icon"><Database size={19} /></span>
+          <div>
+            <span className="eyebrow">League connection</span>
+            <h2>Choose the league to analyze</h2>
+            <p>Your saved Sleeper connection reloads automatically on your next visit.</p>
+          </div>
+          <ProductBadge variant={activeSummary ? "success" : "muted"}>
+            <Link2 size={13} />
+            {activeSummary ? "Data loaded" : "Awaiting league"}
+          </ProductBadge>
+        </div>
         <form className="league-connect-form" onSubmit={scanLeagues}>
           <label>
             <span>Sleeper username</span>
@@ -718,13 +758,18 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
         <SurfaceCard className="league-rankings-card" variant="data">
           <div className="league-card-header">
             <div>
-              <span className="eyebrow">League rankings</span>
+              <span className="eyebrow">Power board</span>
               <h2>Power, timeline, and leverage</h2>
             </div>
-            <ProductBadge className="league-filter-pill" variant="muted">
-              <Gauge size={14} />
-              {summaryStatus === "loading" ? "Loading" : `${formatLeagueType(activeLeague)} lens`}
-            </ProductBadge>
+            <div className="league-card-actions">
+              <ProductBadge className="league-filter-pill" variant="muted">
+                <Gauge size={14} />
+                {summaryStatus === "loading" ? "Loading" : `${formatLeagueType(activeLeague)} lens`}
+              </ProductBadge>
+              <Link className="league-header-link" href="/power-rankings">
+                View rankings <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
 
           <div className="league-table-wrap">
@@ -772,7 +817,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
         <aside className="league-side-stack" aria-label="League context">
           <SurfaceCard className="league-side-card" variant="sports">
             <div className="league-card-header compact">
-              <span className="eyebrow">Room shape</span>
+              <span className="eyebrow">League pulse</span>
               <Trophy size={18} />
             </div>
             <div className="league-meter">
@@ -790,7 +835,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
           <SurfaceCard className="league-side-card">
             <div className="league-card-header compact">
               <span className="eyebrow">Settings snapshot</span>
-              <Users size={18} />
+              <LayoutDashboard size={18} />
             </div>
             <div className="settings-list">
               {settings.map(([label, value]) => (

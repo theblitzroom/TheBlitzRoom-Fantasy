@@ -4,6 +4,7 @@ import "./globals.css";
 import "./clubhouse.css";
 import "./product-theme.css";
 import "./draft-room-workspace.css";
+import "./league-hub-workspace.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
