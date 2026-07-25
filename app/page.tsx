@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Manrope } from "next/font/google";
+import "./landing.css";
+
+const manrope = Manrope({ subsets: ["latin"] });
 
 const navItems = [
   ["Home", "/"],
@@ -65,7 +69,7 @@ function playerImage(id: string) {
 
 export default function HomePage() {
   return (
-    <main className="mock-home">
+    <main className={`mock-home ${manrope.className}`}>
       <nav className="mock-nav" aria-label="The Blitz Room navigation">
         <Link className="mock-brand" href="/">
           <Image className="mock-brand-logo" src="/branding/tbr-fantasy-neon-v1.png" width={58} height={55} alt="" aria-hidden="true" priority />
