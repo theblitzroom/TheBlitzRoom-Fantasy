@@ -4193,3 +4193,15 @@ textarea:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+.login-page-route {
+  isolation: isolate;
+}
+
+body:has(.login-page-route) {
+  background: #03070b;
+}
+
+body:has(.login-page-route) .site-header,
+body:has(.login-page-route) .site-footer {
+  display: none;
+}

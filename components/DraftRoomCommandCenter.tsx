@@ -201,6 +201,21 @@ function buildSyncedBoard(picks: SleeperPick[], teams: number): DraftBoardPick[]
   });
 }
 
+function pickFingerprint(picks: SleeperPick[]) {
+  return JSON.stringify(picks.map((pick) => [
+    pick.pick_no,
+    pick.round,
+    pick.draft_slot ?? null,
+    pick.roster_id ?? null,
+    pick.player_id ?? null,
+    pick.picked_by ?? null,
+    pick.metadata?.first_name ?? null,
+    pick.metadata?.last_name ?? null,
+    pick.metadata?.position ?? null,
+    pick.metadata?.team ?? null
+  ]));
+}
+
 function positionClass(position: string) {
   return `draft-position draft-position-${position.toLowerCase()}`;
 }
@@ -256,7 +271,22 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
   const [notice, setNotice] = useState("");
   const inFlight = useRef<AbortController | null>(null);
   const loadedDraftContext = useRef("");
+  const lastPickFingerprint = useRef("");
+  const statusRef = useRef<SyncStatus>("idle");
+  const errorRef = useRef("");
   const viewerUserId = useRef("");
+
+  const updateStatus = useCallback((nextStatus: SyncStatus) => {
+    if (statusRef.current === nextStatus) return;
+    statusRef.current = nextStatus;
+    setStatus(nextStatus);
+  }, []);
+
+  const updateError = useCallback((nextError: string) => {
+    if (errorRef.current === nextError) return;
+    errorRef.current = nextError;
+    setError(nextError);
+  }, []);
 
   useEffect(() => {
     const saved = readSavedSync();
@@ -281,6 +311,8 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
 
   useEffect(() => {
     loadedDraftContext.current = "";
+    lastPickFingerprint.current = "";
+    setPicks([]);
   }, [draftId]);
 
   const loadDraftContext = useCallback(async (normalizedDraftId: string) => {
@@ -315,23 +347,22 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
     }
   }, []);
 
-  const syncNow = useCallback(async () => {
+  const syncNow = useCallback(async ({ showSyncing = false }: { showSyncing?: boolean } = {}) => {
     if (!paidAccess) {
-      setStatus("error");
-      setError(signedIn ? "Choose a plan to unlock live Sleeper draft sync." : "Sign in to unlock live Sleeper draft sync.");
+      updateStatus("error");
+      updateError(signedIn ? "Choose a plan to unlock live Sleeper draft sync." : "Sign in to unlock live Sleeper draft sync.");
       return;
     }
     if (!draftId.trim()) {
-      setStatus("error");
-      setError("Add a Sleeper draft ID or open Draft Room from a connected league.");
+      updateStatus("error");
+      updateError("Add a Sleeper draft ID or open Draft Room from a connected league.");
       return;
     }
+    if (document.visibilityState !== "visible" || inFlight.current) return;
 
-    inFlight.current?.abort();
     const controller = new AbortController();
     inFlight.current = controller;
-    setStatus("syncing");
-    setError("");
+    if (showSyncing && statusRef.current !== "synced") updateStatus("syncing");
 
     try {
       const normalizedDraftId = draftId.trim();
@@ -343,50 +374,71 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
       }
       const data = await response.json() as { picks: SleeperPick[] };
       const deduped = Array.from(new Map(data.picks.map((pick) => [pick.pick_no, pick])).values()).sort((a, b) => a.pick_no - b.pick_no);
-      setPicks(deduped);
-      setStatus("synced");
+      const fingerprint = pickFingerprint(deduped);
+      if (lastPickFingerprint.current !== fingerprint) {
+        lastPickFingerprint.current = fingerprint;
+        setPicks(deduped);
+      }
+      updateError("");
+      updateStatus("synced");
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === "AbortError") return;
-      setStatus("error");
-      setError(caught instanceof Error ? caught.message : "Sync failed");
+      updateStatus("error");
+      updateError(caught instanceof Error ? caught.message : "Sync failed");
+    } finally {
+      if (inFlight.current === controller) inFlight.current = null;
     }
-  }, [draftId, loadDraftContext, paidAccess, signedIn]);
+  }, [draftId, loadDraftContext, paidAccess, signedIn, updateError, updateStatus]);
 
   useEffect(() => {
     if (!enabled) {
       inFlight.current?.abort();
-      setStatus("idle");
+      inFlight.current = null;
+      updateStatus("idle");
       return;
     }
     if (!paidAccess) {
       setEnabled(false);
-      setStatus("error");
-      setError(signedIn ? "Choose a plan to start live Sleeper draft sync." : "Sign in to start live Sleeper draft sync.");
+      updateStatus("error");
+      updateError(signedIn ? "Choose a plan to start live Sleeper draft sync." : "Sign in to start live Sleeper draft sync.");
       return;
     }
 
-    void syncNow();
-    const interval = window.setInterval(() => void syncNow(), POLL_MS);
-    return () => {
-      window.clearInterval(interval);
+    let interval: number | null = null;
+    let started = false;
+
+    const stopPolling = () => {
+      if (interval !== null) window.clearInterval(interval);
+      interval = null;
       inFlight.current?.abort();
+      inFlight.current = null;
     };
-  }, [enabled, paidAccess, signedIn, syncNow]);
 
-  useEffect(() => {
-    if (!enabled || !paidAccess) return;
+    const startPolling = () => {
+      if (document.visibilityState !== "visible" || interval !== null) return;
+      void syncNow({ showSyncing: !started });
+      started = true;
+      interval = window.setInterval(() => void syncNow(), POLL_MS);
+    };
 
-    const refreshVisibleDraft = () => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") startPolling();
+      else stopPolling();
+    };
+
+    const handleFocus = () => {
       if (document.visibilityState === "visible") void syncNow();
     };
 
-    window.addEventListener("focus", refreshVisibleDraft);
-    document.addEventListener("visibilitychange", refreshVisibleDraft);
+    startPolling();
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      window.removeEventListener("focus", refreshVisibleDraft);
-      document.removeEventListener("visibilitychange", refreshVisibleDraft);
+      stopPolling();
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [enabled, paidAccess, syncNow]);
+  }, [enabled, paidAccess, signedIn, syncNow, updateError, updateStatus]);
 
   const syncedBoard = useMemo(() => buildSyncedBoard(picks, draftTeamCount), [draftTeamCount, picks]);
   const demoBoard = useMemo(() => buildDemoBoard(selectedLeague), [selectedLeague]);
@@ -465,7 +517,7 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
 
     setEnabled(true);
     setNotice("Sleeper opened. Make the pick there and this board will sync it automatically.");
-    void syncNow();
+    void syncNow({ showSyncing: true });
     window.open(`https://sleeper.com/draft/nfl/${encodeURIComponent(draftId.trim())}`, "_blank", "noopener,noreferrer");
   }
 
@@ -531,7 +583,7 @@ export function DraftRoomCommandCenter({ paidAccess, signedIn }: DraftRoomComman
               </label>
               <div>
                 <button onClick={() => setEnabled((value) => !value)} type="button" disabled={!paidAccess}>{enabled ? "Pause sync" : "Start sync"}</button>
-                <button onClick={() => void syncNow()} type="button" disabled={!paidAccess}><RefreshCcw size={13} /> Sync now</button>
+                <button onClick={() => void syncNow({ showSyncing: true })} type="button" disabled={!paidAccess}><RefreshCcw size={13} /> Sync now</button>
               </div>
               {!paidAccess ? <p><CircleAlert size={13} /> {signedIn ? "Choose a paid plan for live sync." : "Sign in for live sync."}</p> : null}
               {error ? <p className="draft-sync-error">{error}</p> : null}

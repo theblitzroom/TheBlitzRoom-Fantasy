@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -8,6 +9,7 @@ type AuthMode = "signin" | "signup";
 
 type AuthPanelProps = {
   defaultRedirectTo?: string;
+  presentation?: "default" | "immersive";
 };
 
 function safeInternalRedirect(value?: string | null) {
@@ -28,16 +30,23 @@ function safeInternalRedirect(value?: string | null) {
   }
 }
 
-export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
+export function AuthPanel({ defaultRedirectTo, presentation = "default" }: AuthPanelProps) {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const supabase = useMemo(() => {
+    try {
+      return createSupabaseBrowserClient();
+    } catch {
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     const authError = new URLSearchParams(window.location.search).get("auth_error");
@@ -75,6 +84,10 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
     setError("");
 
     try {
+      if (!supabase) {
+        throw new Error("Account access is unavailable in this local preview.");
+      }
+
       const trimmedEmail = email.trim();
 
       if (mode === "signup") {
@@ -125,6 +138,10 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
     setError("");
 
     try {
+      if (!supabase) {
+        throw new Error("Password reset is unavailable in this local preview.");
+      }
+
       if (!email.trim()) {
         throw new Error("Enter your email address first, then request a password reset.");
       }
@@ -146,54 +163,95 @@ export function AuthPanel({ defaultRedirectTo }: AuthPanelProps) {
   }
 
   return (
-    <div className="auth-card">
-      <div className="auth-tabs" role="tablist" aria-label="Account access">
-        <button className={mode === "signin" ? "active" : ""} type="button" onClick={() => setMode("signin")}>
-          Sign in
-        </button>
-        <button className={mode === "signup" ? "active" : ""} type="button" onClick={() => setMode("signup")}>
-          Create account
-        </button>
-      </div>
+    <div className={`auth-card${presentation === "immersive" ? " auth-card-immersive" : ""}`}>
+      {presentation === "immersive" ? (
+        <div className="auth-panel-heading">
+          <span className="auth-panel-kicker">{mode === "signin" ? "Member access" : "Create your account"}</span>
+          <h1>{mode === "signin" ? "Log In to Your Account" : "Join TBR Fantasy"}</h1>
+          <p>
+            {mode === "signin"
+              ? "Access your teams, tools, and league dashboard."
+              : "Create one account for draft tools, rankings, and league intelligence."}
+          </p>
+        </div>
+      ) : (
+        <div className="auth-tabs" role="tablist" aria-label="Account access">
+          <button className={mode === "signin" ? "active" : ""} type="button" onClick={() => setMode("signin")}>
+            Sign in
+          </button>
+          <button className={mode === "signup" ? "active" : ""} type="button" onClick={() => setMode("signup")}>
+            Create account
+          </button>
+        </div>
+      )}
 
       <form className="auth-form" onSubmit={submitAuth}>
         <label>
           Email address
-          <input
-            autoComplete="email"
-            inputMode="email"
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-            required
-            type="email"
-            value={email}
-          />
+          <span className="auth-input-shell">
+            <Mail aria-hidden="true" size={18} />
+            <input
+              autoComplete="email"
+              inputMode="email"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              required
+              type="email"
+              value={email}
+            />
+          </span>
         </label>
         <label>
           Password
-          <input
-            autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            minLength={6}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Minimum 6 characters"
-            required
-            type="password"
-            value={password}
-          />
+          <span className="auth-input-shell">
+            <LockKeyhole aria-hidden="true" size={18} />
+            <input
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              minLength={6}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={mode === "signin" ? "Enter your password" : "Minimum 6 characters"}
+              required
+              type={showPassword ? "text" : "password"}
+              value={password}
+            />
+            <button
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="auth-password-toggle"
+              onClick={() => setShowPassword((visible) => !visible)}
+              type="button"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </span>
         </label>
-        <button className="premium-button premium-button-primary" disabled={loading} type="submit">
-          {loading ? "Working..." : mode === "signin" ? "Sign in" : "Create account"}
-        </button>
         {mode === "signin" ? (
-          <div className="auth-secondary-actions">
+          <div className="auth-secondary-actions auth-session-row">
+            <span><ShieldCheck size={15} /> Secure session</span>
             <button className="auth-reset-link" disabled={resetLoading} onClick={sendPasswordReset} type="button">
               {resetLoading ? "Sending reset email..." : "Forgot password?"}
             </button>
           </div>
         ) : null}
+        <button className="premium-button premium-button-primary auth-submit-button" disabled={loading} type="submit">
+          <span>{loading ? "Working..." : mode === "signin" ? "Log In" : "Create Account"}</span>
+          {!loading ? <ArrowRight aria-hidden="true" size={19} /> : null}
+        </button>
         {message ? <p className="auth-message">{message}</p> : null}
         {error ? <p className="sync-error">{error}</p> : null}
       </form>
+
+      {presentation === "immersive" ? (
+        <p className="auth-mode-switch">
+          {mode === "signin" ? "Don’t have an account?" : "Already have an account?"}
+          <button type="button" onClick={() => {
+            setMode((current) => current === "signin" ? "signup" : "signin");
+            setError("");
+            setMessage("");
+          }}>
+            {mode === "signin" ? "Create account" : "Log in"}
+          </button>
+        </p>
+      ) : null}
     </div>
   );
 }
