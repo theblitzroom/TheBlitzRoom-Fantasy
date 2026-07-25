@@ -26,10 +26,10 @@ export default function LoginPage() {
         <div className={styles.navLinks}>
           <Link className={styles.activeNavLink} href="/">Home</Link>
           <Link href="/draft-room">Draft Assistant</Link>
-          <Link href="/league-hub">Rankings</Link>
+          <Link href="/league-hub">League Hub</Link>
           <Link href="/trade-calculator">Trade Analyzer</Link>
           <Link href="/draft-room">Mock Drafts</Link>
-          <Link href="/command-center">News</Link>
+          <Link href="/power-rankings">Rankings</Link>
         </div>
 
         <div className={styles.navActions}>

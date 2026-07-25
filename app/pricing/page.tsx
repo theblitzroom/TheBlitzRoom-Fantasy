@@ -8,9 +8,9 @@ import styles from "./pricing.module.css";
 const navItems = [
   ["Home", "/"],
   ["Features", "/command-center"],
-  ["Rankings", "/league-hub"],
+  ["League Hub", "/league-hub"],
   ["Pricing", "/pricing"],
-  ["News", "/command-center"]
+  ["Rankings", "/power-rankings"]
 ];
 
 export default function PricingPage() {

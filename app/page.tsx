@@ -25,10 +25,10 @@ const manrope = Manrope({ subsets: ["latin"] });
 const navItems = [
   ["Home", "/"],
   ["Draft Assistant", "/draft-room"],
-  ["Rankings", "/league-hub"],
+  ["League Hub", "/league-hub"],
   ["Trade Analyzer", "/trade-calculator"],
   ["Mock Drafts", "/draft-room"],
-  ["News", "/command-center"]
+  ["Rankings", "/power-rankings"]
 ];
 
 const stats = [
