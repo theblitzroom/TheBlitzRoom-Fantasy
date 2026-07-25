@@ -8,10 +8,6 @@ export async function GET() {
     return NextResponse.json({ redirectTo: "/login" });
   }
 
-  if (entitlement.isAdmin) {
-    return NextResponse.json({ redirectTo: "/admin" });
-  }
-
   if (entitlement.hasPaidAccess) {
     return NextResponse.json({ redirectTo: "/league-hub" });
   }
