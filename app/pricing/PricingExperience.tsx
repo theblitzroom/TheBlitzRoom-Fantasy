@@ -33,11 +33,18 @@ const previewFeatures = [
   { icon: Newspaper, title: "Player News", detail: "Daily NFL context" }
 ];
 
-const draftFeatures = [
+const draftSeasonFeatures = [
+  { icon: Trophy, title: "Unlimited 2026 Drafts", detail: "Every mock and live draft" },
+  { icon: CalendarCheck2, title: "Full Draft-Season Access", detail: "Through February 15, 2027" },
+  { icon: Radio, title: "Sleeper Live Sync", detail: "Picks update in context" },
+  { icon: Bot, title: "Draft Assistant", detail: "BPA plus roster fit" }
+];
+
+const draftMonthlyFeatures = [
   { icon: Radio, title: "Sleeper Live Sync", detail: "Picks update in context" },
   { icon: BarChart3, title: "Draft Rankings", detail: "Redraft and dynasty" },
   { icon: Bot, title: "Draft Assistant", detail: "BPA plus roster fit" },
-  { icon: Zap, title: "Pick Recommendations", detail: "Clear advice on the clock" }
+  { icon: CreditCard, title: "Monthly Flexibility", detail: "Cancel before renewal" }
 ];
 
 const eliteFeatures = [
@@ -91,6 +98,8 @@ export function PricingExperience() {
     draft: findPaidPlan(draftId),
     elite: findPaidPlan(eliteId)
   };
+  const isSeason = mode === "season";
+  const draftFeatures = isSeason ? draftSeasonFeatures : draftMonthlyFeatures;
 
   if (!selectedPlans.draft || !selectedPlans.elite) {
     return <p className={styles.pricingError}>Pricing is temporarily unavailable.</p>;
@@ -137,15 +146,30 @@ export function PricingExperience() {
         </article>
 
         <article className={`${styles.planCard} ${styles.featuredPlan}`}>
-          <span className={styles.popularBadge}><Sparkles aria-hidden="true" size={15} /> Most Popular</span>
+          <span className={styles.popularBadge}>
+            <Sparkles aria-hidden="true" size={15} />
+            {isSeason ? "Best Draft Value" : "Flexible Access"}
+          </span>
           <header>
             <span className={styles.planName}>Draft Pro</span>
             <PriceDisplay mode={mode} plan={selectedPlans.draft} />
-            <p>Live draft intelligence for managers who want the strongest pick on the clock.</p>
+            <p>
+              {isSeason
+                ? "One payment for every 2026 mock and live draft. No recurring bill."
+                : "Live draft intelligence that renews monthly and can be canceled anytime."}
+            </p>
           </header>
+          <div className={styles.billingValue}>
+            <strong>{isSeason ? "Save 25%" : "Pay as you go"}</strong>
+            <span>
+              {isSeason
+                ? "Compared with five monthly payments"
+                : "Keep access only for the months you need"}
+            </span>
+          </div>
           <FeatureList features={draftFeatures} />
           <CheckoutButton highlighted plan={selectedPlans.draft.id}>
-            {mode === "season" ? "Get Draft Pro" : "Subscribe Monthly"} <ArrowRight aria-hidden="true" size={18} />
+            {isSeason ? "Get the 2026 Season Pass" : "Start Monthly Access"} <ArrowRight aria-hidden="true" size={18} />
           </CheckoutButton>
         </article>
 

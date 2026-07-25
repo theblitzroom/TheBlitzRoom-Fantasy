@@ -27,12 +27,12 @@ export const plans: Plan[] = [
     id: "draft_pro_season",
     billing: "season",
     name: "theblitzroom Draft Pro",
-    price: "$39.99",
+    price: "$29.99",
     priceDetail: "2026 season pass",
     badge: "Best draft-night value",
-    audience: "Live draft help without another monthly bill.",
-    features: ["One-time payment", "Sleeper live sync", "Draft board and player rankings", "BPA and roster-need recommendations", "Access through the 2026 fantasy season"],
-    cta: "Get Draft Pro",
+    audience: "Every 2026 mock and live draft for one payment.",
+    features: ["One-time payment with no renewal", "Unlimited 2026 draft rooms", "Sleeper live sync and player rankings", "BPA and roster-fit recommendations", "Access through February 15, 2027"],
+    cta: "Get the 2026 Season Pass",
     highlighted: true
   },
   {
@@ -42,9 +42,9 @@ export const plans: Plan[] = [
     price: "$7.99",
     priceDetail: "per month",
     badge: "Flexible access",
-    audience: "Start small and keep live draft tools active only when you need them.",
-    features: ["Monthly subscription", "Sleeper live sync", "Draft board and player rankings", "BPA and roster-need recommendations", "Cancel before next renewal"],
-    cta: "Subscribe monthly"
+    audience: "Flexible draft-room access that renews monthly.",
+    features: ["Monthly subscription", "Sleeper live sync", "Draft board and player rankings", "BPA and roster-fit recommendations", "Cancel before your next renewal"],
+    cta: "Start Monthly Access"
   },
   {
     id: "dynasty_elite_season",
