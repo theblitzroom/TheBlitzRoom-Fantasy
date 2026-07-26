@@ -1,5 +1,6 @@
 import {
   estimateFantasyValue,
+  playerDisplayName,
   playerPosition
 } from "@/lib/fantasyModel";
 import {
@@ -23,6 +24,27 @@ type ValueMode = "dynasty" | "redraft";
 
 export type PositionValueMap = Record<CorePosition, number>;
 
+export type RosterPlayerAsset = {
+  playerId: string;
+  name: string;
+  position: CorePosition;
+  team?: string | null;
+  role: "Starter" | "Bench" | "Development" | "Reserve";
+  dynastyValue: number;
+  redraftValue: number;
+};
+
+export type OwnedPickAsset = {
+  id: string;
+  season: number;
+  round: number;
+  originalRosterId: number;
+  originalTeam: string;
+  ownerRosterId: number;
+  acquired: boolean;
+  value: number;
+};
+
 export type RosterAssetProfile = {
   roster: LeagueToolRoster;
   team: string;
@@ -40,6 +62,8 @@ export type RosterAssetProfile = {
     dynasty: PositionValueMap;
     redraft: PositionValueMap;
   };
+  players: RosterPlayerAsset[];
+  ownedPicks: OwnedPickAsset[];
   valuedPlayers: number;
 };
 
@@ -136,10 +160,11 @@ function pickSeasonStart(summary: LeagueToolSummary) {
 
 function buildPickValues(summary: LeagueToolSummary) {
   const values = new Map(summary.rosters.map((roster) => [roster.roster_id, 0]));
+  const picks: OwnedPickAsset[] = [];
   const startSeason = pickSeasonStart(summary);
 
   if (!isDynastyLeague(summary)) {
-    return { values, startSeason };
+    return { values, picks, startSeason };
   }
 
   const ownedPicks = new Map<string, number>();
@@ -168,12 +193,29 @@ function buildPickValues(summary: LeagueToolSummary) {
     const [seasonText, roundText] = pickKey.split(":");
     const seasonOffset = Number(seasonText) - startSeason;
     const round = Number(roundText);
+    const originalRosterId = Number(pickKey.split(":")[2]);
     const timeDiscount = Math.pow(0.82, seasonOffset);
     const pickValue = (rookiePickBaseValue[round] ?? 0) * timeDiscount * teamCountAdjustment;
     values.set(ownerId, (values.get(ownerId) ?? 0) + pickValue);
+    const originalRoster = summary.rosters.find((roster) => roster.roster_id === originalRosterId);
+
+    picks.push({
+      id: pickKey,
+      season: Number(seasonText),
+      round,
+      originalRosterId,
+      originalTeam: originalRoster ? managerName(summary.users, originalRoster) : `Roster ${originalRosterId}`,
+      ownerRosterId: ownerId,
+      acquired: ownerId !== originalRosterId,
+      value: pickValue
+    });
   }
 
-  return { values, startSeason };
+  return {
+    values,
+    picks: picks.sort((left, right) => left.season - right.season || left.round - right.round || left.originalRosterId - right.originalRosterId),
+    startSeason
+  };
 }
 
 function relativeProfileScores(
@@ -207,7 +249,7 @@ export function buildLeagueAssetModel(
     };
   }
 
-  const { values: pickValues, startSeason } = buildPickValues(summary);
+  const { values: pickValues, picks, startSeason } = buildPickValues(summary);
   let totalPlayers = 0;
   let valuedPlayers = 0;
 
@@ -218,6 +260,7 @@ export function buildLeagueAssetModel(
     let redraftValue = 0;
     let benchValue = 0;
     let rosterValuedPlayers = 0;
+    const playerAssets: RosterPlayerAsset[] = [];
 
     for (const playerId of new Set(roster.players ?? [])) {
       totalPlayers += 1;
@@ -255,6 +298,16 @@ export function buildLeagueAssetModel(
       if (role !== "Starter") {
         benchValue += dynastyPlayerValue;
       }
+
+      playerAssets.push({
+        playerId,
+        name: playerDisplayName(playerId, player),
+        position,
+        team: player.team,
+        role,
+        dynastyValue: dynastyPlayerValue,
+        redraftValue: redraftPlayerValue
+      });
     }
 
     const manager = managerForRoster(summary.users, roster);
@@ -281,6 +334,8 @@ export function buildLeagueAssetModel(
         dynasty: dynastyByPosition,
         redraft: redraftByPosition
       },
+      players: playerAssets.sort((left, right) => right.dynastyValue - left.dynastyValue),
+      ownedPicks: picks.filter((pick) => pick.ownerRosterId === roster.roster_id),
       valuedPlayers: rosterValuedPlayers
     };
   });

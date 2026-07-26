@@ -7,6 +7,7 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
+  ChevronDown,
   CircleAlert,
   Crown,
   Database,
@@ -20,7 +21,7 @@ import {
   Trophy,
   Users
 } from "lucide-react";
-import { ManagerIdentity } from "@/components/FootballIdentity";
+import { ManagerIdentity, PlayerAvatar, TeamLogo } from "@/components/FootballIdentity";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
 import {
   formatLeagueScoringLabel,
@@ -112,6 +113,7 @@ function buildLeagueSignals(summary: LeagueSummary | null, rows: ReturnType<type
 
 const dynastyPositions = ["All", "QB", "RB", "WR", "TE", "Picks"];
 const redraftPositions = ["All", "QB", "RB", "WR", "TE"];
+const teamRosterPositions = ["QB", "RB", "WR", "TE"] as const;
 
 function formatValue(value: number) {
   if (value >= 1000) {
@@ -119,6 +121,15 @@ function formatValue(value: number) {
   }
 
   return String(Math.round(value));
+}
+
+function pickRoundLabel(round: number) {
+  const suffix = round === 1 ? "st" : round === 2 ? "nd" : round === 3 ? "rd" : "th";
+  return `${round}${suffix}`;
+}
+
+function playerRoleLabel(role: "Starter" | "Bench" | "Development" | "Reserve") {
+  return role === "Development" ? "Taxi" : role;
 }
 
 function EdgeBadge({ edge }: { edge: number }) {
@@ -170,6 +181,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [dynastyPosition, setDynastyPosition] = useState("All");
   const [redraftPosition, setRedraftPosition] = useState("All");
+  const [teamValueMode, setTeamValueMode] = useState<"dynasty" | "redraft">("dynasty");
+  const [expandedRosterId, setExpandedRosterId] = useState<number | null>(null);
   const [scanStatus, setScanStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
   const [summaryStatus, setSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">(liveAccess ? "idle" : "ready");
   const [error, setError] = useState("");
@@ -205,6 +218,40 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
     [assetModel, redraftPosition]
   );
   const economyRows = useMemo(() => buildAccurateEconomyRows(assetModel), [assetModel]);
+  const teamPositionRanks = useMemo(() => {
+    const ranks = new Map<number, Record<string, number>>();
+    const positions = teamValueMode === "dynasty"
+      ? [...teamRosterPositions, "Picks"]
+      : [...teamRosterPositions];
+
+    for (const position of positions) {
+      for (const row of buildAccurateValueStandings(assetModel, teamValueMode, position)) {
+        const rosterRanks = ranks.get(row.rosterId) ?? {};
+        rosterRanks[position] = row.rank;
+        ranks.set(row.rosterId, rosterRanks);
+      }
+    }
+
+    return ranks;
+  }, [assetModel, teamValueMode]);
+  const playerPositionRanks = useMemo(() => {
+    const ranks = new Map<string, number>();
+
+    for (const position of teamRosterPositions) {
+      const players = assetModel.profiles
+        .flatMap((profile) => profile.players)
+        .filter((player) => player.position === position)
+        .sort((left, right) => (
+          teamValueMode === "dynasty"
+            ? right.dynastyValue - left.dynastyValue
+            : right.redraftValue - left.redraftValue
+        ));
+
+      players.forEach((player, index) => ranks.set(`${position}:${player.playerId}`, index + 1));
+    }
+
+    return ranks;
+  }, [assetModel.profiles, teamValueMode]);
   const coverageLabel = summaryStatus === "loading" || assetStatus === "loading"
     ? "Loading player values"
     : assetStatus === "error"
@@ -228,6 +275,14 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const strongestFutureTeam = powerRows.find((row) => row.rosterId === strongestFutureRosterId);
   const fragileTeam = [...powerRows].reverse().find((row) => row.depth === "Thin") ?? powerRows[powerRows.length - 1];
   const draftId = activeSummary?.drafts?.[0]?.draft_id || activeLeague?.draft_id;
+
+  useEffect(() => {
+    setExpandedRosterId((current) => (
+      current && assetModel.profiles.some((profile) => profile.roster.roster_id === current)
+        ? current
+        : assetModel.profiles[0]?.roster.roster_id ?? null
+    ));
+  }, [assetModel.profiles]);
 
   const loadLeagueSummary = useCallback(async (leagueId: string) => {
     if (!liveAccess) {
@@ -535,7 +590,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
           <div className="league-card-header">
             <div>
               <span className="eyebrow">Power board</span>
-              <h2>Power, timeline, and leverage</h2>
+              <h2>Power rankings and roster assets</h2>
             </div>
             <div className="league-card-actions">
               <ProductBadge className="league-filter-pill" variant="muted">
@@ -548,49 +603,170 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             </div>
           </div>
 
-          <div className="league-table-wrap">
-            <table className="league-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Team</th>
-                  <th>Tier</th>
-                  <th>Power</th>
-                  <th>Depth</th>
-                  <th>Record</th>
-                  <th>Read</th>
-                </tr>
-              </thead>
-              <tbody>
-                {powerRows.map((row) => (
-                  <tr key={`${row.rank}-${row.team}`}>
-                    <td><span className="rank-chip">{row.rank}</span></td>
-                    <td>
-                      <ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} />
-                    </td>
-                    <td><span className="league-tier" data-tier={row.tier.toLowerCase()}>{row.tier}</span></td>
-                    <td>
-                      <div className="score-cell">
-                        <strong>{row.score}</strong>
-                        <EdgeBadge edge={row.edge} />
+          <div className="league-team-board-toolbar">
+            <SegmentControl
+              ariaLabel="Team value mode"
+              className="league-team-mode"
+              onChange={(value) => setTeamValueMode(value.toLowerCase() as "dynasty" | "redraft")}
+              options={["Dynasty", "Redraft"]}
+              value={teamValueMode === "dynasty" ? "Dynasty" : "Redraft"}
+            />
+            <span>Choose a team to inspect every roster asset.</span>
+          </div>
+
+          <div className="league-team-board" aria-label="League team power rankings">
+            {powerRows.map((row) => {
+              const profile = assetModel.profiles.find((item) => item.roster.roster_id === row.rosterId);
+              if (!profile) {
+                return null;
+              }
+
+              const expanded = expandedRosterId === row.rosterId;
+              const modeValues = profile.valuesByPosition[teamValueMode];
+              const teamTotal = teamValueMode === "dynasty"
+                ? profile.dynastyValue + profile.pickValue
+                : profile.redraftValue;
+              const distributionValues = [
+                ...teamRosterPositions.map((position) => ({
+                  key: position,
+                  value: modeValues[position]
+                })),
+                ...(teamValueMode === "dynasty" ? [{ key: "Picks", value: profile.pickValue }] : [])
+              ];
+
+              return (
+                <article className={expanded ? "league-team-entry expanded" : "league-team-entry"} key={row.rosterId}>
+                  <button
+                    aria-expanded={expanded}
+                    className="league-team-summary"
+                    onClick={() => setExpandedRosterId(expanded ? null : row.rosterId)}
+                    type="button"
+                  >
+                    <span className="league-team-rank">{row.rank}</span>
+                    <ManagerIdentity avatar={row.managerAvatar} compact name={row.team} subtitle={row.manager} />
+                    <span className="league-tier" data-tier={row.tier.toLowerCase()}>{row.tier}</span>
+                    <span className="league-team-stat league-team-power">
+                      <small>Power</small>
+                      <strong>{row.score}</strong>
+                      <EdgeBadge edge={row.edge} />
+                    </span>
+                    <span className="league-team-stat league-team-record">
+                      <small>Record</small>
+                      <strong>{row.record}</strong>
+                    </span>
+                    <span className="league-team-stat league-team-value">
+                      <small>{teamValueMode === "dynasty" ? "Dynasty assets" : "Redraft value"}</small>
+                      <strong>{formatValue(teamTotal)}</strong>
+                    </span>
+                    <ChevronDown className="league-team-chevron" size={18} />
+                  </button>
+
+                  <div className="league-team-distribution" aria-label={`${row.team} asset distribution`}>
+                    {distributionValues.map((segment) => (
+                      <span
+                        data-position={segment.key.toLowerCase()}
+                        key={segment.key}
+                        style={{ width: `${teamTotal ? Math.max((segment.value / teamTotal) * 100, 2) : 0}%` }}
+                        title={`${segment.key}: ${formatValue(segment.value)}`}
+                      />
+                    ))}
+                  </div>
+
+                  {expanded ? (
+                    <div className="league-team-expanded">
+                      <div className="league-team-read">
+                        <span>{row.signal}</span>
+                        <small>{row.depth} depth</small>
                       </div>
-                    </td>
-                    <td>{row.depth}</td>
-                    <td>{row.record}</td>
-                    <td>{row.signal}</td>
-                  </tr>
-                ))}
-                {!powerRows.length ? (
-                  <tr>
-                    <td colSpan={7}>
-                      {assetStatus === "loading"
-                        ? "Loading rostered players and building the league asset model."
-                        : "Scan a paid league or load the demo to populate rankings."}
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
+                      <div className="league-roster-columns">
+                        {teamRosterPositions.map((position) => {
+                          const players = profile.players
+                            .filter((player) => player.position === position)
+                            .sort((left, right) => (
+                              teamValueMode === "dynasty"
+                                ? right.dynastyValue - left.dynastyValue
+                                : right.redraftValue - left.redraftValue
+                            ));
+                          const positionValue = modeValues[position];
+                          const positionRank = teamPositionRanks.get(row.rosterId)?.[position];
+
+                          return (
+                            <section className="league-roster-column" data-position={position.toLowerCase()} key={position}>
+                              <header>
+                                <div>
+                                  <strong>{position}</strong>
+                                  <small>#{positionRank ?? "-"} in league</small>
+                                </div>
+                                <span>{formatValue(positionValue)}</span>
+                              </header>
+                              <div className="league-roster-player-list">
+                                {players.map((player) => {
+                                  const playerValue = teamValueMode === "dynasty" ? player.dynastyValue : player.redraftValue;
+                                  const playerRank = playerPositionRanks.get(`${position}:${player.playerId}`);
+
+                                  return (
+                                    <div className="league-roster-player" key={player.playerId}>
+                                      <PlayerAvatar name={player.name} playerId={player.playerId} size="xs" />
+                                      <span className="league-roster-player-copy">
+                                        <strong title={player.name}>{player.name}</strong>
+                                        <small>
+                                          <TeamLogo team={player.team} size="xs" />
+                                          <span>{player.team || "FA"}</span>
+                                          <em>{playerRoleLabel(player.role)}</em>
+                                        </small>
+                                      </span>
+                                      <span className="league-roster-player-value">
+                                        <small>#{playerRank ?? "-"}</small>
+                                        <strong>{formatValue(playerValue)}</strong>
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                                {!players.length ? <p>No {position} assets loaded.</p> : null}
+                              </div>
+                            </section>
+                          );
+                        })}
+
+                        <section className="league-roster-column league-roster-picks" data-position="picks">
+                          <header>
+                            <div>
+                              <strong>Picks</strong>
+                              <small>
+                                {teamValueMode === "dynasty"
+                                  ? `#${teamPositionRanks.get(row.rosterId)?.Picks ?? "-"} in league`
+                                  : "Not in redraft score"}
+                              </small>
+                            </div>
+                            <span>{formatValue(profile.pickValue)}</span>
+                          </header>
+                          <div className="league-roster-player-list">
+                            {profile.ownedPicks.map((pick) => (
+                              <div className={pick.acquired ? "league-roster-pick acquired" : "league-roster-pick"} key={pick.id}>
+                                <span className="league-pick-round">{pickRoundLabel(pick.round)}</span>
+                                <span>
+                                  <strong>{pick.season} {pickRoundLabel(pick.round)}</strong>
+                                  <small>{pick.acquired ? `From ${pick.originalTeam}` : "Own pick"}</small>
+                                </span>
+                                <strong>{formatValue(pick.value)}</strong>
+                              </div>
+                            ))}
+                            {!profile.ownedPicks.length ? <p>No future picks detected.</p> : null}
+                          </div>
+                        </section>
+                      </div>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
+            {!powerRows.length ? (
+              <div className="league-team-board-empty">
+                {assetStatus === "loading"
+                  ? "Loading rostered players and building the league asset model."
+                  : "Scan a paid league or load the demo to populate rankings."}
+              </div>
+            ) : null}
           </div>
         </SurfaceCard>
 
