@@ -433,17 +433,44 @@ body:has(.league-hub-page) {
   transform: rotate(180deg);
 }
 
-.league-hub-redesign .league-team-distribution {
-  display: flex;
-  height: 5px;
-  gap: 2px;
-  padding-inline: 13px;
+.league-hub-redesign .league-team-position-ranks {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 0 13px 10px;
+  overflow: hidden;
+  border: 1px solid rgba(94, 132, 158, 0.14);
+  border-radius: 5px;
+  background: rgba(8, 20, 29, 0.66);
 }
 
-.league-hub-redesign .league-team-distribution span {
-  min-width: 2px;
-  border-radius: 2px 2px 0 0;
-  opacity: 0.9;
+.league-hub-redesign .league-team-position-ranks span {
+  display: flex;
+  min-width: 0;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-right: 1px solid rgba(94, 132, 158, 0.12);
+}
+
+.league-hub-redesign .league-team-position-ranks span:last-child {
+  border-right: 0;
+}
+
+.league-hub-redesign .league-team-position-ranks small {
+  color: rgba(157, 180, 195, 0.6);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.league-hub-redesign .league-team-position-ranks strong {
+  color: rgba(240, 247, 251, 0.94);
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .league-hub-redesign :where([data-position="qb"]) {
@@ -464,10 +491,6 @@ body:has(.league-hub-page) {
 
 .league-hub-redesign :where([data-position="picks"]) {
   --position-color: #d8b25c;
-}
-
-.league-hub-redesign .league-team-distribution span {
-  background: var(--position-color);
 }
 
 .league-hub-redesign .league-team-expanded {
@@ -1022,6 +1045,23 @@ body:has(.league-hub-page) {
 
   .league-hub-redesign .league-team-expanded {
     padding: 10px;
+  }
+
+  .league-hub-redesign .league-team-position-ranks {
+    margin: 0 10px 8px;
+  }
+
+  .league-hub-redesign .league-team-position-ranks span {
+    min-height: 26px;
+    gap: 4px;
+  }
+
+  .league-hub-redesign .league-team-position-ranks small {
+    font-size: 8px;
+  }
+
+  .league-hub-redesign .league-team-position-ranks strong {
+    font-size: 10px;
   }
 
   .league-hub-redesign .league-team-read {

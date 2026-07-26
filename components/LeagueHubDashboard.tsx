@@ -626,12 +626,14 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
               const teamTotal = teamValueMode === "dynasty"
                 ? profile.dynastyValue + profile.pickValue
                 : profile.redraftValue;
-              const distributionValues = [
+              const positionRankValues = [
                 ...teamRosterPositions.map((position) => ({
                   key: position,
-                  value: modeValues[position]
+                  rank: teamPositionRanks.get(row.rosterId)?.[position]
                 })),
-                ...(teamValueMode === "dynasty" ? [{ key: "Picks", value: profile.pickValue }] : [])
+                ...(teamValueMode === "dynasty"
+                  ? [{ key: "Picks", rank: teamPositionRanks.get(row.rosterId)?.Picks }]
+                  : [])
               ];
 
               return (
@@ -661,14 +663,12 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                     <ChevronDown className="league-team-chevron" size={18} />
                   </button>
 
-                  <div className="league-team-distribution" aria-label={`${row.team} asset distribution`}>
-                    {distributionValues.map((segment) => (
-                      <span
-                        data-position={segment.key.toLowerCase()}
-                        key={segment.key}
-                        style={{ width: `${teamTotal ? Math.max((segment.value / teamTotal) * 100, 2) : 0}%` }}
-                        title={`${segment.key}: ${formatValue(segment.value)}`}
-                      />
+                  <div className="league-team-position-ranks" aria-label={`${row.team} positional rankings`}>
+                    {positionRankValues.map((position) => (
+                      <span key={position.key} title={`${position.key} rank ${position.rank ?? "unavailable"} of ${powerRows.length}`}>
+                        <small>{position.key}</small>
+                        <strong>#{position.rank ?? "-"}</strong>
+                      </span>
                     ))}
                   </div>
 
