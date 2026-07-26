@@ -518,7 +518,7 @@ body:has(.league-hub-page) {
 }
 
 .league-hub-redesign :where([data-position="picks"]) {
-  --position-color: #b995ff;
+  --position-color: #2bd9e8;
 }
 
 .league-hub-redesign .league-team-expanded {
@@ -717,18 +717,18 @@ body:has(.league-hub-page) {
   width: 27px;
   height: 27px;
   place-items: center;
-  border: 1px solid rgba(185, 149, 255, 0.3);
+  border: 1px solid rgba(43, 217, 232, 0.3);
   border-radius: 6px;
-  color: #b995ff;
-  background: rgba(185, 149, 255, 0.08);
+  color: #2bd9e8;
+  background: rgba(43, 217, 232, 0.08);
   font-family: var(--font-ibm-plex-mono), monospace;
   font-size: 8px;
   font-weight: 800;
 }
 
 .league-hub-redesign .league-roster-pick.acquired {
-  box-shadow: inset 2px 0 0 #b995ff;
-  background: rgba(185, 149, 255, 0.03);
+  box-shadow: inset 2px 0 0 #2bd9e8;
+  background: rgba(43, 217, 232, 0.03);
 }
 
 .league-hub-redesign .league-table-wrap {
