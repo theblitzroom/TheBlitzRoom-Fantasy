@@ -358,6 +358,12 @@ body:has(.league-hub-page) {
   background: rgba(0, 221, 235, 0.065);
 }
 
+.league-hub-redesign .league-tier[data-tier="needs reset"] {
+  border-color: rgba(224, 109, 119, 0.28);
+  color: #ef9ca4;
+  background: rgba(224, 109, 119, 0.07);
+}
+
 .league-hub-redesign .league-side-stack {
   gap: 12px;
 }
@@ -431,7 +437,41 @@ body:has(.league-hub-page) {
 }
 
 .league-hub-redesign .league-value-row button {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
   color: inherit;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.league-hub-redesign .league-value-empty {
+  margin: 0;
+  padding: 28px 14px;
+  color: rgba(169, 191, 205, 0.68);
+  text-align: center;
+}
+
+.league-hub-redesign .league-model-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: -2px 2px 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(94, 132, 158, 0.18);
+  border-radius: 7px;
+  color: rgba(171, 194, 208, 0.72);
+  background: rgba(3, 12, 19, 0.72);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.league-hub-redesign .league-model-note svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--league-cyan);
 }
 
 .league-hub-redesign .economy-map {

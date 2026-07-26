@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -23,10 +23,26 @@ import {
 import { ManagerIdentity } from "@/components/FootballIdentity";
 import { ProductCommandNav } from "@/components/ProductCommandNav";
 import {
-  deriveLeagueProfile,
   formatLeagueScoringLabel,
   formatLeagueTypeLabel
 } from "@/lib/fantasyModel";
+import {
+  buildAccurateEconomyRows,
+  buildAccuratePowerRows,
+  buildAccurateValueStandings,
+  buildLeagueAssetModel
+} from "@/lib/leagueValueEngine";
+import {
+  demoLeagues,
+  demoPlayerDirectory,
+  demoSummary,
+  getDemoSummary,
+  type LeagueLookupResponse,
+  type LeagueToolLeague,
+  type LeagueToolPlayer,
+  type LeagueToolSummary,
+  type LeagueToolUser
+} from "@/lib/leagueTools";
 import {
   getStoredLeagueConnection,
   saveStoredLeagueConnection,
@@ -44,167 +60,14 @@ import {
   cn
 } from "@/components/DesignPrimitives";
 
-type SleeperUser = {
-  user_id?: string;
-  username?: string;
-  display_name?: string;
-};
-
-type SleeperLeague = {
-  league_id: string;
-  name: string;
-  season: string;
-  status: string;
-  sport?: string;
-  total_rosters?: number;
-  draft_id?: string;
-  roster_positions?: string[];
-  scoring_settings?: Record<string, number>;
-  settings?: Record<string, number>;
-};
-
-type SleeperLeagueUser = {
-  user_id: string;
-  display_name?: string;
-  avatar?: string | null;
-  metadata?: {
-    team_name?: string;
-  };
-};
-
-type SleeperRoster = {
-  roster_id: number;
-  owner_id?: string;
-  players?: string[];
-  starters?: string[];
-  reserve?: string[];
-  taxi?: string[];
-  settings?: {
-    wins?: number;
-    losses?: number;
-    ties?: number;
-    fpts?: number;
-    fpts_decimal?: number;
-    ppts?: number;
-    ppts_decimal?: number;
-  };
-};
-
-type SleeperDraft = {
-  draft_id: string;
-  status: string;
-  type?: string;
-  season?: string;
-};
-
-type LeagueLookupResponse = {
-  user: SleeperUser;
-  season: string;
-  leagues: SleeperLeague[];
-};
-
-type LeagueSummary = {
-  league: SleeperLeague;
-  users: SleeperLeagueUser[];
-  rosters: SleeperRoster[];
-  drafts: SleeperDraft[];
-};
+type SleeperUser = LeagueToolUser;
+type SleeperLeague = LeagueToolLeague;
+type LeagueSummary = LeagueToolSummary;
 
 type LeagueHubDashboardProps = {
   paidAccess: boolean;
   signedIn: boolean;
 };
-
-type PowerRow = {
-  rank: string;
-  team: string;
-  manager: string;
-  managerAvatar?: string | null;
-  tier: string;
-  score: number;
-  trend: string;
-  depth: string;
-  record: string;
-  signal: string;
-};
-
-type ValueStandingRow = {
-  rank: number;
-  team: string;
-  manager: string;
-  managerAvatar?: string | null;
-  value: number;
-  position: string;
-  rosterId: number;
-};
-
-const demoLeagues: SleeperLeague[] = [
-  {
-    league_id: "demo-dynasty-war-room",
-    name: "Apex League",
-    season: "2026",
-    status: "in_season",
-    total_rosters: 12,
-    draft_id: "demo_draft_12_team_superflex",
-    roster_positions: ["QB", "RB", "RB", "WR", "WR", "WR", "TE", "FLEX", "FLEX", "SUPER_FLEX", "BN", "BN"],
-    scoring_settings: { rec: 1 }
-  },
-  {
-    league_id: "demo-redraft-gauntlet",
-    name: "Redraft Gauntlet",
-    season: "2026",
-    status: "pre_draft",
-    total_rosters: 10,
-    draft_id: "demo_draft_10_team_redraft",
-    roster_positions: ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "FLEX", "BN", "BN"],
-    scoring_settings: { rec: 0.5 }
-  }
-];
-
-const demoSummary: LeagueSummary = {
-  league: demoLeagues[0],
-  users: [
-    { user_id: "1", display_name: "Apex Window", metadata: { team_name: "Apex Window" } },
-    { user_id: "2", display_name: "Tempo Kings", metadata: { team_name: "Tempo Kings" } },
-    { user_id: "3", display_name: "Future Bank", metadata: { team_name: "Future Bank" } },
-    { user_id: "4", display_name: "Need Leverage", metadata: { team_name: "Need Leverage" } }
-  ],
-  rosters: [
-    { roster_id: 1, owner_id: "1", players: Array(23).fill("p"), starters: Array(10).fill("s"), settings: { wins: 10, losses: 3, fpts: 1830, ppts: 1915 } },
-    { roster_id: 2, owner_id: "2", players: Array(21).fill("p"), starters: Array(10).fill("s"), settings: { wins: 9, losses: 4, fpts: 1764, ppts: 1840 } },
-    { roster_id: 3, owner_id: "3", players: Array(27).fill("p"), starters: Array(10).fill("s"), settings: { wins: 5, losses: 8, fpts: 1510, ppts: 1698 } },
-    { roster_id: 4, owner_id: "4", players: Array(18).fill("p"), starters: Array(10).fill("s"), settings: { wins: 4, losses: 9, fpts: 1402, ppts: 1465 } }
-  ],
-  drafts: [{ draft_id: "demo_draft_12_team_superflex", status: "pre_draft", type: "startup", season: "2026" }]
-};
-
-function getDemoSummary(leagueId: string): LeagueSummary {
-  const league = demoLeagues.find((item) => item.league_id === leagueId) ?? demoLeagues[0];
-
-  if (league.league_id === demoSummary.league.league_id) {
-    return demoSummary;
-  }
-
-  return {
-    ...demoSummary,
-    league,
-    rosters: demoSummary.rosters.map((roster, index) => ({
-      ...roster,
-      settings: {
-        ...roster.settings,
-        wins: Math.max((roster.settings?.wins ?? 0) - index, 0),
-        losses: (roster.settings?.losses ?? 0) + index,
-        fpts: Math.max((roster.settings?.fpts ?? 0) - index * 72, 0),
-        ppts: Math.max((roster.settings?.ppts ?? 0) - index * 45, 0)
-      }
-    })),
-    drafts: league.draft_id ? [{ draft_id: league.draft_id, status: "pre_draft", type: "mock", season: league.season }] : []
-  };
-}
-
-function decimalPoints(base = 0, decimal = 0) {
-  return base + decimal / 100;
-}
 
 function formatLeagueType(league?: SleeperLeague | null) {
   return formatLeagueTypeLabel(league);
@@ -220,83 +83,6 @@ function formatLineup(league?: SleeperLeague | null) {
   return starters.length ? `${starters.length} starters` : "Lineup pending";
 }
 
-function managerName(users: SleeperLeagueUser[], roster: SleeperRoster) {
-  const user = users.find((item) => item.user_id === roster.owner_id);
-  return user?.metadata?.team_name || user?.display_name || `Roster ${roster.roster_id}`;
-}
-
-function managerForRoster(users: SleeperLeagueUser[], roster: SleeperRoster) {
-  return users.find((item) => item.user_id === roster.owner_id) ?? null;
-}
-
-function buildPowerRows(summary: LeagueSummary | null): PowerRow[] {
-  if (!summary) {
-    return [];
-  }
-
-  const points = summary.rosters.map((roster) => decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal));
-  const potential = summary.rosters.map((roster) => decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal));
-  const maxPoints = Math.max(...points, 1);
-  const maxPotential = Math.max(...potential, 1);
-  const profile = deriveLeagueProfile(summary.league);
-
-  return summary.rosters
-    .map((roster) => {
-      const fpts = decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal);
-      const ppts = decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal);
-      const wins = roster.settings?.wins ?? 0;
-      const losses = roster.settings?.losses ?? 0;
-      const depthCount = roster.players?.length ?? 0;
-      const starterCount = roster.starters?.length ?? 0;
-      const formatDepth = profile.isSuperflex ? Math.min(depthCount, 30) * 0.35 : Math.min(depthCount, 28) * 0.28;
-      const starterPressure = Math.min(starterCount, profile.starters.length || 10) * (profile.isSuperflex ? 0.66 : 0.5);
-      const score = Math.round(
-        40 +
-        (fpts / maxPoints) * 32 +
-        (ppts / maxPotential) * 17 +
-        formatDepth +
-        starterPressure +
-        wins * 0.9
-      );
-      const upsideGap = Math.round(ppts - fpts);
-
-      return {
-        roster,
-        score,
-        fpts,
-        ppts,
-        wins,
-        losses,
-        depthCount,
-        starterCount,
-        upsideGap
-      };
-    })
-    .sort((a, b) => b.score - a.score)
-    .map((row, index) => {
-      const manager = managerForRoster(summary.users, row.roster);
-      const tier = index <= 1 ? "Contender" : row.upsideGap > 125 ? "Builder" : "Middle";
-      const depth = row.depthCount >= 24 ? "Deep" : row.depthCount >= 20 ? "Stable" : "Thin";
-      const signal = tier === "Contender"
-        ? "Scoring profile supports buying points."
-        : tier === "Builder"
-          ? "Potential points suggest rebuild leverage."
-          : "Needs a direction before spending future value.";
-
-      return {
-        rank: String(index + 1).padStart(2, "0"),
-        team: managerName(summary.users, row.roster),
-        manager: `Roster ${row.roster.roster_id}`,
-        managerAvatar: manager?.avatar ?? null,
-        tier,
-        score: row.score,
-        trend: row.upsideGap > 100 ? `+${Math.min(Math.round(row.upsideGap / 20), 9)}` : "-1",
-        depth,
-        record: `${row.wins}-${row.losses}`,
-        signal
-      };
-    });
-}
 
 function buildSettings(summary: LeagueSummary | null) {
   const league = summary?.league;
@@ -310,7 +96,7 @@ function buildSettings(summary: LeagueSummary | null) {
   ];
 }
 
-function buildLeagueSignals(summary: LeagueSummary | null, rows: PowerRow[]) {
+function buildLeagueSignals(summary: LeagueSummary | null, rows: ReturnType<typeof buildAccuratePowerRows>) {
   const league = summary?.league;
   const top = rows[0]?.team ?? "Top roster";
   const builderCount = rows.filter((row) => row.tier === "Builder").length;
@@ -318,109 +104,14 @@ function buildLeagueSignals(summary: LeagueSummary | null, rows: PowerRow[]) {
 
   return [
     ["Format pressure", `${formatLeagueType(league)} and ${formatScoring(league)} settings shape every close player decision.`],
-    ["Contender count", `${contenderCount || "-"} rosters profile as immediate contenders in the current standings view.`],
-    ["Builder count", `${builderCount || "-"} rosters have enough gap or upside to treat future value carefully.`],
-    ["Top leverage", `${top} has the cleanest combination of current points and roster stability.`]
+    ["Contender count", `${contenderCount || "-"} roster${contenderCount === 1 ? "" : "s"} profile as immediate contenders in the unified power model.`],
+    ["Builder count", `${builderCount || "-"} roster${builderCount === 1 ? "" : "s"} hold more future leverage than current scoring power.`],
+    ["Top leverage", `${top} has the strongest blend of current value, dynasty value, owned picks, and production.`]
   ];
 }
 
 const dynastyPositions = ["All", "QB", "RB", "WR", "TE", "Picks"];
 const redraftPositions = ["All", "QB", "RB", "WR", "TE"];
-
-function positionWeight(position: string, rosterId: number, kind: "dynasty" | "redraft") {
-  const seed = (rosterId * 17 + position.charCodeAt(0) + position.length * 7) % 13;
-  const base = {
-    All: 1,
-    QB: 0.18,
-    RB: kind === "redraft" ? 0.29 : 0.2,
-    WR: kind === "redraft" ? 0.31 : 0.27,
-    TE: 0.11,
-    Picks: kind === "dynasty" ? 0.24 : 0
-  }[position] ?? 0.16;
-
-  return Math.max(0.06, base + (seed - 6) * 0.012);
-}
-
-function buildValueStandings(summary: LeagueSummary | null, kind: "dynasty" | "redraft", position: string): ValueStandingRow[] {
-  if (!summary) {
-    return [];
-  }
-
-  const selectedPosition = position === "All" ? "All" : position;
-  const profile = deriveLeagueProfile(summary.league, kind === "redraft" ? "redraft" : "dynasty");
-
-  return summary.rosters
-    .map((roster) => {
-      const manager = managerForRoster(summary.users, roster);
-      const points = decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal);
-      const potential = decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal);
-      const depth = roster.players?.length ?? 0;
-      const wins = roster.settings?.wins ?? 0;
-      const baseValue = kind === "dynasty"
-        ? potential * 42 + Math.max(potential - points, 0) * 31 + depth * 540
-        : points * 47 + wins * 760 + Math.min(depth, 24) * 260;
-      const formatModifier =
-        selectedPosition === "QB" && profile.isSuperflex ? 1.28 :
-        selectedPosition === "TE" && profile.tePremium ? 1.2 :
-        selectedPosition === "WR" && profile.scoring !== "standard" ? 1.08 :
-        selectedPosition === "RB" && kind === "redraft" ? 1.07 :
-        1;
-      const value = selectedPosition === "All"
-        ? baseValue * (profile.isSuperflex ? 1.04 : 1)
-        : baseValue * positionWeight(selectedPosition, roster.roster_id, kind) * formatModifier;
-
-      return {
-        rank: 0,
-        team: managerName(summary.users, roster),
-        manager: `Roster ${roster.roster_id}`,
-        managerAvatar: manager?.avatar ?? null,
-        value,
-        position: selectedPosition,
-        rosterId: roster.roster_id
-      };
-    })
-    .sort((a, b) => b.value - a.value)
-    .map((row, index) => ({ ...row, rank: index + 1 }));
-}
-
-function buildEconomyRows(summary: LeagueSummary | null) {
-  if (!summary) {
-    return [];
-  }
-
-  const rows = summary.rosters.map((roster) => {
-    const points = decimalPoints(roster.settings?.fpts, roster.settings?.fpts_decimal);
-    const potential = decimalPoints(roster.settings?.ppts, roster.settings?.ppts_decimal);
-    const depth = roster.players?.length ?? 0;
-    const pickLeverage = Math.max(potential - points, 0) + Math.max(depth - 20, 0) * 18;
-    return { roster, points, potential, depth, pickLeverage };
-  });
-  const avgPoints = rows.reduce((total, row) => total + row.points, 0) / Math.max(rows.length, 1);
-  const avgPickLeverage = rows.reduce((total, row) => total + row.pickLeverage, 0) / Math.max(rows.length, 1);
-
-  return rows
-    .map((row) => {
-      const current = row.points / Math.max(avgPoints, 1);
-      const future = row.pickLeverage / Math.max(avgPickLeverage, 1);
-      const quadrant = current >= 1 && future >= 1
-        ? "Dynasty apex"
-        : current >= 1
-          ? "Win-now pressure"
-          : future >= 1
-            ? "Rebuild with ammo"
-            : "Value trap";
-
-      return {
-        team: managerName(summary.users, row.roster),
-        current,
-        future,
-        quadrant,
-        x: Math.min(Math.max(18 + current * 34, 8), 90),
-        y: Math.min(Math.max(86 - future * 34, 10), 88)
-      };
-    })
-    .sort((a, b) => (b.current + b.future) - (a.current + a.future));
-}
 
 function formatValue(value: number) {
   if (value >= 1000) {
@@ -430,20 +121,51 @@ function formatValue(value: number) {
   return String(Math.round(value));
 }
 
-function TrendBadge({ trend }: { trend: string }) {
-  const positive = trend.startsWith("+");
+function EdgeBadge({ edge }: { edge: number }) {
+  const positive = edge >= 0;
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <span className={positive ? "league-trend trend-up" : "league-trend trend-down"}>
+    <span
+      className={positive ? "league-trend trend-up" : "league-trend trend-down"}
+      title="Power score compared with the league average"
+    >
       <Icon size={13} />
-      {trend}
+      {positive ? `+${edge}` : edge}
     </span>
   );
 }
 
+async function fetchPlayerDirectory(summary: LeagueSummary) {
+  const playerIds = [...new Set(summary.rosters.flatMap((roster) => roster.players ?? []))];
+  const batches: string[][] = [];
+
+  for (let index = 0; index < playerIds.length; index += 100) {
+    batches.push(playerIds.slice(index, index + 100));
+  }
+
+  const responses = await Promise.all(batches.map(async (batch) => {
+    const response = await fetch(`/api/sleeper/players?ids=${encodeURIComponent(batch.join(","))}`, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      throw new Error(data?.error || "Player value data failed to load.");
+    }
+
+    return response.json() as Promise<{ players: Record<string, LeagueToolPlayer> }>;
+  }));
+
+  return responses.reduce<Record<string, LeagueToolPlayer>>((directory, response) => ({
+    ...directory,
+    ...response.players
+  }), {});
+}
+
 export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardProps) {
   const liveAccess = paidAccess;
+  const playerRequestRef = useRef(0);
   const [username, setUsername] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [dynastyPosition, setDynastyPosition] = useState("All");
@@ -454,6 +176,12 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const [leagues, setLeagues] = useState<SleeperLeague[]>(liveAccess ? [] : demoLeagues);
   const [selectedLeagueId, setSelectedLeagueId] = useState(liveAccess ? "" : demoSummary.league.league_id);
   const [summary, setSummary] = useState<LeagueSummary | null>(liveAccess ? null : demoSummary);
+  const [playerDirectory, setPlayerDirectory] = useState<Record<string, LeagueToolPlayer>>(
+    liveAccess ? {} : demoPlayerDirectory
+  );
+  const [assetStatus, setAssetStatus] = useState<"idle" | "loading" | "ready" | "error">(
+    liveAccess ? "idle" : "ready"
+  );
   const [loadedUser, setLoadedUser] = useState<SleeperUser | null>(
     liveAccess ? null : { user_id: "demo-user", username: "demo-manager", display_name: "Demo Manager" }
   );
@@ -461,20 +189,43 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   const selectedLeague = leagues.find((league) => league.league_id === selectedLeagueId) ?? null;
   const activeSummary = summary;
   const activeLeague = activeSummary?.league ?? selectedLeague ?? null;
-  const powerRows = useMemo(() => buildPowerRows(activeSummary), [activeSummary]);
+  const assetModel = useMemo(
+    () => buildLeagueAssetModel(assetStatus === "ready" ? activeSummary : null, playerDirectory),
+    [activeSummary, assetStatus, playerDirectory]
+  );
+  const powerRows = useMemo(() => buildAccuratePowerRows(assetModel), [assetModel]);
   const settings = useMemo(() => buildSettings(activeSummary), [activeSummary]);
   const leagueSignals = useMemo(() => buildLeagueSignals(activeSummary, powerRows), [activeSummary, powerRows]);
-  const dynastyValueRows = useMemo(() => buildValueStandings(activeSummary, "dynasty", dynastyPosition), [activeSummary, dynastyPosition]);
-  const redraftValueRows = useMemo(() => buildValueStandings(activeSummary, "redraft", redraftPosition), [activeSummary, redraftPosition]);
-  const economyRows = useMemo(() => buildEconomyRows(activeSummary), [activeSummary]);
+  const dynastyValueRows = useMemo(
+    () => buildAccurateValueStandings(assetModel, "dynasty", dynastyPosition),
+    [assetModel, dynastyPosition]
+  );
+  const redraftValueRows = useMemo(
+    () => buildAccurateValueStandings(assetModel, "redraft", redraftPosition),
+    [assetModel, redraftPosition]
+  );
+  const economyRows = useMemo(() => buildAccurateEconomyRows(assetModel), [assetModel]);
+  const coverageLabel = summaryStatus === "loading" || assetStatus === "loading"
+    ? "Loading player values"
+    : assetStatus === "error"
+      ? "Player values unavailable"
+      : assetModel.totalPlayers
+        ? `${Math.round(assetModel.coverage * 100)}% player coverage`
+        : "Awaiting roster data";
   const leagueStats = [
     { label: "Teams", value: String(activeLeague?.total_rosters ?? "-"), detail: formatLeagueType(activeLeague) },
     { label: "Scoring", value: formatScoring(activeLeague), detail: "Sleeper settings" },
     { label: "Starters", value: formatLineup(activeLeague).split(" ")[0], detail: formatLineup(activeLeague) },
-    { label: "Loaded", value: activeSummary ? "Live" : "Ready", detail: activeSummary ? "League data" : "Connect Sleeper" }
+    {
+      label: "Model",
+      value: assetStatus === "ready" ? "Ready" : assetStatus === "loading" ? "Loading" : "Connect",
+      detail: assetStatus === "ready" ? coverageLabel : "Player assets"
+    }
   ];
   const topTeam = powerRows[0];
-  const builderTeam = powerRows.find((row) => row.tier === "Builder") ?? powerRows[powerRows.length - 1];
+  const strongestFutureRosterId = [...assetModel.profiles]
+    .sort((left, right) => right.futureValue - left.futureValue)[0]?.roster.roster_id;
+  const strongestFutureTeam = powerRows.find((row) => row.rosterId === strongestFutureRosterId);
   const fragileTeam = [...powerRows].reverse().find((row) => row.depth === "Thin") ?? powerRows[powerRows.length - 1];
   const draftId = activeSummary?.drafts?.[0]?.draft_id || activeLeague?.draft_id;
 
@@ -483,9 +234,12 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
       return;
     }
 
+    const requestId = ++playerRequestRef.current;
     setSelectedLeagueId(leagueId);
     updateStoredLeagueSelection(leagueId);
     setSummaryStatus("loading");
+    setAssetStatus("loading");
+    setPlayerDirectory({});
     setError("");
 
     try {
@@ -499,10 +253,26 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
       }
 
       const data = await response.json() as LeagueSummary;
+      if (requestId !== playerRequestRef.current) {
+        return;
+      }
+
       setSummary(data);
+      const directory = await fetchPlayerDirectory(data);
+      if (requestId !== playerRequestRef.current) {
+        return;
+      }
+
+      setPlayerDirectory(directory);
+      setAssetStatus("ready");
       setSummaryStatus("ready");
     } catch (caught) {
+      if (requestId !== playerRequestRef.current) {
+        return;
+      }
+
       setSummaryStatus("error");
+      setAssetStatus("error");
       setError(caught instanceof Error ? caught.message : "League summary failed.");
     }
   }, [liveAccess]);
@@ -568,6 +338,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
     setLeagues([]);
     setSelectedLeagueId("");
     setSummary(null);
+    setPlayerDirectory({});
+    setAssetStatus("idle");
 
     try {
       const response = await fetch(`/api/sleeper/user/${encodeURIComponent(trimmed)}/leagues?season=${encodeURIComponent(season)}`, {
@@ -608,6 +380,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
     setLeagues(demoLeagues);
     setSelectedLeagueId(demoSummary.league.league_id);
     setSummary(getDemoSummary(demoSummary.league.league_id));
+    setPlayerDirectory(demoPlayerDirectory);
+    setAssetStatus("ready");
     setScanStatus("ready");
     setSummaryStatus("ready");
     setError("");
@@ -616,6 +390,8 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
   function selectPreviewLeague(leagueId: string) {
     setSelectedLeagueId(leagueId);
     setSummary(getDemoSummary(leagueId));
+    setPlayerDirectory(demoPlayerDirectory);
+    setAssetStatus("ready");
   }
 
   return (
@@ -764,7 +540,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
             <div className="league-card-actions">
               <ProductBadge className="league-filter-pill" variant="muted">
                 <Gauge size={14} />
-                {summaryStatus === "loading" ? "Loading" : `${formatLeagueType(activeLeague)} lens`}
+                {assetStatus === "loading" ? "Loading asset model" : coverageLabel}
               </ProductBadge>
               <Link className="league-header-link" href="/power-rankings">
                 View rankings <ArrowRight size={14} />
@@ -779,7 +555,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                   <th>Rank</th>
                   <th>Team</th>
                   <th>Tier</th>
-                  <th>Score</th>
+                  <th>Power</th>
                   <th>Depth</th>
                   <th>Record</th>
                   <th>Read</th>
@@ -796,7 +572,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                     <td>
                       <div className="score-cell">
                         <strong>{row.score}</strong>
-                        <TrendBadge trend={row.trend} />
+                        <EdgeBadge edge={row.edge} />
                       </div>
                     </td>
                     <td>{row.depth}</td>
@@ -806,7 +582,11 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                 ))}
                 {!powerRows.length ? (
                   <tr>
-                    <td colSpan={7}>Scan a paid league or load the demo to populate rankings.</td>
+                    <td colSpan={7}>
+                      {assetStatus === "loading"
+                        ? "Loading rostered players and building the league asset model."
+                        : "Scan a paid league or load the demo to populate rankings."}
+                    </td>
                   </tr>
                 ) : null}
               </tbody>
@@ -854,7 +634,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
           <div className="league-card-header compact">
             <div>
               <span className="eyebrow">Dynasty Value by Position</span>
-              <h2>Long-window roster leverage</h2>
+              <h2>Players and owned draft capital</h2>
             </div>
           </div>
           <SegmentControl ariaLabel="Dynasty position filters" className="value-filter-row" onChange={setDynastyPosition} options={dynastyPositions} value={dynastyPosition} />
@@ -868,6 +648,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                 <strong>{formatValue(row.value)}</strong>
               </div>
             ))}
+            {!dynastyValueRows.length ? <p className="league-value-empty">{coverageLabel}</p> : null}
           </div>
         </SurfaceCard>
 
@@ -875,7 +656,7 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
           <div className="league-card-header compact">
             <div>
               <span className="eyebrow">Redraft Value by Position</span>
-              <h2>Current scoring power</h2>
+              <h2>Current-season roster strength</h2>
             </div>
           </div>
           <SegmentControl ariaLabel="Redraft position filters" className="value-filter-row" onChange={setRedraftPosition} options={redraftPositions} value={redraftPosition} />
@@ -889,21 +670,30 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
                 <strong>{formatValue(row.value)}</strong>
               </div>
             ))}
+            {!redraftValueRows.length ? <p className="league-value-empty">{coverageLabel}</p> : null}
           </div>
         </SurfaceCard>
       </section>
+
+      <div className="league-model-note" role="note">
+        <Database size={16} />
+        <span>
+          Values use rostered Sleeper players, league scoring and lineup settings, starter roles,
+          and owned 1st-3rd round picks from {assetModel.pickSeasonStart}. They are comparative decision support, not guaranteed trade prices.
+        </span>
+      </div>
 
       <SurfaceCard className="league-economy-panel" variant="data" aria-label="League economy">
         <div className="league-card-header">
           <div>
             <span className="eyebrow">League Economy</span>
-            <h2>Who has points, who has future leverage, and who is stuck</h2>
+            <h2>Current roster strength against future asset value</h2>
           </div>
           <ProductBadge className="league-filter-pill" variant="muted">Normalized to room average</ProductBadge>
         </div>
         <div className="economy-map" aria-label="Current value and future leverage chart">
           <span className="economy-axis top">Future leverage</span>
-          <span className="economy-axis right">Current points</span>
+          <span className="economy-axis right">Current roster value</span>
           <span className="economy-quadrant q1">Dynasty apex</span>
           <span className="economy-quadrant q2">Rebuild with ammo</span>
           <span className="economy-quadrant q3">Value trap</span>
@@ -932,9 +722,9 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
 
       <section className="league-card-grid" aria-label="Team callouts">
         {[
-          { title: "Best Title Window", row: topTeam, icon: Crown, copy: "Top score and current production make this the cleanest win-now profile." },
-          { title: "Best Rebuild Base", row: builderTeam, icon: Sparkles, copy: "Potential value or lower current rank suggests a better long-term path than all-in buying." },
-          { title: "Most Fragile Team", row: fragileTeam, icon: ShieldAlert, copy: "Depth or scoring profile creates the most immediate roster pressure." }
+          { title: "Best Title Window", row: topTeam, icon: Crown, copy: "The strongest combined current value, production, dynasty assets, and pick capital." },
+          { title: "Strongest Future Base", row: strongestFutureTeam, icon: Sparkles, copy: "The highest combined long-window player value and owned rookie-pick capital." },
+          { title: "Most Fragile Team", row: fragileTeam, icon: ShieldAlert, copy: "Bench value and total roster strength create the clearest downside risk." }
         ].map((card) => {
           const Icon = card.icon;
           return (

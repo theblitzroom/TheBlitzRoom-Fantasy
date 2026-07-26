@@ -384,7 +384,8 @@ export function getDemoSummary(leagueId: string): LeagueToolSummary {
         ppts: Math.max((roster.settings?.ppts ?? 0) - index * 45, 0)
       }
     })),
-    drafts: league.draft_id ? [{ draft_id: league.draft_id, status: "pre_draft", type: "mock", season: league.season }] : []
+    drafts: league.draft_id ? [{ draft_id: league.draft_id, status: "pre_draft", type: "mock", season: league.season }] : [],
+    tradedPicks: []
   };
 }
 

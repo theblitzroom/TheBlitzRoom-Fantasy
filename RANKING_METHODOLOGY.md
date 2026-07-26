@@ -28,6 +28,15 @@ TheBlitzRoom uses an internal format-aware model instead of copying proprietary 
 - Waiver scores blend available-player value, league format, age/upside, health status, and roster need.
 - Trade values blend dynasty market anchors, format scoring, role, age curve, and pick value.
 
+## League Hub Calculations
+
+- Every League Hub view starts from one shared roster asset profile so the Power Board, position-value tables, and League Economy do not disagree because of separate proxy formulas.
+- Dynasty position values sum the format-adjusted values of the actual QB, RB, WR, and TE assets on each roster. The All view also includes owned rookie-pick capital.
+- Redraft position values use the same players with current-season age, role, scoring, Superflex, and TE-premium adjustments. Draft picks are excluded.
+- Rookie-pick ownership is reconstructed from each roster's original picks plus Sleeper's traded-pick records. The model includes 1st-3rd round picks across the next three available draft classes and discounts future seasons.
+- Power scores blend current roster value, dynasty roster value, season production when available, and pick capital. Every input is scaled against the league average so a small pick difference cannot overpower a large player-value difference.
+- League Economy compares each team's current-season roster value with its dynasty player value plus owned pick capital. Quadrants are determined against the room average.
+
 ## Public-Source Guardrails
 
 The model is designed around public fantasy-football concepts used across the market:
