@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import type { SyntheticEvent } from "react";
+import { UserRound } from "lucide-react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import type { LeagueToolPlayer } from "@/lib/leagueTools";
 
 type AvatarSize = "xs" | "sm" | "md" | "lg";
@@ -106,16 +107,22 @@ function hideBrokenImage(event: SyntheticEvent<HTMLImageElement>) {
   event.currentTarget.style.display = "none";
 }
 
-export function PlayerAvatar({ playerId, name, size = "md" }: { playerId?: string | null; name: string; size?: AvatarSize }) {
+export function PlayerAvatar({ playerId, size = "md" }: { playerId?: string | null; name: string; size?: AvatarSize }) {
   const imageUrl = playerHeadshotUrl(playerId);
   const pixels = avatarPixels[size];
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
 
   return (
     <span className={`football-avatar football-avatar-${size}`} aria-hidden="true">
-      {imageUrl ? (
-        <Image alt="" height={pixels} loading="lazy" onError={hideBrokenImage} src={imageUrl} width={pixels} />
-      ) : null}
-      <em>{initialsFromName(name)}</em>
+      {imageUrl && !imageFailed ? (
+        <Image alt="" height={pixels} loading="lazy" onError={() => setImageFailed(true)} src={imageUrl} width={pixels} />
+      ) : (
+        <UserRound size={Math.max(12, Math.round(pixels * 0.46))} strokeWidth={1.6} />
+      )}
     </span>
   );
 }

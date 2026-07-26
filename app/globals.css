@@ -1202,6 +1202,10 @@ p {
   font-weight: 800;
 }
 
+.football-avatar > svg {
+  color: var(--muted);
+}
+
 .player-identity,
 .manager-identity,
 .team-identity {
