@@ -665,9 +665,15 @@ export function LeagueHubDashboard({ paidAccess, signedIn }: LeagueHubDashboardP
 
                   <div className="league-team-position-ranks" aria-label={`${row.team} positional rankings`}>
                     {positionRankValues.map((position) => (
-                      <span key={position.key} title={`${position.key} rank ${position.rank ?? "unavailable"} of ${powerRows.length}`}>
+                      <span
+                        data-position={position.key.toLowerCase()}
+                        data-rank-strength={position.rank === 1 ? "first" : position.rank && position.rank <= 3 ? "top" : "base"}
+                        key={position.key}
+                        title={`${position.key} rank ${position.rank ?? "unavailable"} of ${powerRows.length}`}
+                      >
                         <small>{position.key}</small>
                         <strong>#{position.rank ?? "-"}</strong>
+                        <em>of {powerRows.length}</em>
                       </span>
                     ))}
                   </div>
